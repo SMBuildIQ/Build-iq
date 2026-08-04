@@ -63,21 +63,24 @@ export default function ShopPage() {
 
   return (
     <AppShell user={user || { name: "You" }}>
-      <h1 className="font-display text-3xl font-semibold">Material packages</h1>
-      <p className="mt-2 text-sm text-[var(--sage)]">
-        Order takeoff packages for windows, doors, lumber, trusses, cabinetry, masonry stone, door hardware, and millwork.
-      </p>
+      <section className="site-topband">
+        <div className="site-topband__inner px-5 py-5">
+          <p className="site-topband__eyebrow">Supply Monkey packages</p>
+          <h1 className="mt-2 font-display text-4xl text-white">Material packages</h1>
+          <p className="mt-2 max-w-2xl text-sm text-white/78">
+            Order takeoff packages for windows, doors, lumber, trusses, cabinetry, masonry stone,
+            door hardware, and millwork.
+          </p>
+        </div>
+      </section>
 
-      <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
         {["All", ...PACKAGE_CATEGORIES].map((c) => (
           <button
             key={c}
             onClick={() => setCategory(c)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-              category === c
-                ? "bg-[var(--ink)] text-[var(--paper)]"
-                : "bg-white/60 text-[var(--sage)] border border-[var(--line)]"
-            }`}
+            className="site-filter shrink-0"
+            data-active={category === c}
           >
             {c}
           </button>
@@ -86,12 +89,12 @@ export default function ShopPage() {
 
       {message && <p className="mt-3 text-sm text-emerald-800">{message}</p>}
 
-      <ul className="mt-5 space-y-3">
+      <ul className="mt-6 space-y-4">
         {filtered.map((pkg) => (
-          <li key={pkg.id} className="surface p-4">
+          <li key={pkg.id} className="site-panel site-card-hover border-l-4 border-l-[var(--orange)] p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--copper-deep)]">
+                <p className="site-kicker">
                   {pkg.category}
                 </p>
                 <h2 className="mt-1 font-display text-xl font-semibold">{pkg.name}</h2>

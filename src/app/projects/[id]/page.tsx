@@ -242,16 +242,17 @@ export default function ProjectDetailPage() {
 
   return (
     <AppShell user={me || { name: "You" }}>
-        <div className="flex flex-col gap-4">
+        <section className="site-topband">
+          <div className="site-topband__inner flex flex-col gap-4 px-5 py-5">
           <div>
             <Link href="/dashboard" className="text-sm text-[var(--sage)] hover:text-[var(--ink)]">
               ← Projects
             </Link>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-3xl font-semibold text-[var(--ink)]">{project.name}</h1>
+              <h1 className="font-display text-4xl text-white">{project.name}</h1>
               <StatusBadge status={project.status} />
             </div>
-            <p className="mt-2 text-sm text-[var(--sage)]">
+            <p className="mt-2 text-sm text-white/76">
               {[project.address, project.city, project.state, project.zip].filter(Boolean).join(", ") ||
                 "Address TBD"}
               {project.squareFeet ? ` · ${project.squareFeet.toLocaleString()} sf` : ""}
@@ -309,6 +310,7 @@ export default function ProjectDetailPage() {
             </button>
           </div>
         </div>
+        </section>
 
         <BotRunner
           open={botsOpen}
@@ -330,7 +332,7 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
-        <section className="mt-8 border border-[var(--line)] bg-white px-4 py-3">
+        <section className="site-panel mt-8 px-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="font-display text-xl font-semibold">Cabinetry</h2>
@@ -345,7 +347,7 @@ export default function ProjectDetailPage() {
         </section>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
-          <section>
+          <section className="site-panel p-5">
             <h2 className="font-display text-2xl font-semibold">Blueprints</h2>
             <p className="mt-1 text-sm text-[var(--sage)]">
               Upload plans — AI bots run OCR, drawing vision, takeoff, estimate, bids, cart, and Spruce.
@@ -406,7 +408,7 @@ export default function ProjectDetailPage() {
             )}
           </section>
 
-          <section>
+          <section className="site-panel p-5">
             <h2 className="font-display text-2xl font-semibold">Cost estimate</h2>
             {project.estimate ? (
               <dl className="mt-4 space-y-2 text-sm">
@@ -469,7 +471,7 @@ export default function ProjectDetailPage() {
         </div>
 
         {project.materials.length > 0 && (
-          <section className="mt-14">
+          <section className="site-panel mt-14 p-5">
             <h2 className="font-display text-2xl font-semibold">Material takeoff</h2>
             <p className="mt-1 text-sm text-[var(--sage)]">
               {project.materials.length} line items identified across {materialsByTrade.length} trades
@@ -531,7 +533,7 @@ export default function ProjectDetailPage() {
 
             <ul className="mt-6 grid gap-4 md:grid-cols-2">
               {project.bidPackages.map((pkg) => (
-                <li key={pkg.id} className="border border-[var(--line)] bg-white/40 p-5">
+                <li key={pkg.id} className="site-panel border-l-4 border-l-[var(--orange)] p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="font-display text-lg font-semibold">{pkg.trade}</h3>

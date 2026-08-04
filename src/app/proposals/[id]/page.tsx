@@ -187,35 +187,34 @@ export default function ProposalDetailPage() {
         </Link>
       </div>
 
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-xs text-[var(--sage)]">{proposal.number}</p>
-          <h1 className="mt-1 font-display text-3xl font-semibold text-[var(--ink)]">
-            {proposal.title}
-          </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <StatusBadge status={proposal.status} />
-            <span className="text-xs text-[var(--sage)]">v{proposal.version}</span>
-            {proposal.project && (
-              <Link
-                href={`/projects/${proposal.project.id}`}
-                className="text-xs text-[var(--copper-deep)] underline-offset-2 hover:underline"
-              >
-                {proposal.project.name}
-              </Link>
-            )}
+      <section className="site-topband mb-6">
+        <div className="site-topband__inner flex flex-wrap items-start justify-between gap-3 px-5 py-5">
+          <div>
+            <p className="site-topband__eyebrow">{proposal.number}</p>
+            <h1 className="mt-2 font-display text-4xl text-white">{proposal.title}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <StatusBadge status={proposal.status} />
+              <span className="text-xs text-white/70">v{proposal.version}</span>
+              {proposal.project && (
+                <Link
+                  href={`/projects/${proposal.project.id}`}
+                  className="text-xs text-[var(--orange)] underline-offset-2 hover:underline"
+                >
+                  {proposal.project.name}
+                </Link>
+              )}
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="font-display text-3xl text-[var(--orange)]">
+              {formatCurrencyExact(proposal.grandTotal)}
+            </p>
+            <p className="text-xs text-white/72">
+              Deposit {formatCurrencyExact(proposal.depositAmount)} ({Math.round(proposal.depositPct * 100)}%)
+            </p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="font-display text-2xl font-semibold text-[var(--copper-deep)]">
-            {formatCurrencyExact(proposal.grandTotal)}
-          </p>
-          <p className="text-xs text-[var(--sage)]">
-            Deposit {formatCurrencyExact(proposal.depositAmount)} (
-            {Math.round(proposal.depositPct * 100)}%)
-          </p>
-        </div>
-      </div>
+      </section>
 
       {(error || message) && (
         <div
@@ -267,7 +266,7 @@ export default function ProposalDetailPage() {
       </div>
 
       {editing && (
-        <form onSubmit={saveEdits} className="mb-8 grid gap-3 border border-[var(--line)] bg-white p-4">
+        <form onSubmit={saveEdits} className="site-panel mb-8 grid gap-3 p-5">
           <label className="flex flex-col gap-1 text-sm">
             <span className="label">Title</span>
             <input
@@ -327,7 +326,7 @@ export default function ProposalDetailPage() {
         </form>
       )}
 
-      <section className="mb-8 border border-[var(--line)] bg-white p-4">
+      <section className="site-panel mb-8 p-5">
         <h2 className="font-display text-xl font-semibold">Send to customer</h2>
         <p className="mt-1 text-sm text-[var(--sage)]">
           Emails the secure accept link (and you can share the PDF). Works with Resend when keyed;
@@ -372,7 +371,7 @@ export default function ProposalDetailPage() {
         <h2 className="font-display text-xl font-semibold">Categories</h2>
         <ul className="mt-4 space-y-6">
           {proposal.sections.map((s) => (
-            <li key={s.id} className="border border-[var(--line)] bg-white">
+            <li key={s.id} className="site-panel border-l-4 border-l-[var(--orange)]">
               <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] bg-[var(--mist)]/40 px-4 py-3">
                 <div>
                   <h3 className="font-display text-lg font-semibold">{s.title}</h3>
@@ -416,7 +415,7 @@ export default function ProposalDetailPage() {
         </ul>
       </section>
 
-      <section className="mb-10 border border-[var(--line)] bg-white p-4">
+      <section className="site-panel mb-10 p-5">
         <h2 className="font-display text-xl font-semibold">Investment</h2>
         <dl className="mt-3 space-y-2 text-sm">
           {(

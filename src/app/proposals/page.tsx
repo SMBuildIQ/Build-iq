@@ -76,17 +76,17 @@ export default function ProposalsPage() {
 
   return (
     <AppShell user={user || { name: "You" }}>
-      <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--copper-deep)]">
-          Customer proposals
-        </p>
-        <h1 className="mt-1 font-display text-3xl font-semibold text-[var(--ink)]">Proposals</h1>
-        <p className="mt-2 max-w-2xl text-sm text-[var(--sage)]">
-          Polished material proposals across Windows, Doors, Lumber, Trusses, Cabinetry, Masonry
-          Stone, Door Hardware, and Millwork — generated from project takeoff, PDF-ready, with
-          customer accept links.
-        </p>
-      </div>
+      <section className="site-topband">
+        <div className="site-topband__inner px-5 py-5">
+          <p className="site-topband__eyebrow">Customer proposals</p>
+          <h1 className="mt-2 font-display text-4xl text-white">Proposals</h1>
+          <p className="mt-2 max-w-2xl text-sm text-white/78">
+            Polished material proposals across Windows, Doors, Lumber, Trusses, Cabinetry, Masonry
+            Stone, Door Hardware, and Millwork — generated from takeoff, PDF-ready, and customer
+            accept enabled.
+          </p>
+        </div>
+      </section>
 
       {(error || message) && (
         <div
@@ -98,7 +98,7 @@ export default function ProposalsPage() {
         </div>
       )}
 
-      <section className="mb-8 border border-[var(--line)] bg-white p-4">
+      <section className="site-panel mt-8 mb-8 p-5">
         <h2 className="font-display text-xl font-semibold">New proposal from takeoff</h2>
         <p className="mt-1 text-sm text-[var(--sage)]">
           Pick a job that already has material takeoff lines. Categories with quantities become
@@ -128,13 +128,17 @@ export default function ProposalsPage() {
       </section>
 
       <section>
-        <h2 className="font-display text-xl font-semibold">All proposals</h2>
+        <div className="mb-3">
+          <p className="site-kicker">Active list</p>
+          <h2 className="mt-1 font-display text-2xl font-semibold">All proposals</h2>
+          <div className="site-rule mt-2" />
+        </div>
         {proposals.length === 0 ? (
           <p className="mt-4 text-sm text-[var(--sage)]">
             No proposals yet. Run AI takeoff on a job, then create a proposal here.
           </p>
         ) : (
-          <ul className="mt-4 divide-y divide-[var(--line)] border border-[var(--line)] bg-white">
+          <ul className="site-panel mt-4 divide-y divide-[var(--line)]">
             {proposals.map((p) => (
               <li key={p.id}>
                 <Link

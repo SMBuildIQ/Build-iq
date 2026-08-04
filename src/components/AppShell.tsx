@@ -39,8 +39,8 @@ export function AppShell({
   }
 
   return (
-    <div className="app-shell min-h-dvh bg-[var(--paper-deep)]">
-      <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--dark)] text-white safe-top">
+    <div className="app-shell min-h-dvh hero-wash">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[var(--dark)] text-white safe-top">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <Link href={user ? "/dashboard" : "/"} className="flex min-w-0 items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -55,31 +55,31 @@ export function AppShell({
             <div className="flex items-center gap-0.5">
               <Link
                 href="/cabinetry"
-                className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"
+                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
               >
                 Cabinetry
               </Link>
               <Link
                 href="/agents"
-                className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"
+                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
               >
                 Agents
               </Link>
               <Link
                 href="/modules"
-                className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"
+                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
               >
                 Modules
               </Link>
               <Link
                 href="/team"
-                className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"
+                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
               >
                 Team
               </Link>
               <Link
                 href="/settings/account"
-                className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"
+                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
               >
                 Account
               </Link>
@@ -102,13 +102,13 @@ export function AppShell({
       <main
         id="main-content"
         tabIndex={-1}
-        className={`mx-auto w-full max-w-3xl px-4 py-5 outline-none ${user ? "pb-28" : "pb-10"}`}
+        className={`mx-auto w-full max-w-3xl px-4 py-5 outline-none ${user ? "pb-28 pt-6" : "pb-10"}`}
       >
         {children}
       </main>
 
       {user && (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-white safe-bottom">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-white/98 backdrop-blur safe-bottom">
           <ul className="mx-auto grid max-w-3xl grid-cols-5">
             {tabs.map((tab) => {
               const active =
@@ -120,8 +120,8 @@ export function AppShell({
                   <Link
                     href={tab.href}
                     aria-current={active ? "page" : undefined}
-                    className={`relative flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2.5 text-[11px] font-semibold uppercase tracking-wide ${
-                      active ? "text-[var(--orange)]" : "text-[var(--sage)]"
+                    className={`relative flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                      active ? "bg-[var(--mist)] text-[var(--orange-deep)]" : "text-[var(--sage)]"
                     }`}
                   >
                     <Icon className={`h-5 w-5 ${active ? "stroke-[2.25]" : ""}`} />

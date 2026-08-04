@@ -21,20 +21,23 @@ export default async function DashboardPage() {
 
   return (
     <AppShell user={user}>
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--sage)]">
-            {user.companyName || "Your company"}
-          </p>
-          <h1 className="mt-1 font-display text-3xl text-[var(--brown)]">Jobs</h1>
+      <section className="site-topband">
+        <div className="site-topband__inner flex items-end justify-between gap-3 px-5 py-5">
+          <div>
+            <p className="site-topband__eyebrow">{user.companyName || "Your company"}</p>
+            <h1 className="mt-2 font-display text-4xl text-white">Jobs</h1>
+            <p className="mt-2 max-w-lg text-sm text-white/78">
+              Track active estimates, materials, and proposal-ready jobs in the same Supply Monkey look as the public site.
+            </p>
+          </div>
+          <Link href="/projects/new" className="btn-copper !px-3.5 !py-2.5 !text-sm">
+            New
+          </Link>
         </div>
-        <Link href="/projects/new" className="btn-copper !px-3.5 !py-2.5 !text-sm">
-          New
-        </Link>
-      </div>
+      </section>
 
       {projects.length === 0 ? (
-        <div className="surface mt-10 border-dashed px-5 py-12 text-center">
+        <div className="site-panel mt-8 border-dashed px-5 py-12 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/banana-icon.png" alt="" className="mx-auto h-10 w-10" />
           <h2 className="mt-4 font-display text-2xl text-[var(--brown)]">No projects yet</h2>
@@ -46,12 +49,12 @@ export default async function DashboardPage() {
           </Link>
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="mt-8 space-y-4">
           {projects.map((p) => (
             <li key={p.id}>
               <Link
                 href={`/projects/${p.id}`}
-                className="surface block p-4 transition active:scale-[0.99] hover:border-[var(--orange)]"
+                className="site-panel site-card-hover block border-l-4 border-l-[var(--orange)] p-5 active:scale-[0.99]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
