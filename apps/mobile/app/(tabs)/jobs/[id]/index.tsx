@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { router, useLocalSearchParams, type Href } from "expo-router";
 import type { ProjectSummary } from "@buildiq/types";
@@ -193,14 +193,25 @@ export default function JobDetailScreen() {
             router.push(`/(tabs)/jobs/${job.id}/library` as Href)
           }
         />
-        <Button label="Export" variant="secondary" compact style={{ minWidth: 100 }} />
+        <Button
+          label="Export estimate"
+          variant="secondary"
+          compact
+          style={{ minWidth: 130 }}
+          accessibilityLabel="Export estimate"
+          onPress={() =>
+            Alert.alert(
+              "Export",
+              "PDF export is available from proposals after you create one for this job."
+            )
+          }
+        />
         <Button
           label="Create proposal"
           variant="secondary"
           compact
           onPress={() => router.push("/(tabs)/proposals")}
         />
-        <Button label="Spruce" variant="ghost" compact />
       </View>
 
       <Section title="Blueprints">

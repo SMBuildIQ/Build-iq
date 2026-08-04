@@ -1,11 +1,13 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
+import { z } from "zod";
 import { loginSchema, registerSchema } from "@buildiq/validation";
 import { normalizeRole, permissionsFor } from "@buildiq/permissions";
 import { PrismaService } from "../prisma/prisma.service";
@@ -140,6 +142,57 @@ export class AuthService {
       data: { tokenVersion: { increment: 1 } },
     });
     return { ok: true };
+  }
+
+  /**
+   * Apple Guideline 5.1.1(v) / Play account-deletion — soft-delete user,
+   * revoke tokens, remove sole-owner company when no other members.
+   */
+  async deleteAccount(user: AuthUser, body: unknown) {
+    const parsed = z
+      .object({ confirm: z.literal("DELETE") })
+      .safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException('Send { "confirm": "DELETE" } to confirm account deletion.');
+    }
+
+    const memberships = await this.prisma.membership.findMany({
+      where: { userId: user.userId },
+      include: {
+        company: { include: { _count: { select: { members: true } } } },
+      },
+    });
+
+    for (const m of memberships) {
+      if (m.role === "OWNER" && m.company._count.members > 1) {
+        throw new ForbiddenException(
+          "Transfer ownership or remove other team members before deleting your owner account."
+        );
+      }
+    }
+
+    const companyIdsToDelete = memberships
+      .filter((m) => m.role === "OWNER" && m.company._count.members <= 1)
+      .map((m) => m.companyId);
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const id of companyIdsToDelete) {
+        await tx.company.delete({ where: { id } });
+      }
+      await tx.membership.deleteMany({ where: { userId: user.userId } });
+      await tx.user.update({
+        where: { id: user.userId },
+        data: {
+          deletedAt: new Date(),
+          tokenVersion: { increment: 1 },
+          email: `deleted+${user.userId}@deleted.invalid`,
+          name: "Deleted User",
+          passwordHash: await bcrypt.hash(`deleted-${user.userId}-${Date.now()}`, 10),
+        },
+      });
+    });
+
+    return { ok: true as const };
   }
 
   async me(user: AuthUser) {

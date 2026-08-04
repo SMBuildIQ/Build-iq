@@ -10,7 +10,12 @@ import React, {
 import type { UserSession } from "@buildiq/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch, setToken } from "../api/client";
-import { login as apiLogin, register as apiRegister } from "../api/resources";
+import {
+  deleteAccount as apiDeleteAccount,
+  login as apiLogin,
+  register as apiRegister,
+} from "../api/resources";
+import { allowDemoAuth } from "../config/legal";
 import { MOCK_SESSION } from "../data/mock";
 
 const AUTH_KEY = "buildiq.session";
@@ -27,6 +32,7 @@ type AuthContextValue = {
   }) => Promise<void>;
   signOut: () => Promise<void>;
   signInDemo: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -62,8 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await persist(res.user, res.token);
         return;
       }
-      // Offline / API unavailable — demo session for scaffold
-      await persist({ ...MOCK_SESSION, email }, "demo-token");
+      if (allowDemoAuth()) {
+        await persist({ ...MOCK_SESSION, email }, "demo-token");
+        return;
+      }
+      throw new Error("Unable to reach the BuildIQ API. Check your connection and try again.");
     },
     [persist]
   );
@@ -75,22 +84,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await persist(res.user, res.token);
         return;
       }
-      await persist(
-        {
-          ...MOCK_SESSION,
-          id: "user_new",
-          email: input.email,
-          name: input.name,
-          companyName: input.companyName,
-          role: "OWNER",
-        },
-        "demo-token"
-      );
+      if (allowDemoAuth()) {
+        await persist(
+          {
+            ...MOCK_SESSION,
+            id: "user_new",
+            email: input.email,
+            name: input.name,
+            companyName: input.companyName,
+            role: "OWNER",
+          },
+          "demo-token"
+        );
+        return;
+      }
+      throw new Error("Unable to create account. Check your connection and try again.");
     },
     [persist]
   );
 
   const signInDemo = useCallback(async () => {
+    if (!allowDemoAuth()) {
+      throw new Error("Demo sign-in is disabled in production builds.");
+    }
     await persist(MOCK_SESSION, "demo-token");
   }, [persist]);
 
@@ -103,9 +119,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await persist(null, null);
   }, [persist]);
 
+  const deleteAccount = useCallback(async () => {
+    const res = await apiDeleteAccount();
+    if (!res?.ok && !allowDemoAuth()) {
+      throw new Error(
+        "Could not delete account. If you are the only owner with teammates, transfer ownership first."
+      );
+    }
+    // Demo / offline: still clear local session so Review can verify the flow.
+    await persist(null, null);
+  }, [persist]);
+
   const value = useMemo(
-    () => ({ session, bootstrapped, signIn, signUp, signOut, signInDemo }),
-    [session, bootstrapped, signIn, signUp, signOut, signInDemo]
+    () => ({
+      session,
+      bootstrapped,
+      signIn,
+      signUp,
+      signOut,
+      signInDemo,
+      deleteAccount,
+    }),
+    [session, bootstrapped, signIn, signUp, signOut, signInDemo, deleteAccount]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

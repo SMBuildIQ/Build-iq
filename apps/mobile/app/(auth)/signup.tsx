@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Linking, Pressable, Text, View } from "react-native";
 import { Redirect, router, type Href } from "expo-router";
 import Animated, {
   Easing,
@@ -9,9 +9,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { BrandMark, Button, Screen, TextField, useTheme } from "../../src/ui";
 import { useAuth } from "../../src/context/AuthContext";
+import { LEGAL, LEGAL_URLS } from "../../src/config/legal";
 import { registerSchema } from "@buildiq/validation";
 
-/** M1b — Create account */
+/** M1b — Create account (requires Privacy & Terms acceptance) */
 export default function SignupScreen() {
   const { session, signUp } = useAuth();
   const { theme, gutter, reduceMotion } = useTheme();
@@ -19,6 +20,7 @@ export default function SignupScreen() {
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const enter = useSharedValue(reduceMotion ? 1 : 0);
@@ -39,6 +41,10 @@ export default function SignupScreen() {
 
   async function onSubmit() {
     setError(undefined);
+    if (!accepted) {
+      setError("Accept the Privacy Policy and Terms to create an account.");
+      return;
+    }
     const parsed = registerSchema.safeParse({ name, email, password, companyName });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Invalid registration");
@@ -119,6 +125,47 @@ export default function SignupScreen() {
           autoComplete="new-password"
           error={error}
         />
+
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: accepted }}
+          accessibilityLabel="Accept Privacy Policy and Terms of Service"
+          onPress={() => setAccepted((v) => !v)}
+          style={{
+            flexDirection: "row",
+            gap: theme.space[3],
+            alignItems: "flex-start",
+          }}
+        >
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              borderWidth: theme.stroke.hairline,
+              borderColor: accepted ? theme.colors.accent : theme.colors.borderStrong,
+              backgroundColor: accepted ? theme.colors.accent : "transparent",
+              marginTop: 2,
+            }}
+          />
+          <Text style={{ flex: 1, fontFamily: "Questrial", fontSize: 14, color: theme.colors.textSecondary, lineHeight: 20 }}>
+            I agree to the{" "}
+            <Text
+              style={{ color: theme.colors.accent, textDecorationLine: "underline" }}
+              onPress={() => void Linking.openURL(LEGAL_URLS.terms)}
+            >
+              Terms
+            </Text>{" "}
+            and{" "}
+            <Text
+              style={{ color: theme.colors.accent, textDecorationLine: "underline" }}
+              onPress={() => void Linking.openURL(LEGAL_URLS.privacy)}
+            >
+              Privacy Policy
+            </Text>{" "}
+            of {LEGAL.developerName}.
+          </Text>
+        </Pressable>
+
         <Button
           label={loading ? "Creating…" : "Create account"}
           onPress={onSubmit}

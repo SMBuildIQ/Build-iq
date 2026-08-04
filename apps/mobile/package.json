@@ -1,6 +1,6 @@
 {
   "name": "@buildiq/mobile",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -8,7 +8,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eas:build:preview": "eas build --profile preview --platform all",
+    "eas:build:production": "eas build --profile production --platform all",
+    "eas:submit": "eas submit --profile production --platform all"
   },
   "dependencies": {
     "@buildiq/design-tokens": "*",

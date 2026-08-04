@@ -6,17 +6,18 @@ This document maps BuildIQ to Apple App Store Review Guidelines and Google Play 
 
 BuildIQ ships as:
 
-1. **Progressive Web App (PWA)** — installable today  
-2. **Capacitor native shell** (`capacitor.config.json`) — loads the hosted HTTPS app (`server.url`) with a minimal `native-shell/` placeholder `webDir`
+1. **Expo React Native app** (`apps/mobile`) — primary App Store / Play binary via EAS (`com.supplymonkey.buildiq`)
+2. **Progressive Web App (PWA)** — installable soft-launch surface  
+3. **Capacitor native shell** (`capacitor.config.json`) — optional WKWebView/Android WebView loading the hosted HTTPS app
 
-Native shells should point `server.url` at your production HTTPS origin (default placeholder: `https://app.buildiq.com`).
+Native shells and Expo must use the same app id: **`com.supplymonkey.buildiq`**. Point `server.url` / `EXPO_PUBLIC_LEGAL_BASE_URL` at your production HTTPS origin.
 
 ## Apple App Store checklist
 
 | Requirement | BuildIQ implementation |
 |---|---|
 | Privacy Policy URL | `/privacy` (must be publicly reachable) |
-| Account deletion in-app | Settings → Account → Delete account (`DELETE /api/account/delete`) — purges DB + upload files; invalidates JWTs |
+| Account deletion in-app | More → Delete account (`DELETE /auth/account` on Nest; web `DELETE /api/account/delete`) |
 | Support URL | `/support` |
 | Terms of Use | `/terms` |
 | Sign in with Apple | Optional follow-up if you add third-party social login; email/password only today |
@@ -73,6 +74,8 @@ Native shells should point `server.url` at your production HTTPS origin (default
 6. Fill App Store Connect / Play Console questionnaires using the `store/` files  
 7. Test account deletion end-to-end on a TestFlight / internal testing build  
 8. Provide demo login credentials **only** in App Review notes (not in the shipping UI): `demo@buildiq.app` / `demo1234`  
+9. Production EAS builds must ship with `EXPO_PUBLIC_ALLOW_DEMO=false`  
+10. See **[store/STORE_LAUNCH_READINESS.md](./STORE_LAUNCH_READINESS.md)** for the pass/fail matrix before submit  
 
 ## Review notes template
 

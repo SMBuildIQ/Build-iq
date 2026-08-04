@@ -22,6 +22,7 @@ Honest inventory after the incomplete-items fix pass.
 | Item | Status |
 |---|---|
 | Capacitor `ios/` / `android/` native projects | Not generated (needs Mac/Android Studio) |
+| Expo App Store / Play binaries | Code/store-compliance ready (`1.0.0`, account deletion, legal links, EAS); needs EAS project id + TestFlight/Play internal |
 | Postgres + formal migrate history for all envs | Schema ready; still SQLite locally |
 | Object storage / signed URLs / malware scan | Planned |
 | Redis durable rate limits | In-memory only |

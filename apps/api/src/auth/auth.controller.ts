@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Post, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { CurrentUser, type AuthUser } from "./auth.decorators";
+import { CurrentUser, RequirePermissions, type AuthUser } from "./auth.decorators";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 
 @Controller("auth")
@@ -21,6 +21,13 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   logout(@CurrentUser() user: AuthUser) {
     return this.auth.logout(user);
+  }
+
+  @Delete("account")
+  @UseGuards(JwtAuthGuard)
+  @RequirePermissions("account:delete")
+  deleteAccount(@CurrentUser() user: AuthUser, @Body() body: unknown) {
+    return this.auth.deleteAccount(user, body);
   }
 
   @Get("me")

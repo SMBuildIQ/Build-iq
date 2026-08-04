@@ -1,5 +1,5 @@
 {
-  "appId": "app.buildiq.estimator",
+  "appId": "com.supplymonkey.buildiq",
   "appName": "BuildIQ",
   "webDir": "native-shell",
   "bundledWebRuntime": false,
@@ -19,19 +19,19 @@
   },
   "android": {
     "allowMixedContent": false,
-    "backgroundColor": "#1a1b1f",
+    "backgroundColor": "#161412",
     "webContentsDebuggingEnabled": false
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1200,
       "launchAutoHide": true,
-      "backgroundColor": "#1a1b1f",
+      "backgroundColor": "#161412",
       "showSpinner": false
     },
     "StatusBar": {
       "style": "LIGHT",
-      "backgroundColor": "#1a1b1f"
+      "backgroundColor": "#161412"
     },
     "Keyboard": {
       "resize": "body"

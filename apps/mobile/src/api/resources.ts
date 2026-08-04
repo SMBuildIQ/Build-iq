@@ -93,6 +93,16 @@ export async function register(input: {
   );
 }
 
+/** Apple 5.1.1(v) / Play — permanent account deletion. */
+export async function deleteAccount(): Promise<{ ok: boolean } | null> {
+  return tryApi(() =>
+    apiFetch<{ ok: boolean }>("/auth/account", {
+      method: "DELETE",
+      body: { confirm: "DELETE" },
+    })
+  );
+}
+
 export async function listProjects(): Promise<ProjectSummary[] | null> {
   const res = await tryApi(() =>
     apiFetch<{ projects: ProjectSummary[] }>("/projects")

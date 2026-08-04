@@ -10,10 +10,11 @@ Use these values in Apple App Store Connect and Google Play Console.
 | Privacy contact | support@supplymonkeyco.com |
 | Business address | 710 N Montezuma St, Prescott, Arizona 86302, United States |
 | Governing law | Arizona, United States |
-| Privacy Policy URL | `https://<your-production-host>/privacy` |
-| Terms URL | `https://<your-production-host>/terms` |
-| Support URL | `https://<your-production-host>/support` |
+| Privacy Policy URL | `https://app.buildiq.com/privacy` (override host in production) |
+| Terms URL | `https://app.buildiq.com/terms` |
+| Support URL | `https://app.buildiq.com/support` |
 | Marketing URL | optional |
+| Mobile app id | `com.supplymonkey.buildiq` |
 
 ## Policy status
 

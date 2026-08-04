@@ -191,13 +191,17 @@ export default function CartScreen() {
                 disabled={checkingOut}
                 onPress={() => void onCheckout()}
               />
-              <Button
-                label="Apple Pay / Google Pay"
-                variant="secondary"
-                accessibilityLabel="Apple Pay or Google Pay"
-                disabled={checkingOut}
-                onPress={() => void onCheckout()}
-              />
+              <Text
+                style={{
+                  fontFamily: "Questrial",
+                  fontSize: 12,
+                  color: theme.colors.textMuted,
+                  lineHeight: 18,
+                }}
+              >
+                Materials are physical goods billed through Stripe. Apple Pay / Google Pay become
+                available when wallet checkout is enabled for your yard.
+              </Text>
               <Button label="Clear cart" variant="ghost" onPress={clear} />
             </>
           )}
