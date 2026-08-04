@@ -1,0 +1,139 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #14201b;
+  --ink-soft: #2a3b33;
+  --paper: #f3efe6;
+  --paper-deep: #e7e0d2;
+  --copper: #c36b3a;
+  --copper-deep: #9a4f28;
+  --sage: #5f7a6a;
+  --mist: #d5e0d8;
+  --line: rgba(20, 32, 27, 0.12);
+  --glow: rgba(195, 107, 58, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "DM Sans", sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(1.5%, -1%, 0) scale(1.03);
+  }
+}
+
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 240;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.8s ease-out both;
+}
+
+.animate-rise-delay-1 {
+  animation: rise 0.8s ease-out 0.12s both;
+}
+
+.animate-rise-delay-2 {
+  animation: rise 0.8s ease-out 0.24s both;
+}
+
+.animate-drift {
+  animation: drift 18s ease-in-out infinite;
+}
+
+.blueprint-grid {
+  background-image:
+    linear-gradient(rgba(20, 32, 27, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 32, 27, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.hero-wash {
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(195, 107, 58, 0.22), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 15% 80%, rgba(95, 122, 106, 0.25), transparent 50%),
+    linear-gradient(160deg, #f7f3eb 0%, #ebe4d6 45%, #dfe8e2 100%);
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-md bg-[var(--ink)] px-5 py-3 text-sm font-semibold text-[var(--paper)] transition hover:bg-[var(--ink-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--copper)];
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-transparent px-5 py-3 text-sm font-semibold text-[var(--ink)] transition hover:border-[var(--ink)] hover:bg-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--copper)];
+}
+
+.btn-copper {
+  @apply inline-flex items-center justify-center gap-2 rounded-md bg-[var(--copper)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--copper-deep)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ink)];
+}
+
+.input-field {
+  @apply w-full rounded-md border border-[var(--line)] bg-white/70 px-3 py-2.5 text-sm text-[var(--ink)] outline-none transition placeholder:text-[var(--sage)] focus:border-[var(--copper)] focus:ring-2 focus:ring-[var(--glow)];
+}
+
+.label {
+  @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-[var(--sage)];
+}
+
+.surface {
+  @apply rounded-xl border border-[var(--line)] bg-white/55 backdrop-blur-sm;
+}
+
+.status-pill {
+  @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-medium tracking-wide;
+}

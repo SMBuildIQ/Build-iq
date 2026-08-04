@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  companyName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  projects       Project[]
+  spruceSettings SpruceSettings?
+}
+
+model Project {
+  id         String   @id @default(cuid())
+  name       String
+  address    String?
+  city       String?
+  state      String?
+  zip        String?
+  squareFeet Int?
+  stories    Int      @default(1)
+  status     String   @default("DRAFT")
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  blueprints  Blueprint[]
+  materials   MaterialItem[]
+  estimate    Estimate?
+  bidPackages BidPackage[]
+  spruceSyncs SpruceSyncLog[]
+}
+
+model Blueprint {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  sheetType    String?
+  pageCount    Int      @default(1)
+  analysisJson String?
+  createdAt    DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model MaterialItem {
+  id          String  @id @default(cuid())
+  category    String
+  trade       String
+  name        String
+  description String?
+  quantity    Float
+  unit        String
+  unitCost    Float
+  laborHours  Float   @default(0)
+  laborRate   Float   @default(0)
+  wasteFactor Float   @default(0.1)
+  spruceSku   String?
+  source      String  @default("ai")
+  confidence  Float?
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  bidPackageId String?
+  bidPackage   BidPackage? @relation(fields: [bidPackageId], references: [id], onDelete: SetNull)
+}
+
+model Estimate {
+  id              String   @id @default(cuid())
+  materialCost    Float
+  laborCost       Float
+  wasteCost       Float
+  contingencyPct  Float    @default(0.1)
+  contingencyCost Float
+  overheadPct     Float    @default(0.08)
+  overheadCost    Float
+  profitPct       Float    @default(0.12)
+  profitAmount    Float
+  taxPct          Float    @default(0.065)
+  taxAmount       Float
+  grandTotal      Float
+  version         Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model BidPackage {
+  id          String    @id @default(cuid())
+  trade       String
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      String    @default("DRAFT")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  materials MaterialItem[]
+}
+
+model SpruceSettings {
+  id            String   @id @default(cuid())
+  apiEndpoint   String?
+  soapEndpoint  String?
+  apiKey        String?
+  branchCode    String?
+  accountNumber String?
+  enabled       Boolean  @default(false)
+  mockMode      Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SpruceSyncLog {
+  id        String   @id @default(cuid())
+  action    String
+  status    String
+  detail    String?
+  payload   String?
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
