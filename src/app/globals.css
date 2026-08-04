@@ -29,7 +29,21 @@ body {
   color: var(--ink);
   background: var(--paper);
   font-family: "DM Sans", sans-serif;
-  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-shell {
+  min-height: 100dvh;
 }
 
 h1,

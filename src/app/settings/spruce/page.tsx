@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
+import { useRouter } from "next/navigation";
+import { AppShell } from "@/components/AppShell";
 import { formatCurrencyExact } from "@/lib/format";
 
 type Settings = {
@@ -26,6 +27,8 @@ type InventoryItem = {
 };
 
 export default function SpruceSettingsPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<{ name: string; companyName?: string | null } | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [mode, setMode] = useState("mock");
@@ -35,6 +38,14 @@ export default function SpruceSettingsPage() {
 
   useEffect(() => {
     (async () => {
+      const me = await fetch("/api/auth/me");
+      const meData = await me.json();
+      if (!meData.user) {
+        router.push("/login");
+        return;
+      }
+      setUser(meData.user);
+
       const res = await fetch("/api/spruce/settings");
       const data = await res.json();
       if (res.ok) setSettings(data.settings);
@@ -46,7 +57,7 @@ export default function SpruceSettingsPage() {
         setMode(invData.mode);
       }
     })();
-  }, []);
+  }, [router]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -86,145 +97,127 @@ export default function SpruceSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--paper)]">
-      <AppNav user={{ name: "You" }} />
-      <main className="mx-auto max-w-4xl px-5 py-10">
-        <Link href="/dashboard" className="text-sm text-[var(--sage)] hover:text-[var(--ink)]">
-          ← Projects
-        </Link>
-        <h1 className="mt-3 font-display text-4xl font-semibold">ECI Spruce</h1>
-        <p className="mt-2 max-w-2xl text-[var(--sage)]">
-          Connect BuildIQ to your Spruce ecommerce API for inventory pricing and quote submission.
-          Ask your ECI Implementation specialist for the endpoint URL and API key. Mock mode works
-          without credentials using the built-in catalog.
-        </p>
+    <AppShell user={user || { name: "You" }}>
+      <h1 className="font-display text-3xl font-semibold">ECI Spruce</h1>
+      <p className="mt-2 text-sm text-[var(--sage)]">
+        Connect BuildIQ to your Spruce ecommerce API. Mock mode works without credentials.
+      </p>
 
-        {settings && (
-          <form onSubmit={onSubmit} className="mt-8 space-y-4 border-t border-[var(--line)] pt-8">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="label" htmlFor="apiEndpoint">
-                  REST / API endpoint
-                </label>
-                <input
-                  id="apiEndpoint"
-                  name="apiEndpoint"
-                  className="input-field"
-                  defaultValue={settings.apiEndpoint || ""}
-                  placeholder="https://your-spruce-host/api"
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="soapEndpoint">
-                  SOAP endpoint
-                </label>
-                <input
-                  id="soapEndpoint"
-                  name="soapEndpoint"
-                  className="input-field"
-                  defaultValue={settings.soapEndpoint || ""}
-                  placeholder="https://your-spruce-host/soap"
-                />
-              </div>
-            </div>
+      {settings && (
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <div>
+            <label className="label" htmlFor="apiEndpoint">
+              REST / API endpoint
+            </label>
+            <input
+              id="apiEndpoint"
+              name="apiEndpoint"
+              className="input-field !rounded-xl !py-3"
+              defaultValue={settings.apiEndpoint || ""}
+              placeholder="https://your-spruce-host/api"
+              inputMode="url"
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="soapEndpoint">
+              SOAP endpoint
+            </label>
+            <input
+              id="soapEndpoint"
+              name="soapEndpoint"
+              className="input-field !rounded-xl !py-3"
+              defaultValue={settings.soapEndpoint || ""}
+              placeholder="https://your-spruce-host/soap"
+              inputMode="url"
+            />
+          </div>
 
+          <div>
+            <label className="label" htmlFor="apiKey">
+              API key
+            </label>
+            <input
+              id="apiKey"
+              name="apiKey"
+              className="input-field !rounded-xl !py-3"
+              defaultValue={settings.apiKey || ""}
+              placeholder={settings.hasApiKey ? "Leave blank to keep existing key" : "Provided by ECI"}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label" htmlFor="apiKey">
-                API key
+              <label className="label" htmlFor="branchCode">
+                Branch
               </label>
               <input
-                id="apiKey"
-                name="apiKey"
-                className="input-field"
-                defaultValue={settings.apiKey || ""}
-                placeholder={settings.hasApiKey ? "Leave blank to keep existing key" : "Provided by ECI"}
+                id="branchCode"
+                name="branchCode"
+                className="input-field !rounded-xl !py-3"
+                defaultValue={settings.branchCode || ""}
               />
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="label" htmlFor="branchCode">
-                  Branch code
-                </label>
-                <input
-                  id="branchCode"
-                  name="branchCode"
-                  className="input-field"
-                  defaultValue={settings.branchCode || ""}
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="accountNumber">
-                  Account number
-                </label>
-                <input
-                  id="accountNumber"
-                  name="accountNumber"
-                  className="input-field"
-                  defaultValue={settings.accountNumber || ""}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-6 pt-2">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="enabled" defaultChecked={settings.enabled} />
-                Integration enabled
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="mockMode" defaultChecked={settings.mockMode} />
-                Mock mode (no live Spruce calls)
-              </label>
-            </div>
-
-            {error && <p className="text-sm text-red-700">{error}</p>}
-            {message && <p className="text-sm text-emerald-800">{message}</p>}
-
-            <button type="submit" disabled={loading} className="btn-copper">
-              {loading ? "Saving…" : "Save connection"}
-            </button>
-          </form>
-        )}
-
-        <section className="mt-14">
-          <div className="flex items-end justify-between gap-4">
             <div>
-              <h2 className="font-display text-2xl font-semibold">Inventory preview</h2>
-              <p className="mt-1 text-sm text-[var(--sage)]">
-                Currently serving <span className="font-semibold text-[var(--ink)]">{mode}</span> catalog
-                data ({inventory.length} SKUs)
-              </p>
+              <label className="label" htmlFor="accountNumber">
+                Account #
+              </label>
+              <input
+                id="accountNumber"
+                name="accountNumber"
+                className="input-field !rounded-xl !py-3"
+                defaultValue={settings.accountNumber || ""}
+              />
             </div>
           </div>
 
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-[var(--ink)] text-xs uppercase tracking-wider text-[var(--sage)]">
-                  <th className="py-3 pr-3">SKU</th>
-                  <th className="py-3 pr-3">Description</th>
-                  <th className="py-3 pr-3">Price</th>
-                  <th className="py-3 pr-3">On hand</th>
-                  <th className="py-3">Branch</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inventory.slice(0, 12).map((item) => (
-                  <tr key={item.sku} className="border-b border-[var(--line)]">
-                    <td className="py-2 pr-3 font-mono text-xs">{item.sku}</td>
-                    <td className="py-2 pr-3">{item.description}</td>
-                    <td className="py-2 pr-3">{formatCurrencyExact(item.price)}</td>
-                    <td className="py-2 pr-3">
-                      {item.onHand} {item.unit}
-                    </td>
-                    <td className="py-2">{item.branch}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex flex-col gap-3 pt-1">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="enabled" defaultChecked={settings.enabled} className="h-4 w-4" />
+              Integration enabled
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="mockMode" defaultChecked={settings.mockMode} className="h-4 w-4" />
+              Mock mode (no live Spruce calls)
+            </label>
           </div>
-        </section>
-      </main>
-    </div>
+
+          {error && <p className="text-sm text-red-700">{error}</p>}
+          {message && <p className="text-sm text-emerald-800">{message}</p>}
+
+          <button type="submit" disabled={loading} className="btn-copper w-full !rounded-xl !py-3.5">
+            {loading ? "Saving…" : "Save connection"}
+          </button>
+        </form>
+      )}
+
+      <section className="mt-10">
+        <h2 className="font-display text-xl font-semibold">Inventory</h2>
+        <p className="mt-1 text-sm text-[var(--sage)]">
+          <span className="font-semibold text-[var(--ink)]">{mode}</span> catalog · {inventory.length} SKUs
+        </p>
+
+        <ul className="mt-4 divide-y divide-[var(--line)] rounded-2xl border border-[var(--line)] bg-white/40">
+          {inventory.slice(0, 10).map((item) => (
+            <li key={item.sku} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{item.description}</p>
+                <p className="font-mono text-xs text-[var(--sage)]">{item.sku}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="font-semibold">{formatCurrencyExact(item.price)}</p>
+                <p className="text-xs text-[var(--sage)]">
+                  {item.onHand} {item.unit}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-center text-xs text-[var(--sage)]">
+          <Link href="/dashboard" className="underline-offset-2 hover:underline">
+            Back to projects
+          </Link>
+        </p>
+      </section>
+    </AppShell>
   );
 }

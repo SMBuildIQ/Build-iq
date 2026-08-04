@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AppNav, StatusBadge } from "@/components/AppNav";
+import { AppShell } from "@/components/AppShell";
+import { StatusBadge } from "@/components/AppNav";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/format";
@@ -19,64 +20,62 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[var(--paper)]">
-      <AppNav user={user} />
-      <main className="mx-auto max-w-6xl px-5 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-[var(--sage)]">
-              {user.companyName || "Your workspace"}
-            </p>
-            <h1 className="mt-1 font-display text-4xl font-semibold text-[var(--ink)]">Projects</h1>
-          </div>
-          <Link href="/projects/new" className="btn-copper">
-            New estimate
+    <AppShell user={user}>
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--sage)]">
+            {user.companyName || "Your workspace"}
+          </p>
+          <h1 className="mt-1 font-display text-3xl font-semibold text-[var(--ink)]">Projects</h1>
+        </div>
+        <Link href="/projects/new" className="btn-copper !rounded-xl !px-3.5 !py-2.5 !text-sm">
+          New
+        </Link>
+      </div>
+
+      {projects.length === 0 ? (
+        <div className="mt-10 rounded-2xl border border-dashed border-[var(--line)] px-5 py-12 text-center">
+          <h2 className="font-display text-2xl font-semibold">No projects yet</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--sage)]">
+            Create a residential project, upload blueprints, and let BuildIQ build the takeoff.
+          </p>
+          <Link href="/projects/new" className="btn-primary mt-6 !rounded-xl">
+            Create first project
           </Link>
         </div>
-
-        {projects.length === 0 ? (
-          <div className="mt-16 border border-dashed border-[var(--line)] px-6 py-16 text-center">
-            <h2 className="font-display text-2xl font-semibold">No projects yet</h2>
-            <p className="mx-auto mt-2 max-w-md text-[var(--sage)]">
-              Create a residential project, upload blueprints, and let BuildIQ build the takeoff.
-            </p>
-            <Link href="/projects/new" className="btn-primary mt-6">
-              Create first project
-            </Link>
-          </div>
-        ) : (
-          <ul className="mt-10 divide-y divide-[var(--line)] border-y border-[var(--line)]">
-            {projects.map((p) => (
-              <li key={p.id}>
-                <Link
-                  href={`/projects/${p.id}`}
-                  className="flex flex-wrap items-center justify-between gap-4 py-5 transition hover:bg-black/[0.02]"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="font-display text-xl font-semibold text-[var(--ink)]">{p.name}</h2>
+      ) : (
+        <ul className="mt-6 space-y-3">
+          {projects.map((p) => (
+            <li key={p.id}>
+              <Link
+                href={`/projects/${p.id}`}
+                className="block rounded-2xl border border-[var(--line)] bg-white/50 p-4 transition active:scale-[0.99] hover:bg-white/80"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-display text-lg font-semibold text-[var(--ink)]">{p.name}</h2>
                       <StatusBadge status={p.status} />
                     </div>
                     <p className="mt-1 text-sm text-[var(--sage)]">
                       {[p.city, p.state].filter(Boolean).join(", ") || "Address TBD"}
                       {p.squareFeet ? ` · ${p.squareFeet.toLocaleString()} sf` : ""}
-                      {` · ${p._count.blueprints} plans · ${p._count.materials} materials · ${p._count.bidPackages} bids`}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--sage)]">
+                      {p._count.blueprints} plans · {p._count.materials} materials · {p._count.bidPackages} bids
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-display text-2xl font-semibold text-[var(--ink)]">
+                  <div className="shrink-0 text-right">
+                    <p className="font-display text-xl font-semibold text-[var(--ink)]">
                       {p.estimate ? formatCurrency(p.estimate.grandTotal) : "—"}
                     </p>
-                    <p className="text-xs uppercase tracking-wider text-[var(--sage)]">
-                      {p.estimate ? "Grand total" : "Not estimated"}
-                    </p>
                   </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </main>
-    </div>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </AppShell>
   );
 }

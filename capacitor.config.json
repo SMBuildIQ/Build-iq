@@ -1,0 +1,16 @@
+{
+  "appId": "app.buildiq.estimator",
+  "appName": "BuildIQ",
+  "webDir": "out",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#f3efe6",
+      "showSpinner": false
+    }
+  }
+}

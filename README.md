@@ -13,6 +13,14 @@ Residential construction estimating platform: blueprint upload, AI material take
 - **Excel export** — summary, takeoff, per-trade bids, Spruce SKU sheet
 - **ECI Spruce** — mock inventory/pricing/quotes by default; live SOAP stubs when credentials are configured
 
+## Mobile app
+
+BuildIQ is an **installable web app (PWA)** with a phone-first shell (bottom tabs, home-screen install).
+
+- **iPhone:** Safari → Share → Add to Home Screen  
+- **Android:** Chrome → Install app / Add to Home screen  
+- **Native wrappers:** `capacitor.config.json` is included for iOS/Android packaging against a hosted BuildIQ URL.
+
 ## Quick start
 
 ```bash

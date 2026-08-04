@@ -3,7 +3,8 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { AppNav, StatusBadge } from "@/components/AppNav";
+import { AppShell } from "@/components/AppShell";
+import { StatusBadge } from "@/components/AppNav";
 import { formatCurrency, formatCurrencyExact, formatNumber } from "@/lib/format";
 import { TRADE_ORDER } from "@/lib/materials/catalog";
 
@@ -204,38 +205,32 @@ export default function ProjectDetailPage() {
 
   if (!project && !error) {
     return (
-      <div className="min-h-screen bg-[var(--paper)]">
-        <AppNav user={{ name: "You" }} />
-        <main className="mx-auto max-w-6xl px-5 py-16 text-[var(--sage)]">Loading project…</main>
-      </div>
+      <AppShell user={{ name: "You" }}>
+        <p className="py-10 text-[var(--sage)]">Loading project…</p>
+      </AppShell>
     );
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-[var(--paper)]">
-        <AppNav user={{ name: "You" }} />
-        <main className="mx-auto max-w-6xl px-5 py-16">
-          <p className="text-red-700">{error}</p>
-          <Link href="/dashboard" className="btn-secondary mt-4">
-            Back to projects
-          </Link>
-        </main>
-      </div>
+      <AppShell user={{ name: "You" }}>
+        <p className="text-red-700">{error}</p>
+        <Link href="/dashboard" className="btn-secondary mt-4 inline-flex !rounded-xl">
+          Back to projects
+        </Link>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--paper)]">
-      <AppNav user={{ name: "You" }} />
-      <main className="mx-auto max-w-6xl px-5 py-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <AppShell user={{ name: "You" }}>
+        <div className="flex flex-col gap-4">
           <div>
             <Link href="/dashboard" className="text-sm text-[var(--sage)] hover:text-[var(--ink)]">
               ← Projects
             </Link>
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <h1 className="font-display text-4xl font-semibold text-[var(--ink)]">{project.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h1 className="font-display text-3xl font-semibold text-[var(--ink)]">{project.name}</h1>
               <StatusBadge status={project.status} />
             </div>
             <p className="mt-2 text-sm text-[var(--sage)]">
@@ -246,21 +241,21 @@ export default function ProjectDetailPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <button
               onClick={runAnalyze}
               disabled={!!busy}
-              className="btn-copper"
+              className="btn-copper !rounded-xl !py-3"
             >
               {busy === "analyze" ? "Analyzing…" : "Run AI takeoff"}
             </button>
-            <button onClick={exportExcel} disabled={!!busy || !project.materials.length} className="btn-secondary">
+            <button onClick={exportExcel} disabled={!!busy || !project.materials.length} className="btn-secondary !rounded-xl !py-3">
               {busy === "export" ? "Exporting…" : "Export Excel"}
             </button>
             <button
               onClick={() => spruceAction("submit-quote")}
               disabled={!!busy || !project.materials.length}
-              className="btn-primary"
+              className="btn-primary !rounded-xl !py-3"
             >
               {busy === "submit-quote" ? "Sending…" : "Send to Spruce"}
             </button>
@@ -492,7 +487,7 @@ export default function ProjectDetailPage() {
           </section>
         )}
 
-        <div className="pb-8">
+        <div className="pb-4">
           <button
             className="text-sm text-red-700/80 hover:text-red-800"
             onClick={async () => {
@@ -504,7 +499,6 @@ export default function ProjectDetailPage() {
             Delete project
           </button>
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }

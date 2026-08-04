@@ -1,10 +1,36 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const metadata: Metadata = {
-  title: "BuildIQ — Residential Construction Estimating",
+  title: "BuildIQ",
   description:
-    "Upload blueprints, AI takeoffs, cost estimates, subcontractor bid packages, Excel export, and ECI Spruce sync.",
+    "Residential construction estimating app — blueprints, AI takeoff, bids, Excel, ECI Spruce.",
+  applicationName: "BuildIQ",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BuildIQ",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-180.png", sizes: "180x180", type: "image/png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#14201b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -14,7 +40,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <head>
+        <link rel="apple-touch-icon" href="/icon-180.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+      </head>
+      <body className="antialiased overscroll-none">
+        {children}
+        <InstallPrompt />
+      </body>
     </html>
   );
 }
