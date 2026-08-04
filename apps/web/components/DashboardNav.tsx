@@ -19,8 +19,12 @@ export function DashboardNav() {
     <nav className="bq-nav" aria-label="Primary">
       <div className="bq-nav-inner">
         <Link href="/jobs" className="bq-nav-brand">
-          <span className="bq-nav-brand-mark">BuildIQ</span>
-          <span className="bq-nav-brand-sub">Supply Monkey</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/mark.png" alt="" className="bq-nav-logo" width={36} height={36} />
+          <span className="bq-nav-brand-text">
+            <span className="bq-nav-brand-mark">BuildIQ</span>
+            <span className="bq-nav-brand-sub">Supply Monkey</span>
+          </span>
         </Link>
         <div className="bq-nav-links">
           {LINKS.map((link) => {

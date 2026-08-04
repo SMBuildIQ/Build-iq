@@ -68,6 +68,14 @@ function LoginForm() {
   return (
     <main className="bq-login">
       <section className="bq-login-visual" aria-label="Brand">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/logo-iq.png"
+          alt="Supply Monkey IQ"
+          width={240}
+          height={96}
+          style={{ width: 200, height: "auto", marginBottom: 20 }}
+        />
         <p className="bq-label" style={{ color: "rgba(255,253,249,0.55)" }}>
           Supply Monkey Lumber & Materials Co
         </p>

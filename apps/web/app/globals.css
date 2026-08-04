@@ -163,9 +163,24 @@ img {
 
 .bq-nav-brand {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.bq-nav-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+.bq-nav-brand-text {
+  display: flex;
   flex-direction: column;
   gap: 2px;
-  flex-shrink: 0;
 }
 
 .bq-nav-brand-mark {

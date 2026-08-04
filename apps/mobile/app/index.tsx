@@ -58,7 +58,7 @@ export default function SplashIndex() {
         rootStyle,
       ]}
     >
-      <BrandMark size={72} inverse />
+      <BrandMark size={72} variant="full" inverse />
       <View
         style={{
           position: "absolute",

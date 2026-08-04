@@ -31,14 +31,14 @@ export default function MoreScreen() {
         />
 
         <View style={{ paddingHorizontal: gutter, paddingTop: theme.space[6], gap: theme.space[7] }}>
-          <View style={{ flexDirection: "row", gap: theme.space[4], alignItems: "center" }}>
-            <BrandMark size={48} />
-            <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ gap: theme.space[4] }}>
+            <BrandMark size={52} variant="full" />
+            <View style={{ gap: 4 }}>
               <Text
                 style={{
                   fontFamily: "Staatliches",
-                  fontSize: 24,
-                  letterSpacing: 0.96,
+                  fontSize: 22,
+                  letterSpacing: 0.88,
                   textTransform: "uppercase",
                   color: theme.colors.text,
                 }}

@@ -27,7 +27,7 @@ export function EmptyState({ hand, title, body, action, style }: EmptyStateProps
         style,
       ]}
     >
-      <BrandMark size={56} />
+      <BrandMark size={56} variant="full" />
       <Text
         style={{
           fontFamily: "Questrial",
