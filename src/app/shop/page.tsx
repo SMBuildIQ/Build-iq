@@ -64,17 +64,17 @@ export default function ShopPage() {
   return (
     <AppShell user={user || { name: "You" }}>
       <section className="site-topband">
-        <div className="site-topband__inner px-5 py-5">
-          <p className="site-topband__eyebrow">Supply Monkey packages</p>
-          <h1 className="mt-2 font-display text-4xl text-white">Material packages</h1>
-          <p className="mt-2 max-w-2xl text-sm text-white/78">
-            Order takeoff packages for windows, doors, lumber, trusses, cabinetry, masonry stone,
-            door hardware, and millwork.
+        <div className="site-topband__inner px-6 py-8">
+          <p className="site-topband__eyebrow">Aligned supply</p>
+          <h1 className="mt-2 font-display text-5xl text-white sm:text-6xl">Material packages</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/75">
+            Windows, doors, lumber, trusses, cabinetry, masonry, hardware, and millwork — sized from
+            takeoff and staged for delivery.
           </p>
         </div>
       </section>
 
-      <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-8 flex gap-2 overflow-x-auto pb-1">
         {["All", ...PACKAGE_CATEGORIES].map((c) => (
           <button
             key={c}
@@ -87,38 +87,46 @@ export default function ShopPage() {
         ))}
       </div>
 
-      {message && <p className="mt-3 text-sm text-emerald-800">{message}</p>}
+      {message && (
+        <p className="mt-4 text-sm font-medium text-[var(--brown-ink)]" role="status">
+          {message}
+        </p>
+      )}
 
-      <ul className="mt-6 space-y-4">
+      <ul className="mt-8 space-y-5">
         {filtered.map((pkg) => (
-          <li key={pkg.id} className="site-panel site-card-hover border-l-4 border-l-[var(--orange)] p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="site-kicker">
-                  {pkg.category}
-                </p>
-                <h2 className="mt-1 font-display text-xl font-semibold">{pkg.name}</h2>
-                <p className="mt-1 text-sm text-[var(--sage)]">{pkg.description}</p>
+          <li key={pkg.id} className="site-panel site-card-hover overflow-hidden">
+            <div className="grid gap-0 lg:grid-cols-[1.4fr_0.8fr]">
+              <div className="border-b border-[var(--line)] p-6 lg:border-b-0 lg:border-r">
+                <p className="site-kicker">{pkg.category}</p>
+                <h2 className="mt-2 font-display text-3xl text-[var(--brown-ink)]">{pkg.name}</h2>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--sage)]">{pkg.description}</p>
+                <ul className="mt-5 space-y-2 text-sm text-[var(--ink-soft)]">
+                  {pkg.contents.slice(0, 4).map((line) => (
+                    <li key={line} className="flex gap-2">
+                      <span className="mt-2 h-1 w-1 shrink-0 bg-[var(--orange)]" />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="shrink-0 text-right">
-                <p className="font-display text-xl font-semibold">{formatCurrencyExact(pkg.unitPrice)}</p>
-                <p className="text-[10px] text-[var(--sage)]">{pkg.leadDays} day lead</p>
+              <div className="flex flex-col justify-between bg-[var(--mist)]/35 p-6">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--sage)]">Package</p>
+                  <p className="price-display mt-1 text-4xl">{formatCurrencyExact(pkg.unitPrice)}</p>
+                  <p className="mt-2 text-xs text-[var(--sage)]">{pkg.leadDays}-day lead time</p>
+                  <p className="mt-4 font-mono text-[10px] tracking-wide text-[var(--ink-soft)]">
+                    {pkg.spruceSku}
+                  </p>
+                </div>
+                <button
+                  onClick={() => addToCart(pkg.id)}
+                  disabled={busyId === pkg.id}
+                  className="btn-copper mt-6 w-full !py-3 !text-sm"
+                >
+                  {busyId === pkg.id ? "Adding…" : "Add to cart"}
+                </button>
               </div>
-            </div>
-            <ul className="mt-3 space-y-1 text-xs text-[var(--ink-soft)]">
-              {pkg.contents.slice(0, 4).map((line) => (
-                <li key={line}>· {line}</li>
-              ))}
-            </ul>
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <p className="font-mono text-[10px] text-[var(--sage)]">{pkg.spruceSku}</p>
-              <button
-                onClick={() => addToCart(pkg.id)}
-                disabled={busyId === pkg.id}
-                className="btn-copper !px-4 !py-2 !text-sm"
-              >
-                {busyId === pkg.id ? "Adding…" : "Add to cart"}
-              </button>
             </div>
           </li>
         ))}

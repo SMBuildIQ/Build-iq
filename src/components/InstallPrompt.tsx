@@ -46,34 +46,34 @@ export function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-6 z-50 mx-auto max-w-md border-2 border-[var(--orange)] bg-[var(--dark)] p-4 text-white shadow-xl safe-bottom">
+    <div className="fixed inset-x-4 bottom-[5.5rem] z-40 mx-auto max-w-sm border border-white/10 bg-[var(--dark)]/95 p-3.5 text-white backdrop-blur-md safe-bottom md:bottom-6">
       <div className="flex items-start gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/mark.png" alt="" className="h-11 w-11 object-contain" />
+        <img src="/brand/mark.png" alt="" className="h-9 w-9 object-contain opacity-90" />
         <div className="min-w-0 flex-1">
-          <p className="font-display text-lg tracking-wide text-[var(--orange)]">Install BuildIQ</p>
-          <p className="mt-0.5 text-sm text-white/75">
+          <p className="font-display text-sm tracking-wide text-[var(--orange)]">Install BuildIQ</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-white/65">
             {iosHint
-              ? "Tap Share, then “Add to Home Screen” for the full app."
-              : "Add BuildIQ by Supply Monkey to your home screen."}
+              ? "Share → Add to Home Screen for the full app."
+              : "Add Supply Monkey IQ to your home screen."}
           </p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-2.5 flex gap-2">
             {!iosHint && deferred && (
               <button
-                className="btn-copper !px-3 !py-2 !text-sm"
+                className="btn-copper !px-3 !py-1.5 !text-xs"
                 onClick={async () => {
                   await deferred.prompt();
                   setVisible(false);
                 }}
               >
-                Install app
+                Install
               </button>
             )}
             <button
-              className="px-3 py-2 text-sm font-medium text-white/70"
+              className="px-2 py-1.5 text-xs font-medium text-white/55 hover:text-white"
               onClick={() => setVisible(false)}
             >
-              Not now
+              Dismiss
             </button>
           </div>
         </div>

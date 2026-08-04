@@ -243,16 +243,16 @@ export default function ProjectDetailPage() {
   return (
     <AppShell user={me || { name: "You" }}>
         <section className="site-topband">
-          <div className="site-topband__inner flex flex-col gap-4 px-5 py-5">
+          <div className="site-topband__inner flex flex-col gap-5 px-6 py-8">
           <div>
-            <Link href="/dashboard" className="text-sm text-[var(--sage)] hover:text-[var(--ink)]">
-              ← Projects
+            <Link href="/dashboard" className="text-xs uppercase tracking-[0.14em] text-white/55 hover:text-[var(--orange)]">
+              ← Jobs
             </Link>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-4xl text-white">{project.name}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-4xl text-white sm:text-5xl">{project.name}</h1>
               <StatusBadge status={project.status} />
             </div>
-            <p className="mt-2 text-sm text-white/76">
+            <p className="mt-3 text-sm leading-relaxed text-white/72">
               {[project.address, project.city, project.state, project.zip].filter(Boolean).join(", ") ||
                 "Address TBD"}
               {project.squareFeet ? ` · ${project.squareFeet.toLocaleString()} sf` : ""}

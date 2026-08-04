@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BuildIQ Screenshots</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --orange: #ff8833;
+        --brown: #5d412d;
+        --dark: #1a1b1f;
+        --paper: #f5f5f5;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Questrial, system-ui, sans-serif;
+        background: var(--paper);
+        color: var(--brown);
+      }
+      header {
+        background: linear-gradient(180deg, #1a1b1f 0%, #5d412d 100%);
+        color: white;
+        padding: 28px 20px;
+      }
+      header p { color: var(--orange); letter-spacing: 0.16em; text-transform: uppercase; font-size: 12px; margin: 0 0 8px; }
+      header h1 { margin: 0; font-family: Impact, sans-serif; letter-spacing: 0.04em; text-transform: uppercase; }
+      main { max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 28px; }
+      figure {
+        margin: 0;
+        background: white;
+        border: 1px solid rgba(93,65,45,0.16);
+        box-shadow: 0 14px 34px rgba(61,42,29,0.07);
+      }
+      figcaption {
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(93,65,45,0.12);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      img { display: block; width: 100%; height: auto; background: #ddd; }
+      a { color: var(--orange); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p>BuildIQ · Supply Monkey</p>
+      <h1>App screenshots</h1>
+    </header>
+    <main>
+      <figure>
+        <figcaption>1 · Jobs</figcaption>
+        <img src="/screenshots/dashboard.png" alt="Jobs dashboard" />
+      </figure>
+      <figure>
+        <figcaption>2 · Shop</figcaption>
+        <img src="/screenshots/shop.png" alt="Shop packages" />
+      </figure>
+      <figure>
+        <figcaption>3 · Proposals</figcaption>
+        <img src="/screenshots/proposals.png" alt="Proposals" />
+      </figure>
+      <figure>
+        <figcaption>4 · Project detail</figcaption>
+        <img src="/screenshots/project.png" alt="Project detail" />
+      </figure>
+      <p>Direct files:
+        <a href="/screenshots/dashboard.png">dashboard.png</a> ·
+        <a href="/screenshots/shop.png">shop.png</a> ·
+        <a href="/screenshots/proposals.png">proposals.png</a> ·
+        <a href="/screenshots/project.png">project.png</a>
+      </p>
+    </main>
+  </body>
+</html>

@@ -65,19 +65,19 @@ export function AppNav({
 
 export function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    DRAFT: "bg-[var(--paper-deep)] text-[var(--ink-soft)]",
-    ANALYZING: "bg-amber-100 text-amber-900",
-    ESTIMATED: "bg-emerald-100 text-emerald-900",
-    BIDDING: "bg-sky-100 text-sky-900",
-    SYNCED: "bg-[var(--mist)] text-[var(--ink)]",
-    ARCHIVED: "bg-neutral-200 text-neutral-600",
-    SENT: "bg-sky-100 text-sky-900",
-    VIEWED: "bg-violet-100 text-violet-900",
-    ACCEPTED: "bg-emerald-100 text-emerald-900",
-    AWARDED: "bg-emerald-100 text-emerald-900",
-    DECLINED: "bg-rose-100 text-rose-900",
-    EXPIRED: "bg-neutral-200 text-neutral-600",
-    SUPERSEDED: "bg-neutral-200 text-neutral-600",
+    DRAFT: "border-[var(--line-strong)] text-[var(--ink-soft)]",
+    ANALYZING: "border-[var(--orange)] text-[var(--orange-deep)]",
+    ESTIMATED: "border-[var(--brown)] text-[var(--brown-ink)]",
+    BIDDING: "border-[var(--brown-light)] text-[var(--brown)]",
+    SYNCED: "border-[var(--orange)] text-[var(--brown-ink)]",
+    ARCHIVED: "border-[var(--line)] text-[var(--sage)]",
+    SENT: "border-[var(--brown)] text-[var(--brown)]",
+    VIEWED: "border-[var(--orange)] text-[var(--orange-deep)]",
+    ACCEPTED: "border-[var(--brown-ink)] bg-[var(--mist)] text-[var(--brown-ink)]",
+    AWARDED: "border-[var(--brown-ink)] bg-[var(--mist)] text-[var(--brown-ink)]",
+    DECLINED: "border-red-300 text-red-800",
+    EXPIRED: "border-[var(--line)] text-[var(--sage)]",
+    SUPERSEDED: "border-[var(--line)] text-[var(--sage)]",
   };
 
   const labels: Record<string, string> = {

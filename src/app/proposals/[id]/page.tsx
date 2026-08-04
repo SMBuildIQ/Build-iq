@@ -187,14 +187,16 @@ export default function ProposalDetailPage() {
         </Link>
       </div>
 
-      <section className="site-topband mb-6">
-        <div className="site-topband__inner flex flex-wrap items-start justify-between gap-3 px-5 py-5">
+      <section className="site-topband mb-8">
+        <div className="site-topband__inner flex flex-wrap items-start justify-between gap-4 px-6 py-8">
           <div>
             <p className="site-topband__eyebrow">{proposal.number}</p>
-            <h1 className="mt-2 font-display text-4xl text-white">{proposal.title}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <h1 className="mt-2 max-w-xl font-display text-4xl text-white sm:text-5xl">
+              {proposal.title}
+            </h1>
+            <div className="mt-4 flex flex-wrap items-center gap-2.5">
               <StatusBadge status={proposal.status} />
-              <span className="text-xs text-white/70">v{proposal.version}</span>
+              <span className="text-xs text-white/60">v{proposal.version}</span>
               {proposal.project && (
                 <Link
                   href={`/projects/${proposal.project.id}`}
@@ -205,12 +207,13 @@ export default function ProposalDetailPage() {
               )}
             </div>
           </div>
-          <div className="text-right">
-            <p className="font-display text-3xl text-[var(--orange)]">
+          <div className="text-left sm:text-right">
+            <p className="price-display text-4xl text-[var(--orange)]">
               {formatCurrencyExact(proposal.grandTotal)}
             </p>
-            <p className="text-xs text-white/72">
-              Deposit {formatCurrencyExact(proposal.depositAmount)} ({Math.round(proposal.depositPct * 100)}%)
+            <p className="mt-1 text-xs text-white/65">
+              Deposit {formatCurrencyExact(proposal.depositAmount)} (
+              {Math.round(proposal.depositPct * 100)}%)
             </p>
           </div>
         </div>

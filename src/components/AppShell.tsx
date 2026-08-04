@@ -13,6 +13,13 @@ const tabs = [
   { href: "/orders", label: "Track", icon: PackageSearch },
 ];
 
+const headerLinks = [
+  { href: "/cabinetry", label: "Cabinetry" },
+  { href: "/agents", label: "Agents" },
+  { href: "/team", label: "Team" },
+  { href: "/settings/account", label: "Account" },
+];
+
 export function AppShell({
   user,
   children,
@@ -39,53 +46,40 @@ export function AppShell({
   }
 
   return (
-    <div className="app-shell min-h-dvh hero-wash">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[var(--dark)] text-white safe-top">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
-          <Link href={user ? "/dashboard" : "/"} className="flex min-w-0 items-center gap-2.5">
+    <div className="app-shell min-h-dvh">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[var(--dark)]/95 text-white backdrop-blur-md safe-top">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
+          <Link href={user ? "/dashboard" : "/"} className="flex min-w-0 items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/logo-iq.png" alt="IQ" className="h-9 w-auto max-w-[140px] object-contain object-left" />
+            <img
+              src="/brand/logo-iq.png"
+              alt="Supply Monkey IQ"
+              className="h-10 w-auto max-w-[150px] object-contain object-left"
+            />
             {user?.companyName ? (
-              <span className="hidden truncate text-[10px] font-medium uppercase tracking-[0.14em] text-white/70 sm:block">
+              <span className="hidden truncate border-l border-white/15 pl-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/55 sm:block">
                 {user.companyName}
               </span>
             ) : null}
           </Link>
           {user ? (
-            <div className="flex items-center gap-0.5">
-              <Link
-                href="/cabinetry"
-                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
-              >
-                Cabinetry
-              </Link>
-              <Link
-                href="/agents"
-                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
-              >
-                Agents
-              </Link>
-              <Link
-                href="/modules"
-                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
-              >
-                Modules
-              </Link>
-              <Link
-                href="/team"
-                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
-              >
-                Team
-              </Link>
-              <Link
-                href="/settings/account"
-                className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-[var(--orange)]"
-              >
-                Account
-              </Link>
+            <div className="flex items-center gap-1">
+              {headerLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`hidden px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] transition md:inline-flex ${
+                    pathname.startsWith(l.href)
+                      ? "text-[var(--orange)]"
+                      : "text-white/60 hover:text-[var(--orange)]"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              ))}
               <button
                 onClick={logout}
-                className="inline-flex items-center gap-1.5 px-2.5 py-2 text-sm text-white/70 hover:text-[var(--orange)]"
+                className="ml-1 inline-flex items-center gap-1.5 px-2.5 py-2 text-white/55 transition hover:text-[var(--orange)]"
                 aria-label="Sign out"
               >
                 <LogOut className="h-4 w-4" />
@@ -102,14 +96,16 @@ export function AppShell({
       <main
         id="main-content"
         tabIndex={-1}
-        className={`mx-auto w-full max-w-3xl px-4 py-5 outline-none ${user ? "pb-28 pt-6" : "pb-10"}`}
+        className={`relative z-[1] mx-auto w-full max-w-5xl px-4 outline-none sm:px-6 ${
+          user ? "pb-28 pt-8" : "pb-10 pt-6"
+        }`}
       >
         {children}
       </main>
 
       {user && (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-white/98 backdrop-blur safe-bottom">
-          <ul className="mx-auto grid max-w-3xl grid-cols-5">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--paper)]/95 backdrop-blur-md safe-bottom">
+          <ul className="mx-auto grid max-w-5xl grid-cols-5">
             {tabs.map((tab) => {
               const active =
                 pathname === tab.href ||
@@ -120,15 +116,20 @@ export function AppShell({
                   <Link
                     href={tab.href}
                     aria-current={active ? "page" : undefined}
-                    className={`relative flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
-                      active ? "bg-[var(--mist)] text-[var(--orange-deep)]" : "text-[var(--sage)]"
+                    className={`relative flex min-h-[4.25rem] flex-col items-center justify-center gap-1.5 px-1 py-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] transition ${
+                      active
+                        ? "text-[var(--orange-deep)]"
+                        : "text-[var(--sage)] hover:text-[var(--brown)]"
                     }`}
                   >
+                    {active && (
+                      <span className="absolute inset-x-6 top-0 h-0.5 bg-[var(--orange)]" />
+                    )}
                     <Icon className={`h-5 w-5 ${active ? "stroke-[2.25]" : ""}`} />
                     {tab.label}
                     {tab.href === "/cart" && cartCount > 0 && (
                       <span
-                        className="absolute right-[18%] top-1.5 flex h-4 min-w-4 items-center justify-center bg-[var(--orange)] px-1 text-[9px] text-white"
+                        className="absolute right-[22%] top-2 flex h-4 min-w-4 items-center justify-center bg-[var(--orange)] px-1 text-[9px] text-white"
                         aria-label={`${cartCount} items in cart`}
                       >
                         {cartCount}
@@ -157,14 +158,14 @@ export function MarketingShell({
       <header
         className={`safe-top ${
           transparent
-            ? "absolute inset-x-0 top-0 z-20 border-b border-white/10 bg-black/25 backdrop-blur-md"
-            : "border-b border-[var(--line)] bg-[var(--dark)]"
+            ? "absolute inset-x-0 top-0 z-20 border-b border-white/10 bg-black/20 backdrop-blur-md"
+            : "border-b border-white/10 bg-[var(--dark)]"
         }`}
       >
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/logo-iq.png" alt="Supply Monkey IQ" className="h-10 w-auto" />
+            <img src="/brand/logo-iq.png" alt="Supply Monkey IQ" className="h-11 w-auto" />
           </Link>
           <div className="flex items-center gap-2">
             <Link
@@ -173,36 +174,38 @@ export function MarketingShell({
             >
               Sign in
             </Link>
-            <Link href="/signup" className="btn-copper !px-3.5 !py-2 !text-sm">
+            <Link href="/signup" className="btn-copper !px-4 !py-2.5 !text-sm">
               Signup
             </Link>
           </div>
         </div>
       </header>
       {children}
-      <footer className="border-t border-[var(--line)] bg-[var(--dark)] px-4 py-8 text-center text-xs text-white/70">
+      <footer className="border-t border-white/10 bg-[var(--dark)] px-4 py-12 text-center text-xs text-white/65">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/logo-iq.png" alt="" className="mx-auto mb-4 h-12 w-auto opacity-95" />
-        <p className="mb-2 font-display text-sm tracking-wide text-[var(--orange)]">
+        <img src="/brand/logo-iq.png" alt="" className="mx-auto mb-5 h-14 w-auto opacity-95" />
+        <p className="mb-2 font-display text-base tracking-wide text-[var(--orange)]">
           BuildIQ · Supply Monkey Lumber &amp; Materials Co
         </p>
-        <p className="mb-3">710 N Montezuma St, Prescott, Arizona 86302</p>
-        <Link href="/privacy" className="hover:text-[var(--orange)]">
-          Privacy (Draft)
-        </Link>
-        {" · "}
-        <Link href="/terms" className="hover:text-[var(--orange)]">
-          Terms (Draft)
-        </Link>
-        {" · "}
-        <Link href="/support" className="hover:text-[var(--orange)]">
-          Support
-        </Link>
-        {" · "}
-        <a href="https://supplymonkeyco.com" className="hover:text-[var(--orange)]" target="_blank" rel="noreferrer">
-          supplymonkeyco.com
-        </a>
-        <p className="mx-auto mt-3 max-w-md text-[10px] leading-relaxed text-white/50">
+        <p className="mb-4">710 N Montezuma St, Prescott, Arizona 86302</p>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          <Link href="/privacy" className="hover:text-[var(--orange)]">
+            Privacy (Draft)
+          </Link>
+          <span>·</span>
+          <Link href="/terms" className="hover:text-[var(--orange)]">
+            Terms (Draft)
+          </Link>
+          <span>·</span>
+          <Link href="/support" className="hover:text-[var(--orange)]">
+            Support
+          </Link>
+          <span>·</span>
+          <a href="https://supplymonkeyco.com" className="hover:text-[var(--orange)]" target="_blank" rel="noreferrer">
+            supplymonkeyco.com
+          </a>
+        </div>
+        <p className="mx-auto mt-4 max-w-md text-[10px] leading-relaxed text-white/40">
           Legal pages are drafts requiring attorney review and are not final published policies.
         </p>
       </footer>
