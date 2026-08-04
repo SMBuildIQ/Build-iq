@@ -101,8 +101,8 @@ export function BuildIqWordmark({
             zIndex: 2,
             width: bananaSize,
             alignItems: "center",
+            pointerEvents: "none",
           }}
-          pointerEvents="none"
         >
           <BananaPeel size={bananaSize} />
         </View>

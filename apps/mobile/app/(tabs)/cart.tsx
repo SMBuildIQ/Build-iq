@@ -55,7 +55,7 @@ export default function CartScreen() {
           tone="cart"
           eyebrow="Checkout"
           title="Cart"
-          supporting="Tax estimated for Texas yard pickup or delivery."
+          supporting="Tax estimated for Arizona yard pickup or delivery."
         />
 
         <View style={{ paddingHorizontal: gutter, paddingTop: theme.space[5], flex: 1, gap: theme.space[4] }}>

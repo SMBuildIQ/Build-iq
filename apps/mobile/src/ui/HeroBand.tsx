@@ -71,7 +71,6 @@ export function HeroBand({
         />
       ) : null}
       <View
-        pointerEvents="none"
         style={{
           position: "absolute",
           top: 0,
@@ -79,6 +78,7 @@ export function HeroBand({
           bottom: 0,
           left: 0,
           backgroundColor: "rgba(22,20,18,0.72)",
+          pointerEvents: "none",
         }}
       />
       <View
