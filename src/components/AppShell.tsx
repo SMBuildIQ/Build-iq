@@ -43,21 +43,12 @@ export function AppShell({
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <Link href={user ? "/dashboard" : "/"} className="flex min-w-0 items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/mark.png" alt="" className="h-9 w-9 object-contain" />
-            <span className="truncate">
-              <span className="block font-display text-lg leading-none tracking-wide text-[var(--orange)]">
-                BuildIQ
+            <img src="/brand/logo-iq.png" alt="IQ" className="h-9 w-auto max-w-[140px] object-contain object-left" />
+            {user?.companyName ? (
+              <span className="hidden truncate text-[10px] font-medium uppercase tracking-[0.14em] text-white/70 sm:block">
+                {user.companyName}
               </span>
-              {user?.companyName ? (
-                <span className="mt-0.5 block truncate text-[10px] font-medium uppercase tracking-[0.14em] text-white/70">
-                  {user.companyName}
-                </span>
-              ) : (
-                <span className="mt-0.5 block truncate text-[10px] uppercase tracking-[0.14em] text-white/60">
-                  Supply Monkey
-                </span>
-              )}
-            </span>
+            ) : null}
           </Link>
           {user ? (
             <div className="flex items-center gap-0.5">

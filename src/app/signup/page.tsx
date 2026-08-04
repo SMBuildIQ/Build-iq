@@ -55,7 +55,7 @@ function SignupForm() {
     <MarketingShell>
       <main id="main-content" className="mx-auto max-w-md px-4 py-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/mark.png" alt="" className="h-12 w-12 object-contain" />
+        <img src="/brand/logo-iq.png" alt="" className="h-12 w-auto object-contain" />
         <p className="mt-4 font-hand text-xl text-[var(--orange)]">
           {inviteCode ? "Join your builder team" : "For residential builders"}
         </p>

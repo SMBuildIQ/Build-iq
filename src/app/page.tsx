@@ -21,9 +21,9 @@ export default async function HomePage() {
           <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center px-4 pb-16 pt-10 text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/brand/logo-vertical.png"
-              alt="Supply Monkey Lumber & Materials Co"
-              className="animate-rise h-14 w-auto sm:h-16"
+              src="/brand/logo-iq.png"
+              alt="Supply Monkey IQ"
+              className="animate-rise h-16 w-auto sm:h-20"
             />
             <p className="font-hand animate-rise-delay-1 mt-6 text-2xl text-[var(--orange)] sm:text-3xl">
               No more monkey business

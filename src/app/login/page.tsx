@@ -37,7 +37,7 @@ export default function LoginPage() {
     <MarketingShell>
       <main id="main-content" className="mx-auto max-w-md px-4 py-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/mark.png" alt="" className="mx-auto h-16 w-16 object-contain" />
+        <img src="/brand/logo-iq.png" alt="" className="mx-auto h-16 w-auto object-contain" />
         <h1 className="mt-6 text-center font-display text-4xl text-[var(--orange)]">Welcome back</h1>
         <p className="mt-2 text-center text-sm text-[var(--sage)]">
           Sign in to BuildIQ by Supply Monkey
