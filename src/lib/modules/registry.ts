@@ -33,6 +33,13 @@ export const PLATFORM_MODULES: PlatformModule[] = [
   { slug: "warranty", name: "Warranty management", status: "PLANNED", description: "Post-close warranty tickets." },
   { slug: "notifications", name: "Notifications", status: "PLANNED", description: "In-app, email, and push preferences." },
   { slug: "ai-assistant", name: "AI assistant", status: "PARTIAL", description: "Bot pipeline after upload; conversational assistant planned." },
+  {
+    slug: "cabinetry",
+    name: "AI Cabinetry Proposals",
+    status: "PLANNED",
+    description:
+      "Opportunities, AI extraction, catalog pricing, proposals, deposits — see CABINETRY_INTEGRATION_AUDIT.md. Not started pending plan approval.",
+  },
   { slug: "company-settings", name: "Company settings and permissions", status: "PARTIAL", description: "Team invites and RBAC; deeper settings planned." },
 ];
 

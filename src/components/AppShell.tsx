@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FolderKanban, ShoppingBag, ShoppingCart, PackageSearch, LogOut } from "lucide-react";
+import { FolderKanban, ShoppingBag, ShoppingCart, PackageSearch, LogOut, Boxes } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const tabs = [
   { href: "/dashboard", label: "Jobs", icon: FolderKanban },
+  { href: "/cabinetry", label: "Cabinetry", icon: Boxes },
   { href: "/shop", label: "Shop", icon: ShoppingBag },
   { href: "/cart", label: "Cart", icon: ShoppingCart },
   { href: "/orders", label: "Track", icon: PackageSearch },
@@ -96,7 +97,7 @@ export function AppShell({
 
       {user && (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-white safe-bottom">
-          <ul className="mx-auto grid max-w-3xl grid-cols-4">
+          <ul className="mx-auto grid max-w-3xl grid-cols-5">
             {tabs.map((tab) => {
               const active =
                 pathname === tab.href ||
