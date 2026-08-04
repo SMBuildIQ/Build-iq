@@ -54,6 +54,8 @@ function collectWords(blocks: TessBlock[] | undefined): OcrBlock[] {
 export async function runOcrOnImage(png: Buffer): Promise<OcrResult> {
   const worker = await createWorker("eng", 1, {
     logger: () => undefined,
+    // Keep language data out of the repo root
+    cachePath: process.env.TESSDATA_PREFIX || "/tmp/buildiq-tessdata",
   });
 
   try {
