@@ -78,6 +78,21 @@ export async function login(
   );
 }
 
+export async function register(input: {
+  name: string;
+  email: string;
+  password: string;
+  companyName: string;
+}): Promise<{ token: string; user: UserSession } | null> {
+  return tryApi(() =>
+    apiFetch<{ token: string; user: UserSession }>("/auth/register", {
+      method: "POST",
+      body: input,
+      auth: false,
+    })
+  );
+}
+
 export async function listProjects(): Promise<ProjectSummary[] | null> {
   const res = await tryApi(() =>
     apiFetch<{ projects: ProjectSummary[] }>("/projects")

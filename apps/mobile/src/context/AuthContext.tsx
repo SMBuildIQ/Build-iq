@@ -10,7 +10,7 @@ import React, {
 import type { UserSession } from "@buildiq/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch, setToken } from "../api/client";
-import { login as apiLogin } from "../api/resources";
+import { login as apiLogin, register as apiRegister } from "../api/resources";
 import { MOCK_SESSION } from "../data/mock";
 
 const AUTH_KEY = "buildiq.session";
@@ -19,6 +19,12 @@ type AuthContextValue = {
   session: UserSession | null;
   bootstrapped: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (input: {
+    name: string;
+    email: string;
+    password: string;
+    companyName: string;
+  }) => Promise<void>;
   signOut: () => Promise<void>;
   signInDemo: () => Promise<void>;
 };
@@ -62,6 +68,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist]
   );
 
+  const signUp = useCallback(
+    async (input: { name: string; email: string; password: string; companyName: string }) => {
+      const res = await apiRegister(input);
+      if (res) {
+        await persist(res.user, res.token);
+        return;
+      }
+      await persist(
+        {
+          ...MOCK_SESSION,
+          id: "user_new",
+          email: input.email,
+          name: input.name,
+          companyName: input.companyName,
+          role: "OWNER",
+        },
+        "demo-token"
+      );
+    },
+    [persist]
+  );
+
   const signInDemo = useCallback(async () => {
     await persist(MOCK_SESSION, "demo-token");
   }, [persist]);
@@ -76,8 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [persist]);
 
   const value = useMemo(
-    () => ({ session, bootstrapped, signIn, signOut, signInDemo }),
-    [session, bootstrapped, signIn, signOut, signInDemo]
+    () => ({ session, bootstrapped, signIn, signUp, signOut, signInDemo }),
+    [session, bootstrapped, signIn, signUp, signOut, signInDemo]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
-import { Redirect, router } from "expo-router";
+import { Redirect, router, type Href } from "expo-router";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -113,6 +113,12 @@ export default function LoginScreen() {
         error={error}
       />
       <Button label={loading ? "Signing in…" : "Sign in"} onPress={onSubmit} disabled={loading} />
+      <Button
+        label="Create account"
+        variant="secondary"
+        accessibilityLabel="Create account"
+        onPress={() => router.push("/(auth)/signup" as Href)}
+      />
       <View style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.space[3] }}>
         <Pressable accessibilityRole="button" onPress={() => undefined}>
           <Text style={{ fontFamily: "Questrial", fontSize: 14, color: theme.colors.textSecondary }}>
