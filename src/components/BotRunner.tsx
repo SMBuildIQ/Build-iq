@@ -26,6 +26,7 @@ export function BotRunner({ open, projectId, onClose, onComplete }: Props) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
   const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
+  const [runId, setRunId] = useState<string | null>(null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
@@ -45,6 +46,7 @@ export function BotRunner({ open, projectId, onClose, onComplete }: Props) {
     setDone(false);
     setError("");
     setSummary(null);
+    setRunId(null);
 
     const controller = new AbortController();
     let finished = false;
@@ -54,6 +56,8 @@ export function BotRunner({ open, projectId, onClose, onComplete }: Props) {
       if (event.message) {
         setLog((prev) => [...prev.slice(-40), event.message]);
       }
+      const rid = event.data?.runId;
+      if (typeof rid === "string") setRunId(rid);
 
       if (event.bot) {
         setBots((prev) =>
@@ -82,16 +86,20 @@ export function BotRunner({ open, projectId, onClose, onComplete }: Props) {
 
     (async () => {
       try {
-        const res = await fetch(`/api/projects/${projectId}/bots`, {
+        const res = await fetch(`/api/projects/${projectId}/orchestrate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fillCart: true, syncSpruce: true }),
+          body: JSON.stringify({
+            fillCart: true,
+            syncSpruce: true,
+            workflowId: "estimating-pipeline",
+          }),
           signal: controller.signal,
         });
 
         if (!res.ok || !res.body) {
           const data = await res.json().catch(() => ({}));
-          setError(data.error || "Could not start AI bots");
+          setError(data.error || "Could not start AI orchestration");
           return;
         }
 
@@ -119,7 +127,7 @@ export function BotRunner({ open, projectId, onClose, onComplete }: Props) {
         }
       } catch (err) {
         if ((err as Error).name !== "AbortError") {
-          setError(err instanceof Error ? err.message : "Bot stream failed");
+          setError(err instanceof Error ? err.message : "Orchestration stream failed");
         }
       }
     })();
@@ -135,13 +143,21 @@ export function BotRunner({ open, projectId, onClose, onComplete }: Props) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--copper-deep)]">
-              AI crew
+              AI Agent Orchestration
             </p>
             <h2 className="mt-1 font-display text-2xl font-semibold">
-              {done ? "All bots finished" : "Bots streamlining your job"}
+              {done ? "Workflow complete" : "Orchestrating agents"}
             </h2>
             <p className="mt-1 text-sm text-[var(--sage)]">
-              Takeoff → estimate → bids → packages → Spruce — hands-free after plans upload.
+              Plan Reader → Takeoff → Estimate → Bids → Packages → Spruce → Briefing
+              {runId ? (
+                <>
+                  {" · "}
+                  <Link href={`/agents?run=${runId}`} className="text-[var(--copper-deep)] underline-offset-2 hover:underline">
+                    Run {runId.slice(0, 8)}
+                  </Link>
+                </>
+              ) : null}
             </p>
           </div>
           {(done || error) && (

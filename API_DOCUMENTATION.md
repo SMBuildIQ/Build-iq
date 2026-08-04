@@ -34,7 +34,10 @@ Base: same origin `/api/*`. Auth: HTTP-only cookie `buildiq_session` (JWT).
 | POST | `/api/projects/:id/blueprints/:bid/scan` | estimate:run (OCR + vision) |
 | GET/POST/DELETE | `/api/projects/:id/blueprints/:bid/measurements` | read / estimate:run |
 | POST | `/api/projects/:id/analyze` | estimate:run |
-| GET | `/api/projects/:id/bots` | estimate:run (SSE) |
+| GET | `/api/projects/:id/bots` | estimate:run (SSE) — orchestration-backed |
+| POST | `/api/projects/:id/orchestrate` | estimate:run (SSE) preferred orchestration entry |
+| GET | `/api/orchestration` | project:read — agents, workflows, recent runs |
+| GET | `/api/orchestration/runs/:runId` | project:read |
 | POST | `/api/projects/:id/estimate` | estimate:run |
 | GET/PATCH | `/api/projects/:id/bids` | bid:manage |
 | GET | `/api/projects/:id/export` | project:read |

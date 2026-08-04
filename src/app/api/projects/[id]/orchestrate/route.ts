@@ -1,57 +1,45 @@
-import { NextRequest } from "next/server";
-import { AuthError, ensureOwnedProject, ForbiddenError, getSession } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { ensureOwnedProject, jsonError } from "@/lib/auth";
 import { requirePermission } from "@/lib/require-permission";
-import { BOT_ROSTER, type BotEvent } from "@/lib/ai/bots";
 import { runOrchestration } from "@/lib/ai/orchestration/orchestrator";
+import type { BotEvent } from "@/lib/ai/bots-client";
 import { AGENT_REGISTRY, WORKFLOWS } from "@/lib/ai/orchestration/registry";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: NextRequest, _ctx: Ctx) {
-  const user = await getSession();
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+/** Agent roster + workflows for this project context */
+export async function GET(_req: NextRequest, ctx: Ctx) {
+  try {
+    const user = await requirePermission("project:read");
+    const { id } = await ctx.params;
+    await ensureOwnedProject(id, user.companyId);
+    return NextResponse.json({
+      agents: AGENT_REGISTRY,
+      workflows: WORKFLOWS,
+      defaultWorkflowId: "estimating-pipeline",
+    });
+  } catch (error) {
+    return jsonError(error);
   }
-  return Response.json({
-    bots: BOT_ROSTER,
-    agents: AGENT_REGISTRY,
-    workflows: WORKFLOWS,
-    orchestration: true,
-  });
 }
 
 /**
- * SSE stream — AI Agent Orchestration (persisted run) for the estimating pipeline.
- * Kept at /bots for backward compatibility; preferred path is /orchestrate.
+ * SSE — AI Agent Orchestration run for the project.
+ * Persists AgentRun / AgentStep and streams the same BotEvent shape as /bots.
  */
 export async function POST(req: NextRequest, ctx: Ctx) {
   let user;
   try {
     user = await requirePermission("estimate:run");
   } catch (error) {
-    if (error instanceof AuthError) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    if (error instanceof ForbiddenError) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    throw error;
+    return jsonError(error);
   }
 
   const { id } = await ctx.params;
   try {
     await ensureOwnedProject(id, user.companyId);
-  } catch {
-    return new Response(JSON.stringify({ error: "Project not found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+  } catch (error) {
+    return jsonError(error);
   }
 
   const body = await req.json().catch(() => ({}));
@@ -67,7 +55,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       };
 
       try {
-        await runOrchestration({
+        const result = await runOrchestration({
           companyId: user.companyId,
           projectId: id,
           startedById: user.id,
@@ -76,10 +64,19 @@ export async function POST(req: NextRequest, ctx: Ctx) {
           syncSpruce,
           emit: send,
         });
+
+        if (result.status === "FAILED" && result.error) {
+          // Ensure clients that missed step errors still close cleanly
+          send({
+            type: "error",
+            message: result.error,
+            data: { runId: result.runId },
+          });
+        }
       } catch (err) {
         send({
           type: "error",
-          message: err instanceof Error ? err.message : "Bot pipeline failed",
+          message: err instanceof Error ? err.message : "Orchestration failed",
         });
       } finally {
         controller.close();

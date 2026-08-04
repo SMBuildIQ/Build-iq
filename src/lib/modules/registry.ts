@@ -34,6 +34,13 @@ export const PLATFORM_MODULES: PlatformModule[] = [
   { slug: "notifications", name: "Notifications", status: "PLANNED", description: "In-app, email, and push preferences." },
   { slug: "ai-assistant", name: "AI assistant", status: "PARTIAL", description: "Bot pipeline after upload; conversational assistant planned." },
   {
+    slug: "ai-orchestration",
+    name: "AI Agent Orchestration",
+    status: "FULL",
+    description:
+      "Multi-agent workflows with AgentRun/AgentStep persistence, registry, and SSE streaming.",
+  },
+  {
     slug: "cabinetry",
     name: "AI Cabinetry Proposals",
     status: "PLANNED",

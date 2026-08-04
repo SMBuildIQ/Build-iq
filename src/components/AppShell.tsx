@@ -54,6 +54,12 @@ export function AppShell({
           {user ? (
             <div className="flex items-center gap-0.5">
               <Link
+                href="/agents"
+                className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"
+              >
+                Agents
+              </Link>
+              <Link
                 href="/modules"
                 className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"
               >

@@ -27,9 +27,10 @@ Legend: **FULL** = usable in production paths · **PARTIAL** = real code but inc
 | 21 | Punch lists | NONE | — |
 | 22 | Warranty management | NONE | — |
 | 23 | Notifications | NONE | No in-app / push / email system |
-| 24 | AI assistant | PARTIAL | Bot pipeline with OCR/vision scan; not conversational |
-| 25 | AI Cabinetry Proposals | PLANNED | Audit complete — CABINETRY_INTEGRATION_AUDIT.md; no schema yet |
-| 26 | Company settings and team permissions | PARTIAL | Invites + Spruce + account; roles mostly labels |
+| 24 | AI assistant | PARTIAL | Bot pipeline after upload; conversational assistant planned |
+| 25 | AI Agent Orchestration | FULL | Registry, workflows, AgentRun/AgentStep, SSE, `/agents` UI |
+| 26 | AI Cabinetry Proposals | PLANNED | Audit complete — CABINETRY_INTEGRATION_AUDIT.md; no schema yet |
+| 27 | Company settings and team permissions | PARTIAL | Invites + Spruce + account; roles mostly labels |
 
 ## Related commerce (not in the 25)
 

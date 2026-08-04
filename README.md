@@ -48,9 +48,21 @@ See **[store/STORE_COMPLIANCE.md](store/STORE_COMPLIANCE.md)** for Apple/Google 
 
 In-app: Privacy `/privacy` · Terms `/terms` · Support `/support` · Account deletion `/settings/account`
 
+## AI Agent Orchestration
+
+BuildIQ runs multi-agent workflows through a persisted orchestrator:
+
+- **Registry** — `src/lib/ai/orchestration/registry.ts` (agents + workflows)
+- **Engine** — `src/lib/ai/orchestration/orchestrator.ts` (`AgentRun` / `AgentStep`)
+- **UI** — `/agents` (registry + run history); project **Run AI bots** streams via `/api/projects/:id/orchestrate`
+
+Default workflow: `estimating-pipeline` (Plan Reader → Takeoff → Estimate → Bids → Packages → Spruce → Briefing).
+
+Cabinetry agents are registered as **planned** and do not execute until that module ships.
+
 ## AI bots
 
-After a builder uploads plans, the AI crew runs automatically:
+After a builder uploads plans, the orchestrator runs the estimating crew automatically:
 
 1. **Plan Reader** — rasterize sheets, OCR + drawing vision  
 2. **Takeoff Bot** — vision-grounded materials & quantities  

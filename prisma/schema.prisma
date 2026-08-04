@@ -374,6 +374,55 @@ model AuditLog {
   @@index([actorUserId, createdAt])
 }
 
+/// Persisted AI agent orchestration run (multi-agent workflow).
+model AgentRun {
+  id          String    @id @default(cuid())
+  /// e.g. estimating-pipeline
+  workflowId  String
+  status      String    @default("PENDING") // PENDING | RUNNING | COMPLETED | FAILED | CANCELLED
+  progress    Int       @default(0)
+  inputJson   String?
+  resultJson  String?
+  error       String?
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  companyId   String
+  projectId   String?
+  startedById String?
+
+  steps AgentStep[]
+
+  @@index([companyId, createdAt])
+  @@index([projectId, createdAt])
+  @@index([status, createdAt])
+}
+
+model AgentStep {
+  id         String    @id @default(cuid())
+  agentId    String
+  agentName  String
+  status     String    @default("PENDING") // PENDING | RUNNING | COMPLETED | FAILED | SKIPPED
+  progress   Int       @default(0)
+  message    String?
+  inputJson  String?
+  outputJson String?
+  error      String?
+  sortOrder  Int       @default(0)
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  runId String
+  run   AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, sortOrder])
+  @@index([agentId, status])
+}
+
 /// Planned construction modules — schema placeholders for future implementation.
 /// Do not expose fake CRUD; APIs return planned status until built.
 model ModuleRegistry {
