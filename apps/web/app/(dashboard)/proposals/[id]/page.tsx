@@ -32,6 +32,7 @@ export default async function ProposalDetailPage({ params }: Props) {
   return (
     <>
       <HeroBand
+        tone="proposalDetail"
         eyebrow={summary.customerName ?? "Proposal"}
         title={summary.number}
         support={summary.title}

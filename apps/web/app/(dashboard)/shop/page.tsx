@@ -39,6 +39,7 @@ export default function ShopPage() {
   return (
     <>
       <HeroBand
+        tone="shop"
         eyebrow="Yard packages"
         title="Shop"
         support="Material packages sized for the job — add to cart with one click."

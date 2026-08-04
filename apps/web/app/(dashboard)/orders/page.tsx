@@ -47,6 +47,7 @@ export default async function OrdersPage() {
   return (
     <>
       <HeroBand
+        tone="orders"
         eyebrow="Fulfillment"
         title="Orders"
         support="Track yard picks and deliveries from package checkout through site drop."

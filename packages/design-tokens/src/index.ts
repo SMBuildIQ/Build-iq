@@ -60,3 +60,7 @@ export function cssVariables(mode: ColorMode = "light") {
   lines.push(`  --bq-motion-ease: ${tokens.motion.easing};`);
   return `:root, [data-theme="${mode}"] {\n${lines.join("\n")}\n}\n`;
 }
+
+export { HERO_PHOTOS, heroPhoto } from "./heroPhotos";
+export type { HeroTone } from "./heroPhotos";
+

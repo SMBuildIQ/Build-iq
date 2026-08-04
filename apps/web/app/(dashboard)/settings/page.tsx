@@ -29,6 +29,7 @@ export default function SettingsPage() {
   return (
     <>
       <HeroBand
+        tone="settings"
         eyebrow="Account"
         title="Settings"
         support="Team, company, Spruce sync, and agent preferences — same chrome, utility pace."

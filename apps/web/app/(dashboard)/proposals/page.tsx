@@ -23,6 +23,7 @@ export default async function ProposalsPage() {
   return (
     <>
       <HeroBand
+        tone="proposals"
         eyebrow="Customer-facing"
         title="Proposals"
         support="Compose packages from job takeoffs — PDF, send, and track acceptance."

@@ -38,6 +38,7 @@ export default async function JobDetailPage({ params }: Props) {
   return (
     <>
       <HeroBand
+        tone="jobDetail"
         eyebrow={formatAddress(project.address, project.city, project.state)}
         title={project.name}
         support={`${formatSf(project.squareFeet)} · ${project.stories} stor${project.stories === 1 ? "y" : "ies"}`}

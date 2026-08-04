@@ -54,6 +54,7 @@ export default function ShopScreen() {
         showsVerticalScrollIndicator={false}
       >
         <HeroBand
+          tone="shop"
           eyebrow="Supply Monkey yard"
           title="Material packages"
           supporting="Curated bundles ready for estimate attach and checkout."

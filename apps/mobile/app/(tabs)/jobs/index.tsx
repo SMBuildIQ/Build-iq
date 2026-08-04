@@ -177,6 +177,7 @@ export default function JobsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <HeroBand
+          tone="jobs"
           eyebrow={session?.companyName ?? "Supply Monkey"}
           title="Jobs"
           supporting="Estimates, takeoffs, and bids for every active project."

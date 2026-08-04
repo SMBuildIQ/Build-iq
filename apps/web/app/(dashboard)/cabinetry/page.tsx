@@ -32,6 +32,7 @@ export default async function CabinetryPage() {
   return (
     <>
       <HeroBand
+        tone="cabinetry"
         eyebrow="Millwork studio"
         title="Cabinetry"
         support="Opportunities, product lines, and proposal handoff for cabinetry sales."

@@ -25,6 +25,7 @@ export default function MoreScreen() {
         showsVerticalScrollIndicator={false}
       >
         <HeroBand
+          tone="account"
           eyebrow="Account"
           title="More"
           supporting="Company settings and appearance."

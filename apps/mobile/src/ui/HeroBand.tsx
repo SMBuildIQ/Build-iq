@@ -1,35 +1,38 @@
 import React, { type ReactNode } from "react";
 import { Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { Image } from "expo-image";
+import { heroPhoto, type HeroTone } from "@buildiq/design-tokens";
 import { useTheme } from "./ThemeContext";
-
-/** Warm lumber stack — desaturated yard photo for Millwork Studio heroes. */
-export const HERO_LUMBER_URI =
-  "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=60";
 
 type HeroBandProps = {
   eyebrow: string;
   title: string;
   supporting?: string;
   action?: ReactNode;
+  /** Theme photo matched to Supply Monkey site content */
+  tone?: HeroTone;
   /** Full-bleed photo behind scrim. Defaults on. */
   showPhoto?: boolean;
+  /** Override URI when needed */
   imageUri?: string;
   style?: StyleProp<ViewStyle>;
 };
 
-/** Dark hero band with optional lumber photo, scrim, and orange 3px rule. */
+/** Dark hero band with page-specific stock photo, scrim, and orange 3px rule. */
 export function HeroBand({
   eyebrow,
   title,
   supporting,
   action,
+  tone = "jobs",
   showPhoto = true,
-  imageUri = HERO_LUMBER_URI,
+  imageUri,
   style,
 }: HeroBandProps) {
   const { theme, gutter } = useTheme();
   const base = theme.mode === "dark" ? theme.colors.inverseLift : "#161412";
+  const photo = heroPhoto(tone);
+  const uri = imageUri ?? photo.uri;
 
   return (
     <View
@@ -48,11 +51,12 @@ export function HeroBand({
     >
       {showPhoto ? (
         <Image
-          source={{ uri: imageUri }}
+          source={{ uri }}
           style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
           contentFit="cover"
           transition={theme.motion.enter as number}
           accessibilityIgnoresInvertColors
+          accessibilityLabel={photo.alt}
         />
       ) : null}
       <View

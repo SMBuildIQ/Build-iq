@@ -22,6 +22,7 @@ export default async function JobsPage() {
   return (
     <>
       <HeroBand
+        tone="jobs"
         eyebrow={session.companyName ?? "Your company"}
         title="Jobs"
         support="Plans, takeoffs, and bids — one millwork-grade ledger for every active project."

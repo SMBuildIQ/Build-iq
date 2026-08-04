@@ -46,6 +46,21 @@ export declare function nativeTheme(mode?: ColorMode): {
 };
 export type NativeTheme = ReturnType<typeof nativeTheme>;
 export declare function cssVariables(mode?: ColorMode): string;
+export type HeroTone =
+  | "jobs"
+  | "jobDetail"
+  | "proposals"
+  | "proposalDetail"
+  | "shop"
+  | "cart"
+  | "track"
+  | "orders"
+  | "account"
+  | "cabinetry"
+  | "settings"
+  | "login";
+export declare const HERO_PHOTOS: Record<HeroTone, { uri: string; alt: string }>;
+export declare function heroPhoto(tone?: HeroTone): { uri: string; alt: string };
 `
 );
 

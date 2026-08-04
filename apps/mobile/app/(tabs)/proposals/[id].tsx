@@ -67,6 +67,7 @@ export default function ProposalDetailScreen() {
         </Pressable>
 
         <HeroBand
+          tone="proposalDetail"
           eyebrow={proposal.number}
           title={proposal.title}
           supporting={`${formatCurrency(proposal.grandTotal)} total  ·  ${formatCurrency(deposit)} deposit (${Math.round(proposal.depositPct * 100)}%)`}

@@ -57,6 +57,7 @@ export default function TrackScreen() {
     return (
       <Screen edges={["top", "left", "right"]}>
         <HeroBand
+          tone="track"
           eyebrow="Delivery"
           title="Track"
           supporting="Yard pull through jobsite delivery for open orders."
@@ -81,6 +82,7 @@ export default function TrackScreen() {
         showsVerticalScrollIndicator={false}
       >
         <HeroBand
+          tone="track"
           eyebrow="Delivery"
           title="Track"
           supporting="Yard pull through jobsite delivery for open orders."

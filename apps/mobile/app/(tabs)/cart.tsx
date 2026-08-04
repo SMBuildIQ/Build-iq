@@ -52,6 +52,7 @@ export default function CartScreen() {
         showsVerticalScrollIndicator={false}
       >
         <HeroBand
+          tone="cart"
           eyebrow="Checkout"
           title="Cart"
           supporting="Tax estimated for Texas yard pickup or delivery."

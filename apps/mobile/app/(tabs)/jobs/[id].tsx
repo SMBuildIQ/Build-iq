@@ -250,7 +250,7 @@ export default function JobDetailScreen() {
             Back
           </Text>
         </Pressable>
-        <HeroBand eyebrow="Job detail" title={job.name} />
+        <HeroBand tone="jobDetail" eyebrow="Job detail" title={job.name} />
 
         {isTablet ? (
           <View

@@ -64,6 +64,7 @@ export default function ProposalsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <HeroBand
+          tone="proposals"
           eyebrow="Commercial proposals"
           title="Proposals"
           supporting="Compose, send, and track deposits from the yard to the jobsite."
