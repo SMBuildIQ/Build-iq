@@ -213,6 +213,97 @@ export const MOCK_TAKEOFF = [
   { trade: "Millwork", name: "Base 5-1/4 primed", qty: 860, unit: "lf", unitCost: 2.15 },
 ];
 
+export type MockOrderStep =
+  | "placed"
+  | "pulled"
+  | "staged"
+  | "out"
+  | "delivered";
+
+export type MockOrderLine = {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+};
+
+export type MockOrder = {
+  id: string;
+  orderNumber: string;
+  projectName: string;
+  status: MockOrderStep;
+  /** Index into TRACK_STEPS (0–4) for the current active step */
+  activeStep: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+  createdAt: string;
+  items: MockOrderLine[];
+};
+
+export const TRACK_STEPS = [
+  { key: "placed" as const, label: "Order placed" },
+  { key: "pulled" as const, label: "Yard pull" },
+  { key: "staged" as const, label: "Staged" },
+  { key: "out" as const, label: "Out for delivery" },
+  { key: "delivered" as const, label: "Delivered" },
+];
+
+export const MOCK_ORDERS: MockOrder[] = [
+  {
+    id: "ord_8841",
+    orderNumber: "BQ-ORD-8841",
+    projectName: "Oak Ridge Residence",
+    status: "staged",
+    activeStep: 2,
+    subtotal: 16250,
+    tax: 1056,
+    total: 17306,
+    createdAt: "2026-08-01T10:00:00.000Z",
+    items: [
+      {
+        id: "oli_1",
+        name: "Standard Window Package",
+        category: "Windows",
+        quantity: 1,
+        unitPrice: 12400,
+        lineTotal: 12400,
+      },
+      {
+        id: "oli_2",
+        name: "Entry Door System",
+        category: "Doors",
+        quantity: 1,
+        unitPrice: 3850,
+        lineTotal: 3850,
+      },
+    ],
+  },
+  {
+    id: "ord_8790",
+    orderNumber: "BQ-ORD-8790",
+    projectName: "Cedar Park Spec",
+    status: "out",
+    activeStep: 3,
+    subtotal: 18600,
+    tax: 1209,
+    total: 19809,
+    createdAt: "2026-07-28T14:30:00.000Z",
+    items: [
+      {
+        id: "oli_3",
+        name: "Framing Lumber Bundle",
+        category: "Lumber",
+        quantity: 1,
+        unitPrice: 18600,
+        lineTotal: 18600,
+      },
+    ],
+  },
+];
+
 export function formatCurrency(n: number | null | undefined): string {
   if (n == null || Number.isNaN(n)) return "—";
   return new Intl.NumberFormat("en-US", {

@@ -1,53 +1,39 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/Button";
+import { DemoNotice } from "@/components/DemoNotice";
 import { HeroBand } from "@/components/HeroBand";
+import { RunAiButton } from "@/components/RunAiButton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatAddress, formatCurrency, formatSf, labelStatus, projectStatusTone } from "@/lib/format";
-import { mockJobDetails, mockJobs } from "@/lib/mock-data";
+import { TOKEN_COOKIE } from "@/lib/cookies";
+import { fetchJobDetail, tokenFromCookieHeader } from "@/lib/data";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const job = mockJobs.find((j) => j.id === id) ?? mockJobDetails[id]?.project;
-  return { title: job?.name ?? "Job" };
+  const jar = await cookies();
+  const token = tokenFromCookieHeader(jar.get(TOKEN_COOKIE)?.value);
+  const { data } = await fetchJobDetail(id, token);
+  return { title: data?.project.name ?? "Job" };
 }
 
 export default async function JobDetailPage({ params }: Props) {
   const { id } = await params;
-  const detail =
-    mockJobDetails[id] ??
-    (mockJobs.find((j) => j.id === id)
-      ? {
-          project: mockJobs.find((j) => j.id === id)!,
-          blueprints: [] as { id: string; name: string; sheets: number; uploadedAt: string }[],
-          estimate: {
-            materialCost: 0,
-            laborCost: 0,
-            contingency: 0,
-            overhead: 0,
-            profit: 0,
-            tax: 0,
-            grandTotal: mockJobs.find((j) => j.id === id)!.estimateGrandTotal ?? 0,
-          },
-          takeoff: [] as {
-            id: string;
-            trade: string;
-            item: string;
-            qty: number;
-            unit: string;
-            unitCost: number;
-            total: number;
-          }[],
-          bids: [] as { id: string; vendor: string; amount: number; status: string }[],
-        }
-      : null);
+  const jar = await cookies();
+  const token = tokenFromCookieHeader(jar.get(TOKEN_COOKIE)?.value);
+  const { data: detail, demo } = await fetchJobDetail(id, token);
 
   if (!detail) notFound();
 
   const { project, blueprints, estimate, takeoff, bids } = detail;
+  const hasEstimateBreakdown =
+    estimate.materialCost > 0 ||
+    estimate.laborCost > 0 ||
+    estimate.grandTotal > 0;
 
   return (
     <>
@@ -61,8 +47,9 @@ export default async function JobDetailPage({ params }: Props) {
       />
 
       <div className="bq-content" style={{ paddingTop: 24 }}>
+        <DemoNotice show={demo} />
         <div className="bq-action-row">
-          <Button variant="primary">Run AI</Button>
+          <RunAiButton projectId={project.id} />
           <Button variant="secondary">Export</Button>
           <Link href="/proposals">
             <Button variant="secondary">Create proposal</Button>
@@ -70,6 +57,7 @@ export default async function JobDetailPage({ params }: Props) {
           <Button variant="ghost">Spruce</Button>
         </div>
 
+        {/* W3 — desktop grid: blueprints | estimate; takeoff full width below */}
         <div className="bq-grid-2">
           <section className="bq-section" style={{ marginTop: 8 }}>
             <div className="bq-section-head">
@@ -80,9 +68,14 @@ export default async function JobDetailPage({ params }: Props) {
             </div>
             <div className="bq-panel">
               {blueprints.length === 0 ? (
-                <p className="bq-body" style={{ color: "var(--bq-text-secondary)", margin: 0 }}>
-                  No blueprints uploaded yet.
-                </p>
+                <div className="bq-empty" style={{ padding: "32px 16px" }}>
+                  <p className="bq-hand" style={{ color: "var(--bq-accent-primary)", fontSize: 20 }}>
+                    Plans await
+                  </p>
+                  <p className="bq-body" style={{ color: "var(--bq-text-secondary)", margin: "8px 0 0" }}>
+                    No blueprints uploaded yet. Upload a plan set to begin takeoff.
+                  </p>
+                </div>
               ) : (
                 <table className="bq-table">
                   <thead>
@@ -109,40 +102,53 @@ export default async function JobDetailPage({ params }: Props) {
           <section className="bq-section" style={{ marginTop: 8 }}>
             <div className="bq-section-head">
               <h2 className="bq-title">Cost estimate</h2>
-              <span className="bq-price" style={{ fontSize: 28, color: "var(--bq-accent-primary)" }}>
-                {formatCurrency(estimate.grandTotal)}
-              </span>
+              {hasEstimateBreakdown ? (
+                <span className="bq-price" style={{ fontSize: 28, color: "var(--bq-accent-primary)" }}>
+                  {formatCurrency(estimate.grandTotal)}
+                </span>
+              ) : null}
             </div>
             <div className="bq-muted-panel">
-              <table className="bq-table">
-                <tbody>
-                  {(
-                    [
-                      ["Material", estimate.materialCost],
-                      ["Labor", estimate.laborCost],
-                      ["Contingency", estimate.contingency],
-                      ["Overhead", estimate.overhead],
-                      ["Profit", estimate.profit],
-                      ["Tax", estimate.tax],
-                    ] as const
-                  ).map(([label, value]) => (
-                    <tr key={label}>
-                      <td>{label}</td>
-                      <td style={{ textAlign: "right" }}>{formatCurrency(value)}</td>
+              {!hasEstimateBreakdown ? (
+                <div className="bq-empty" style={{ padding: "32px 16px" }}>
+                  <p className="bq-hand" style={{ color: "var(--bq-accent-primary)", fontSize: 20 }}>
+                    No estimate yet
+                  </p>
+                  <p className="bq-body" style={{ color: "var(--bq-text-secondary)", margin: "8px 0 0" }}>
+                    Run AI takeoff to generate material and labor totals.
+                  </p>
+                </div>
+              ) : (
+                <table className="bq-table">
+                  <tbody>
+                    {(
+                      [
+                        ["Material", estimate.materialCost],
+                        ["Labor", estimate.laborCost],
+                        ["Contingency", estimate.contingency],
+                        ["Overhead", estimate.overhead],
+                        ["Profit", estimate.profit],
+                        ["Tax", estimate.tax],
+                      ] as const
+                    ).map(([label, value]) => (
+                      <tr key={label}>
+                        <td>{label}</td>
+                        <td style={{ textAlign: "right" }}>{formatCurrency(value)}</td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td>
+                        <strong>Grand total</strong>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <strong style={{ color: "var(--bq-accent-primary)" }}>
+                          {formatCurrency(estimate.grandTotal)}
+                        </strong>
+                      </td>
                     </tr>
-                  ))}
-                  <tr>
-                    <td>
-                      <strong>Grand total</strong>
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      <strong style={{ color: "var(--bq-accent-primary)" }}>
-                        {formatCurrency(estimate.grandTotal)}
-                      </strong>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              )}
             </div>
           </section>
         </div>
@@ -153,9 +159,14 @@ export default async function JobDetailPage({ params }: Props) {
           </div>
           <div className="bq-panel">
             {takeoff.length === 0 ? (
-              <p className="bq-body" style={{ color: "var(--bq-text-secondary)", margin: 0 }}>
-                Run AI to generate takeoff lines.
-              </p>
+              <div className="bq-empty" style={{ padding: "32px 16px" }}>
+                <p className="bq-hand" style={{ color: "var(--bq-accent-primary)", fontSize: 20 }}>
+                  Empty takeoff
+                </p>
+                <p className="bq-body" style={{ color: "var(--bq-text-secondary)", margin: "8px 0 0" }}>
+                  Run AI to generate takeoff lines from uploaded plans.
+                </p>
+              </div>
             ) : (
               <table className="bq-table">
                 <thead>

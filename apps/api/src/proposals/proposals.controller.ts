@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Patch,
+  Post,
+  StreamableFile,
+  UseGuards,
+} from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { CurrentUser, RequirePermissions, type AuthUser } from "../auth/auth.decorators";
 import { ProposalsService } from "./proposals.service";
@@ -44,7 +54,15 @@ export class ProposalsController {
 
   @Get(":id/pdf")
   @RequirePermissions("proposal:view")
-  pdf(@CurrentUser() user: AuthUser, @Param("id") id: string) {
-    return this.proposals.pdf(user, id);
+  @Header("Content-Type", "application/pdf")
+  async pdf(
+    @CurrentUser() user: AuthUser,
+    @Param("id") id: string,
+  ): Promise<StreamableFile> {
+    const { buffer, filename } = await this.proposals.pdf(user, id);
+    return new StreamableFile(buffer, {
+      type: "application/pdf",
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 }

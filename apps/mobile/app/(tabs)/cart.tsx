@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { router } from "expo-router";
 import {
   Button,
   EmptyState,
@@ -9,6 +10,7 @@ import {
   useTheme,
 } from "../../src/ui";
 import { useCart } from "../../src/context/CartContext";
+import { checkout } from "../../src/api/resources";
 import { formatCurrency } from "../../src/data/mock";
 
 /** M7 — Cart */
@@ -16,12 +18,32 @@ export default function CartScreen() {
   const { theme, gutter } = useTheme();
   const { lines, subtotal, tax, total, setQuantity, remove, clear } = useCart();
   const [totalsLoading, setTotalsLoading] = useState(true);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   useEffect(() => {
     setTotalsLoading(true);
     const t = setTimeout(() => setTotalsLoading(false), 450);
     return () => clearTimeout(t);
   }, [lines]);
+
+  const onCheckout = useCallback(async () => {
+    setCheckingOut(true);
+    try {
+      const res = await checkout({ paymentMethod: "card" });
+      if (res?.order) {
+        clear();
+        Alert.alert("Order placed", "Checkout succeeded. Track delivery from Track orders.");
+        router.push("/(tabs)/track");
+      } else {
+        Alert.alert(
+          "Checkout stub",
+          "Payment API unavailable — order will sync when the yard API is online."
+        );
+      }
+    } finally {
+      setCheckingOut(false);
+    }
+  }, [clear]);
 
   return (
     <Screen edges={["top", "left", "right"]}>
@@ -36,6 +58,13 @@ export default function CartScreen() {
         />
 
         <View style={{ paddingHorizontal: gutter, paddingTop: theme.space[5], flex: 1, gap: theme.space[4] }}>
+          <Button
+            label="Track orders"
+            variant="secondary"
+            accessibilityLabel="Track orders"
+            onPress={() => router.push("/(tabs)/track")}
+          />
+
           {lines.length === 0 ? (
             <EmptyState
               hand="Your cart is clear"
@@ -110,7 +139,11 @@ export default function CartScreen() {
                       label="+"
                       onPress={() => setQuantity(line.packageId, line.quantity + 1)}
                     />
-                    <Pressable onPress={() => remove(line.packageId)} accessibilityRole="button">
+                    <Pressable
+                      onPress={() => remove(line.packageId)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove ${line.name}`}
+                    >
                       <Text
                         style={{
                           fontFamily: "Questrial",
@@ -151,8 +184,19 @@ export default function CartScreen() {
                 )}
               </View>
 
-              <Button label="Pay with card" onPress={() => undefined} />
-              <Button label="Apple Pay / Google Pay" variant="secondary" onPress={() => undefined} />
+              <Button
+                label="Pay with card"
+                accessibilityLabel="Pay with card"
+                disabled={checkingOut}
+                onPress={() => void onCheckout()}
+              />
+              <Button
+                label="Apple Pay / Google Pay"
+                variant="secondary"
+                accessibilityLabel="Apple Pay or Google Pay"
+                disabled={checkingOut}
+                onPress={() => void onCheckout()}
+              />
               <Button label="Clear cart" variant="ghost" onPress={clear} />
             </>
           )}

@@ -1,29 +1,21 @@
-import React, { useState } from "react";
-import { Pressable, ScrollView, Switch, Text, View } from "react-native";
+import React from "react";
+import { ScrollView, Switch, Text, View } from "react-native";
 import { router } from "expo-router";
 import {
   BrandMark,
   Button,
   HeroBand,
+  ListRow,
   Screen,
   useTheme,
 } from "../../src/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { hasPermission } from "@buildiq/permissions";
 
-const TRACK_STEPS = [
-  { key: "placed", label: "Order placed" },
-  { key: "pulled", label: "Yard pull" },
-  { key: "staged", label: "Staged" },
-  { key: "out", label: "Out for delivery" },
-  { key: "delivered", label: "Delivered" },
-] as const;
-
-/** M9 — Account + dark mode; Track (M8) embedded for v1 */
+/** M9 — Account + appearance; Track linked separately */
 export default function MoreScreen() {
   const { theme, preference, setPreference, mode, gutter } = useTheme();
   const { session, signOut } = useAuth();
-  const [activeStep, setActiveStep] = useState(2);
   const dark = mode === "dark";
 
   return (
@@ -35,7 +27,7 @@ export default function MoreScreen() {
         <HeroBand
           eyebrow="Account"
           title="More"
-          supporting="Company settings, appearance, and order tracking."
+          supporting="Company settings and appearance."
         />
 
         <View style={{ paddingHorizontal: gutter, paddingTop: theme.space[6], gap: theme.space[7] }}>
@@ -85,6 +77,12 @@ export default function MoreScreen() {
             </Text>
           </Text>
 
+          <ListRow
+            title="Order tracking"
+            meta="Yard pull through delivery status"
+            onPress={() => router.push("/(tabs)/track")}
+          />
+
           {session && hasPermission(session.role, "team:invite") ? (
             <Button label="Invite teammate" variant="secondary" onPress={() => undefined} />
           ) : null}
@@ -92,71 +90,6 @@ export default function MoreScreen() {
           {session && hasPermission(session.role, "spruce:configure") ? (
             <Button label="Spruce settings" variant="ghost" onPress={() => undefined} />
           ) : null}
-
-          <View style={{ gap: theme.space[4] }}>
-            <Text
-              style={{
-                fontFamily: "Staatliches",
-                fontSize: 24,
-                letterSpacing: 0.96,
-                textTransform: "uppercase",
-                color: theme.colors.text,
-              }}
-            >
-              Track order
-            </Text>
-            <Text style={{ fontFamily: "Questrial", fontSize: 14, color: theme.colors.textSecondary }}>
-              BQ-ORD-8841  ·  Oak Ridge Residence
-            </Text>
-            <View style={{ gap: 0 }}>
-              {TRACK_STEPS.map((step, index) => {
-                const active = index <= activeStep;
-                const current = index === activeStep;
-                return (
-                  <Pressable
-                    key={step.key}
-                    onPress={() => setActiveStep(index)}
-                    style={{ flexDirection: "row", gap: theme.space[4], minHeight: 56 }}
-                  >
-                    <View style={{ alignItems: "center", width: 16 }}>
-                      <View
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: theme.radius.none,
-                          borderWidth: 1.5,
-                          borderColor: active ? theme.colors.accent : theme.colors.borderStrong,
-                          backgroundColor: current ? theme.colors.accent : "transparent",
-                        }}
-                      />
-                      {index < TRACK_STEPS.length - 1 ? (
-                        <View
-                          style={{
-                            flex: 1,
-                            width: 2,
-                            backgroundColor:
-                              index < activeStep ? theme.colors.accent : theme.colors.border,
-                          }}
-                        />
-                      ) : null}
-                    </View>
-                    <Text
-                      style={{
-                        fontFamily: current ? "Staatliches" : "Questrial",
-                        fontSize: current ? 18 : 15,
-                        letterSpacing: current ? 0.72 : 0.15,
-                        textTransform: current ? "uppercase" : "none",
-                        color: active ? theme.colors.text : theme.colors.textMuted,
-                        paddingBottom: theme.space[4],
-                      }}
-                    >
-                      {step.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
 
           <Button
             label="Sign out"

@@ -1,18 +1,28 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Button } from "@/components/Button";
+import { DemoNotice } from "@/components/DemoNotice";
 import { HeroBand } from "@/components/HeroBand";
 import { ListRow } from "@/components/ListRow";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatAddress, formatCurrency, formatSf, labelStatus, projectStatusTone } from "@/lib/format";
-import { mockJobs, mockSession } from "@/lib/mock-data";
+import { TOKEN_COOKIE } from "@/lib/cookies";
+import { fetchJobs, fetchSession, tokenFromCookieHeader } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Jobs" };
 
-export default function JobsPage() {
+export default async function JobsPage() {
+  const jar = await cookies();
+  const token = tokenFromCookieHeader(jar.get(TOKEN_COOKIE)?.value);
+  const [{ data: jobs, demo }, { data: session }] = await Promise.all([
+    fetchJobs(token),
+    fetchSession(token),
+  ]);
+
   return (
     <>
       <HeroBand
-        eyebrow={mockSession.companyName ?? "Your company"}
+        eyebrow={session.companyName ?? "Your company"}
         title="Jobs"
         support="Plans, takeoffs, and bids — one millwork-grade ledger for every active project."
         actions={
@@ -23,7 +33,8 @@ export default function JobsPage() {
       />
 
       <div className="bq-content" style={{ paddingTop: 32 }}>
-        {mockJobs.length === 0 ? (
+        <DemoNotice show={demo} />
+        {jobs.length === 0 ? (
           <div className="bq-empty">
             <p className="bq-label">BuildIQ</p>
             <p className="bq-hand">Ready when you are</p>
@@ -35,7 +46,7 @@ export default function JobsPage() {
           </div>
         ) : (
           <div className="bq-list" role="list">
-            {mockJobs.map((job) => (
+            {jobs.map((job) => (
               <ListRow
                 key={job.id}
                 href={`/jobs/${job.id}`}

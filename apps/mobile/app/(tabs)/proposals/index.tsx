@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
+import type { ProjectSummary, ProposalSummary } from "@buildiq/types";
 import {
   Button,
   EmptyState,
@@ -8,8 +9,10 @@ import {
   HeroBand,
   ListRow,
   Screen,
+  SkeletonListRow,
   useTheme,
 } from "../../../src/ui";
+import { listProjects, listProposals } from "../../../src/api/resources";
 import {
   MOCK_JOBS,
   MOCK_PROPOSALS,
@@ -20,12 +23,38 @@ import {
 /** M4 — Proposals list */
 export default function ProposalsScreen() {
   const { theme, gutter } = useTheme();
+  const [jobs, setJobs] = useState<ProjectSummary[]>(MOCK_JOBS);
+  const [proposals, setProposals] = useState<ProposalSummary[]>(MOCK_PROPOSALS);
+  const [loading, setLoading] = useState(true);
   const [projectId, setProjectId] = useState(MOCK_JOBS[0]?.id ?? "");
 
-  const proposals = MOCK_PROPOSALS;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const [apiJobs, apiProposals] = await Promise.all([listProjects(), listProposals()]);
+      if (cancelled) return;
+      if (apiJobs && apiJobs.length > 0) {
+        setJobs(apiJobs);
+        setProjectId((prev) => prev || apiJobs[0]?.id || "");
+      } else {
+        setJobs(MOCK_JOBS);
+      }
+      if (apiProposals && apiProposals.length > 0) {
+        setProposals(apiProposals);
+      } else {
+        setProposals(MOCK_PROPOSALS);
+      }
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const selectedProject = useMemo(
-    () => MOCK_JOBS.find((j) => j.id === projectId),
-    [projectId]
+    () => jobs.find((j) => j.id === projectId),
+    [jobs, projectId]
   );
 
   return (
@@ -64,7 +93,7 @@ export default function ProposalsScreen() {
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={{ flexDirection: "row", gap: theme.space[2] }}>
-                {MOCK_JOBS.map((j) => (
+                {jobs.map((j) => (
                   <FilterChip
                     key={j.id}
                     label={j.name}
@@ -76,6 +105,7 @@ export default function ProposalsScreen() {
             </ScrollView>
             <Button
               label="Create proposal"
+              accessibilityLabel="Create proposal"
               onPress={() => {
                 if (selectedProject) {
                   router.push(`/(tabs)/proposals/prop_001`);
@@ -84,7 +114,13 @@ export default function ProposalsScreen() {
             />
           </View>
 
-          {proposals.length === 0 ? (
+          {loading ? (
+            <View>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonListRow key={i} />
+              ))}
+            </View>
+          ) : proposals.length === 0 ? (
             <EmptyState
               hand="Nothing out for signature"
               title="No proposals"

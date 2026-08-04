@@ -1,15 +1,25 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { depositAmount } from "@buildiq/pricing";
 import { Button } from "@/components/Button";
+import { DemoNotice } from "@/components/DemoNotice";
 import { HeroBand } from "@/components/HeroBand";
 import { ListRow } from "@/components/ListRow";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatCurrency, labelStatus, proposalStatusTone } from "@/lib/format";
-import { mockJobs, mockProposals } from "@/lib/mock-data";
+import { fetchJobs, fetchProposals, tokenFromCookieHeader } from "@/lib/data";
+import { TOKEN_COOKIE } from "@/lib/cookies";
 
 export const metadata: Metadata = { title: "Proposals" };
 
-export default function ProposalsPage() {
+export default async function ProposalsPage() {
+  const jar = await cookies();
+  const token = tokenFromCookieHeader(jar.get(TOKEN_COOKIE)?.value);
+  const [{ data: proposals, demo }, { data: jobs }] = await Promise.all([
+    fetchProposals(token),
+    fetchJobs(token),
+  ]);
+
   return (
     <>
       <HeroBand
@@ -24,6 +34,7 @@ export default function ProposalsPage() {
       />
 
       <div className="bq-content" style={{ paddingTop: 32 }}>
+        <DemoNotice show={demo} />
         <section className="bq-muted-panel" style={{ marginBottom: 24 }}>
           <p className="bq-label" style={{ marginBottom: 12 }}>
             Compose
@@ -35,7 +46,7 @@ export default function ProposalsPage() {
                 <option value="" disabled>
                   Select a job…
                 </option>
-                {mockJobs.map((j) => (
+                {jobs.map((j) => (
                   <option key={j.id} value={j.id}>
                     {j.name}
                   </option>
@@ -49,22 +60,25 @@ export default function ProposalsPage() {
         </section>
 
         <div className="bq-list">
-          {mockProposals.map((p) => (
-            <ListRow
-              key={p.id}
-              href={`/proposals/${p.id}`}
-              title={`${p.number} · ${p.title}`}
-              badge={<StatusBadge label={labelStatus(p.status)} tone={proposalStatusTone(p.status)} />}
-              meta={
-                <>
-                  <span>{p.customerName ?? "Customer TBD"}</span>
-                  <span>{p.sectionCount} categories</span>
-                </>
-              }
-              price={formatCurrency(p.grandTotal)}
-              sub={`Deposit ${formatCurrency(depositAmount(p.grandTotal, p.depositPct / 100))} (${p.depositPct}%)`}
-            />
-          ))}
+          {proposals.map((p) => {
+            const pct = p.depositPct > 1 ? p.depositPct / 100 : p.depositPct;
+            return (
+              <ListRow
+                key={p.id}
+                href={`/proposals/${p.id}`}
+                title={`${p.number} · ${p.title}`}
+                badge={<StatusBadge label={labelStatus(p.status)} tone={proposalStatusTone(p.status)} />}
+                meta={
+                  <>
+                    <span>{p.customerName ?? "Customer TBD"}</span>
+                    <span>{p.sectionCount} categories</span>
+                  </>
+                }
+                price={formatCurrency(p.grandTotal)}
+                sub={`Deposit ${formatCurrency(p.depositAmount || depositAmount(p.grandTotal, pct))} (${Math.round(pct * 100)}%)`}
+              />
+            );
+          })}
         </div>
       </div>
     </>

@@ -10,6 +10,7 @@ import React, {
 import type { UserSession } from "@buildiq/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch, setToken } from "../api/client";
+import { login as apiLogin } from "../api/resources";
 import { MOCK_SESSION } from "../data/mock";
 
 const AUTH_KEY = "buildiq.session";
@@ -50,17 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(
     async (email: string, password: string) => {
-      try {
-        const res = await apiFetch<{ token: string; user: UserSession }>("/auth/login", {
-          method: "POST",
-          body: { email, password },
-          auth: false,
-        });
+      const res = await apiLogin(email, password);
+      if (res) {
         await persist(res.user, res.token);
-      } catch {
-        // Offline / API unavailable — demo session for scaffold
-        await persist({ ...MOCK_SESSION, email }, "demo-token");
+        return;
       }
+      // Offline / API unavailable — demo session for scaffold
+      await persist({ ...MOCK_SESSION, email }, "demo-token");
     },
     [persist]
   );

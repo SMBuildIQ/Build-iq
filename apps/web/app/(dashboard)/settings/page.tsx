@@ -4,15 +4,24 @@ import { useRouter } from "next/navigation";
 import { hasPermission } from "@buildiq/permissions";
 import { Button } from "@/components/Button";
 import { HeroBand } from "@/components/HeroBand";
+import { useTheme, type ThemePreference } from "@/components/ThemeProvider";
+import { clearAuthCookies } from "@/lib/cookies";
 import { mockSession } from "@/lib/mock-data";
+
+const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" },
+];
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { preference, setPreference } = useTheme();
   const canInvite = hasPermission(mockSession.role, "team:invite");
   const canSpruce = hasPermission(mockSession.role, "spruce:configure");
 
   function signOut() {
-    document.cookie = "bq_session=; path=/; max-age=0; SameSite=Lax";
+    clearAuthCookies();
     router.push("/login");
     router.refresh();
   }
@@ -27,6 +36,31 @@ export default function SettingsPage() {
 
       <div className="bq-content" style={{ paddingTop: 32 }}>
         <section className="bq-section" style={{ marginTop: 0 }}>
+          <div className="bq-section-head">
+            <h2 className="bq-title">Appearance</h2>
+          </div>
+          <div className="bq-panel">
+            <p className="bq-body" style={{ margin: "0 0 16px", color: "var(--bq-text-secondary)" }}>
+              Dark mode uses Millwork Studio tokens via <span className="bq-mono">data-theme</span>.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }} role="group" aria-label="Theme">
+              {THEME_OPTIONS.map((opt) => (
+                <Button
+                  key={opt.value}
+                  type="button"
+                  variant={preference === opt.value ? "primary" : "secondary"}
+                  compact
+                  onClick={() => setPreference(opt.value)}
+                  aria-pressed={preference === opt.value}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bq-section">
           <div className="bq-section-head">
             <h2 className="bq-title">Company</h2>
           </div>

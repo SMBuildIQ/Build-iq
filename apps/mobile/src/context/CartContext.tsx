@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import type { ShopPackage } from "@buildiq/types";
 import * as Haptics from "expo-haptics";
+import { addToCart as apiAddToCart } from "../api/resources";
 
 export type CartLine = {
   packageId: string;
@@ -56,6 +57,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       ];
     });
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Best-effort sync; keep optimistic local cart either way
+    void apiAddToCart({ packageId: pkg.id, quantity: qty });
   }, []);
 
   const setQuantity = useCallback((packageId: string, quantity: number) => {

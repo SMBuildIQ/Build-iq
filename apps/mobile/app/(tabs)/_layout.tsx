@@ -1,23 +1,45 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Text, View } from "react-native";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useTheme } from "../../src/ui";
 import { useCart } from "../../src/context/CartContext";
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  const { theme } = useTheme();
+  const { theme, reduceMotion } = useTheme();
+  const indicatorOpacity = useSharedValue(focused ? 1 : 0);
+  const indicatorWidth = useSharedValue(focused ? 1 : 0.35);
+
+  useEffect(() => {
+    const duration = reduceMotion ? 0 : theme.motion.base;
+    indicatorOpacity.value = withTiming(focused ? 1 : 0, { duration });
+    indicatorWidth.value = withTiming(focused ? 1 : 0.35, { duration });
+  }, [focused, indicatorOpacity, indicatorWidth, reduceMotion, theme.motion.base]);
+
+  const hairlineStyle = useAnimatedStyle(() => ({
+    opacity: indicatorOpacity.value,
+    transform: [{ scaleX: indicatorWidth.value }],
+  }));
+
   return (
     <View style={{ alignItems: "center", justifyContent: "center", minWidth: 56, paddingTop: 4 }}>
-      <View
-        style={{
-          position: "absolute",
-          top: -6,
-          left: 8,
-          right: 8,
-          height: 2,
-          backgroundColor: focused ? theme.colors.accent : "transparent",
-        }}
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: -6,
+            left: 8,
+            right: 8,
+            height: 2,
+            backgroundColor: theme.colors.accent,
+          },
+          hairlineStyle,
+        ]}
       />
       <View
         style={{
@@ -108,6 +130,13 @@ export default function TabsLayout() {
           },
           tabBarIcon: ({ focused }) => <TabIcon label="Cart" focused={focused} />,
           tabBarAccessibilityLabel: "Cart",
+        }}
+      />
+      <Tabs.Screen
+        name="track"
+        options={{
+          title: "Track",
+          href: null,
         }}
       />
       <Tabs.Screen

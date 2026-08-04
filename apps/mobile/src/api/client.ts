@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 const TOKEN_KEY = "buildiq.jwt";
 
 export function getApiBaseUrl(): string {
-  return process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:3001";
+  return process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:4000";
 }
 
 export async function getToken(): Promise<string | null> {

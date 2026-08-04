@@ -1,6 +1,8 @@
-import React, { useMemo } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { router, useLocalSearchParams } from "expo-router";
+import type { ProjectSummary } from "@buildiq/types";
 import {
   Button,
   HeroBand,
@@ -16,16 +18,36 @@ import {
   formatCurrency,
   projectStatusTone,
 } from "../../../src/data/mock";
+import { getProject, getProjectEstimate, orchestrateProject } from "../../../src/api/resources";
 
-/** M3 — Job detail (tablet split ≥768) */
+/** M3 — Job detail (tablet split ≥768) with API + mock fallback */
 export default function JobDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { theme, gutter, isTablet } = useTheme();
+  const { theme, gutter, isTablet, reduceMotion } = useTheme();
+  const [job, setJob] = useState<ProjectSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [estimateOverride, setEstimateOverride] = useState<{
+    materialCost?: number;
+    laborCost?: number;
+    grandTotal?: number;
+  } | null>(null);
+  const [aiNote, setAiNote] = useState<string | null>(null);
 
-  const job = useMemo(
-    () => MOCK_JOBS.find((j) => j.id === id) ?? MOCK_JOBS[0],
-    [id]
-  );
+  const load = useCallback(async () => {
+    setLoading(true);
+    const fromApi = id ? await getProject(id) : null;
+    setJob(fromApi ?? MOCK_JOBS.find((j) => j.id === id) ?? MOCK_JOBS[0] ?? null);
+    if (id) {
+      const est = await getProjectEstimate(id);
+      if (est) setEstimateOverride(est);
+    }
+    setLoading(false);
+  }, [id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const takeoffEstimate = useMemo(
     () =>
@@ -41,6 +63,57 @@ export default function JobDetailScreen() {
     []
   );
 
+  const runAi = useCallback(async () => {
+    if (!job) return;
+    setRunning(true);
+    setAiNote(null);
+    // Optimistic status
+    setJob((prev) => (prev ? { ...prev, status: "ANALYZING" } : prev));
+    const res = await orchestrateProject(job.id);
+    if (res) {
+      setJob((prev) => (prev ? { ...prev, status: "ESTIMATED" } : prev));
+      setAiNote(res.stub ? "AI pipeline queued (stub). Totals refresh when estimate is ready." : "Takeoff complete.");
+      const est = await getProjectEstimate(job.id);
+      if (est) {
+        setEstimateOverride(est);
+        setJob((prev) =>
+          prev
+            ? { ...prev, estimateGrandTotal: est.grandTotal ?? prev.estimateGrandTotal, status: "ESTIMATED" }
+            : prev
+        );
+      }
+    } else {
+      // Offline demo path
+      setJob((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "ESTIMATED",
+              estimateGrandTotal: takeoffEstimate.grandTotal,
+              materialCount: MOCK_TAKEOFF.length,
+            }
+          : prev
+      );
+      setEstimateOverride({
+        materialCost: takeoffEstimate.materialCost,
+        laborCost: takeoffEstimate.laborCost,
+        grandTotal: takeoffEstimate.grandTotal,
+      });
+      setAiNote("Demo takeoff applied (API offline).");
+    }
+    setRunning(false);
+  }, [job, takeoffEstimate]);
+
+  if (loading) {
+    return (
+      <Screen edges={["top", "left", "right"]}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator color={theme.colors.accent} accessibilityLabel="Loading job" />
+        </View>
+      </Screen>
+    );
+  }
+
   if (!job) {
     return (
       <Screen gutter>
@@ -49,8 +122,15 @@ export default function JobDetailScreen() {
     );
   }
 
+  const materialCost = estimateOverride?.materialCost ?? takeoffEstimate.materialCost;
+  const laborCost = estimateOverride?.laborCost ?? takeoffEstimate.laborCost;
+  const grandTotal =
+    estimateOverride?.grandTotal ?? job.estimateGrandTotal ?? takeoffEstimate.grandTotal;
+
+  const enter = reduceMotion ? undefined : FadeInDown.duration(theme.motion.enter as number);
+
   const summary = (
-    <View style={{ gap: theme.space[5] }}>
+    <Animated.View entering={enter} style={{ gap: theme.space[5] }}>
       <View style={{ gap: theme.space[2] }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: theme.space[2] }}>
           <StatusBadge
@@ -72,13 +152,26 @@ export default function JobDetailScreen() {
             letterSpacing: 1.44,
             color: theme.colors.accent,
           }}
+          accessibilityLabel={`Estimate ${formatCurrency(grandTotal)}`}
         >
-          {formatCurrency(job.estimateGrandTotal)}
+          {formatCurrency(grandTotal)}
         </Text>
+        {aiNote ? (
+          <Text style={{ fontFamily: "Questrial", fontSize: 13, color: theme.colors.textMuted }}>
+            {aiNote}
+          </Text>
+        ) : null}
       </View>
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.space[2] }}>
-        <Button label="Run AI" compact style={{ minWidth: 100 }} onPress={() => undefined} />
+        <Button
+          label={running ? "Running…" : "Run AI"}
+          compact
+          style={{ minWidth: 100 }}
+          disabled={running}
+          onPress={() => void runAi()}
+          accessibilityLabel="Run AI takeoff"
+        />
         <Button label="Export" variant="secondary" compact style={{ minWidth: 100 }} />
         <Button
           label="Create proposal"
@@ -95,20 +188,19 @@ export default function JobDetailScreen() {
       </Section>
 
       <Section title="Cost estimate">
-        <MetaRow label="Materials" value={formatCurrency(takeoffEstimate.materialCost)} />
-        <MetaRow label="Labor" value={formatCurrency(takeoffEstimate.laborCost)} />
+        <MetaRow label="Materials" value={formatCurrency(materialCost)} />
+        <MetaRow label="Labor" value={formatCurrency(laborCost)} />
         <MetaRow label="Bids" value={String(job.bidCount)} />
-        <MetaRow
-          label="Grand total"
-          value={formatCurrency(job.estimateGrandTotal ?? takeoffEstimate.grandTotal)}
-          accent
-        />
+        <MetaRow label="Grand total" value={formatCurrency(grandTotal)} accent />
       </Section>
-    </View>
+    </Animated.View>
   );
 
   const takeoff = (
-    <View style={{ gap: theme.space[3] }}>
+    <Animated.View
+      entering={reduceMotion ? undefined : FadeInDown.delay(80).duration(theme.motion.enter as number)}
+      style={{ gap: theme.space[3] }}
+    >
       <Text
         style={{
           fontFamily: "Staatliches",
@@ -134,7 +226,7 @@ export default function JobDetailScreen() {
           Vendor bids appear here after invitation.
         </Text>
       </Section>
-    </View>
+    </Animated.View>
   );
 
   return (

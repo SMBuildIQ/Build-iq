@@ -1,20 +1,40 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/Button";
+import { DemoNotice } from "@/components/DemoNotice";
 import { FilterChip } from "@/components/FilterChip";
 import { HeroBand } from "@/components/HeroBand";
 import { formatCurrency } from "@/lib/format";
-import { mockShopPackages, shopCategories } from "@/lib/mock-data";
+import { getClientToken } from "@/lib/cookies";
+import { fetchShopPackages } from "@/lib/data";
+import { shopCategories } from "@/lib/mock-data";
+import type { ShopPackage } from "@buildiq/types";
 
 export default function ShopPage() {
   const [category, setCategory] = useState<(typeof shopCategories)[number]>("All");
   const [cartCount, setCartCount] = useState(0);
+  const [packages, setPackages] = useState<ShopPackage[]>([]);
+  const [demo, setDemo] = useState(true);
 
-  const packages = useMemo(() => {
-    if (category === "All") return mockShopPackages;
-    return mockShopPackages.filter((p) => p.category === category);
-  }, [category]);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const result = await fetchShopPackages(getClientToken() ?? undefined);
+      if (!cancelled) {
+        setPackages(result.data);
+        setDemo(result.demo);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (category === "All") return packages;
+    return packages.filter((p) => p.category === category);
+  }, [category, packages]);
 
   return (
     <>
@@ -30,6 +50,7 @@ export default function ShopPage() {
       />
 
       <div className="bq-content" style={{ paddingTop: 32 }}>
+        <DemoNotice show={demo} />
         <div className="bq-chips" role="group" aria-label="Categories" style={{ marginBottom: 28 }}>
           {shopCategories.map((c) => (
             <FilterChip key={c} label={c} active={category === c} onClick={() => setCategory(c)} />
@@ -37,7 +58,7 @@ export default function ShopPage() {
         </div>
 
         <div className="bq-grid-3">
-          {packages.map((pkg) => (
+          {filtered.map((pkg) => (
             <article key={pkg.id} className="bq-package">
               <div className="bq-package-body">
                 <p className="bq-label bq-package-kicker">{pkg.category}</p>

@@ -3,14 +3,27 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { randomUUID } from "node:crypto";
 import { createProjectSchema } from "@buildiq/validation";
+import { calculateEstimate } from "@buildiq/pricing";
 import { PrismaService } from "../prisma/prisma.service";
+import { StorageService } from "../storage/storage.service";
 import type { AuthUser } from "../auth/auth.decorators";
 import { ProjectStatus } from "@buildiq/prisma-client";
+import { z } from "zod";
+
+const blueprintUploadSchema = z.object({
+  filename: z.string().min(1).max(260),
+  contentType: z.string().min(1).max(120),
+  size: z.number().int().nonnegative().optional(),
+});
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   async list(user: AuthUser) {
     const projects = await this.prisma.project.findMany({
@@ -119,5 +132,98 @@ export class ProjectsService {
     if (!existing) throw new NotFoundException("Project not found");
     await this.prisma.project.delete({ where: { id } });
     return { ok: true };
+  }
+
+  private async requireProject(user: AuthUser, id: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id, companyId: user.companyId },
+    });
+    if (!project) throw new NotFoundException("Project not found");
+    return project;
+  }
+
+  async uploadBlueprint(user: AuthUser, projectId: string, body: unknown) {
+    const parsed = blueprintUploadSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException(parsed.error.flatten());
+    }
+    await this.requireProject(user, projectId);
+
+    const { filename, contentType, size } = parsed.data;
+    const sizeBytes = size ?? 0;
+    const storageKey = `projects/${projectId}/blueprints/${randomUUID()}-${filename}`;
+    const uploaded = await this.storage.upload(
+      storageKey,
+      Buffer.alloc(0),
+      contentType,
+    );
+
+    const blueprint = await this.prisma.blueprint.create({
+      data: {
+        projectId,
+        filename: storageKey,
+        originalName: filename,
+        mimeType: contentType,
+        sizeBytes,
+        scanStatus: "IDLE",
+      },
+    });
+
+    return {
+      blueprint,
+      storage: uploaded,
+    };
+  }
+
+  async orchestrate(user: AuthUser, projectId: string) {
+    await this.requireProject(user, projectId);
+    const runId = randomUUID();
+
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: { status: ProjectStatus.ANALYZING },
+    });
+
+    // Stub pipeline — flip to ESTIMATED without a full AI worker.
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: { status: ProjectStatus.ESTIMATED },
+    });
+
+    return {
+      runId,
+      status: "completed" as const,
+      stub: true,
+    };
+  }
+
+  async getEstimate(user: AuthUser, projectId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, companyId: user.companyId },
+      include: { estimate: true, materials: true },
+    });
+    if (!project) throw new NotFoundException("Project not found");
+
+    if (project.estimate) {
+      return { estimate: project.estimate, source: "prisma" as const };
+    }
+
+    if (project.materials.length === 0) {
+      throw new NotFoundException("Estimate not found");
+    }
+
+    const computed = calculateEstimate(project.materials);
+    return {
+      estimate: {
+        id: null,
+        projectId: project.id,
+        version: 1,
+        ...computed,
+        createdAt: null,
+        updatedAt: null,
+      },
+      source: "computed" as const,
+      stub: false,
+    };
   }
 }

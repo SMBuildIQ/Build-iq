@@ -1,34 +1,33 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/Button";
+import { DemoNotice } from "@/components/DemoNotice";
 import { HeroBand } from "@/components/HeroBand";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatCurrency, labelStatus, proposalStatusTone } from "@/lib/format";
-import { mockProposalDetails, mockProposals } from "@/lib/mock-data";
+import { TOKEN_COOKIE } from "@/lib/cookies";
+import { fetchProposalDetail, tokenFromCookieHeader } from "@/lib/data";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const p = mockProposals.find((x) => x.id === id);
-  return { title: p ? p.number : "Proposal" };
+  const jar = await cookies();
+  const token = tokenFromCookieHeader(jar.get(TOKEN_COOKIE)?.value);
+  const { data } = await fetchProposalDetail(id, token);
+  return { title: data?.summary.number ?? "Proposal" };
 }
 
 export default async function ProposalDetailPage({ params }: Props) {
   const { id } = await params;
-  const detail =
-    mockProposalDetails[id] ??
-    (mockProposals.find((p) => p.id === id)
-      ? { summary: mockProposals.find((p) => p.id === id)!, sections: [] }
-      : null);
+  const jar = await cookies();
+  const token = tokenFromCookieHeader(jar.get(TOKEN_COOKIE)?.value);
+  const { data: detail, demo } = await fetchProposalDetail(id, token);
 
   if (!detail) notFound();
 
-  const { summary, sections, acceptedAt } = detail as {
-    summary: (typeof mockProposals)[number];
-    sections: { category: string; lines: { description: string; qty: number; unit: string; unitPrice: number; total: number }[] }[];
-    acceptedAt?: string;
-  };
+  const { summary, sections, acceptedAt } = detail;
 
   return (
     <>
@@ -49,6 +48,7 @@ export default async function ProposalDetailPage({ params }: Props) {
       />
 
       <div className="bq-content" style={{ paddingTop: 24 }}>
+        <DemoNotice show={demo} />
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
           <StatusBadge label={labelStatus(summary.status)} tone={proposalStatusTone(summary.status)} />
           {acceptedAt ? (

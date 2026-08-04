@@ -69,6 +69,28 @@ Mobile/web also render from mock data when the API is unreachable.
 | Redis | 6379 |
 | MinIO (S3) | 9000 |
 
+## Completeness checklist (discussed scope)
+
+| Requirement | Status |
+|---|---|
+| Exact Millwork Studio design system + screen specs | Done — `docs/design/` |
+| Shared packages: tokens, types, validation, permissions, pricing | Done — tested |
+| Expo mobile (strict TS, new architecture) | Done — `apps/mobile` |
+| Custom UI kit + Sheet (swipe dismiss) | Done — `src/ui/*` |
+| Screens M0–M9 (Track dedicated) | Done |
+| Skeletons, optimistic jobs/cart, dark mode, tablet layouts | Done |
+| Gestures: stack back, long-press Sheet, swipe Sheet | Done |
+| Motions: press scale, tab indicator, enter/skeleton | Done |
+| a11y labels / roles | Done on kit + tabs + Track |
+| Next.js web dashboard W1–W8 | Done — `apps/web` |
+| NestJS API + Prisma Postgres + Redis + S3 stubs | Done — `apps/api` |
+| Auth, projects, proposals, shop/cart, orders, cabinetry, health | Done |
+| Blueprints / orchestrate / estimate endpoints | Done (orchestrate stub honest) |
+| docker-compose Postgres/Redis/MinIO | Done |
+| Soft-launch root Next preserved | Done |
+
+**Still intentional stubs (called out in SCREENS “out of scope”):** live Stripe, full AI vision pipeline, native store binaries, email delivery for proposal send, multipart blueprint bytes.
+
 ## Cutover notes
 
 1. Keep shipping soft-launch features on root Next until Nest API parity covers auth, projects, proposals, shop, orders.

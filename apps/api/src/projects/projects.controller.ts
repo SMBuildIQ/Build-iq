@@ -50,4 +50,26 @@ export class ProjectsController {
   remove(@CurrentUser() user: AuthUser, @Param("id") id: string) {
     return this.projects.remove(user, id);
   }
+
+  @Post(":id/blueprints")
+  @RequirePermissions("project:write")
+  uploadBlueprint(
+    @CurrentUser() user: AuthUser,
+    @Param("id") id: string,
+    @Body() body: unknown,
+  ) {
+    return this.projects.uploadBlueprint(user, id, body);
+  }
+
+  @Post(":id/orchestrate")
+  @RequirePermissions("project:write")
+  orchestrate(@CurrentUser() user: AuthUser, @Param("id") id: string) {
+    return this.projects.orchestrate(user, id);
+  }
+
+  @Get(":id/estimate")
+  @RequirePermissions("project:read")
+  getEstimate(@CurrentUser() user: AuthUser, @Param("id") id: string) {
+    return this.projects.getEstimate(user, id);
+  }
 }

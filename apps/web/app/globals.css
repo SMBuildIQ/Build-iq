@@ -230,15 +230,9 @@ img {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(105deg, rgba(22, 20, 18, 0.92) 0%, rgba(22, 20, 18, 0.72) 48%, rgba(34, 30, 27, 0.55) 100%),
-    repeating-linear-gradient(
-      -12deg,
-      #2a2420 0px,
-      #2a2420 18px,
-      #1c1916 18px,
-      #1c1916 36px
-    );
-  background-size: cover;
+    linear-gradient(105deg, rgba(22, 20, 18, 0.88) 0%, rgba(22, 20, 18, 0.68) 48%, rgba(34, 30, 27, 0.5) 100%),
+    url("https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=60")
+      center / cover no-repeat;
 }
 
 .bq-hero-inner {
@@ -771,16 +765,9 @@ img {
   position: relative;
   min-height: 280px;
   background:
-    linear-gradient(160deg, rgba(22, 20, 18, 0.75), rgba(22, 20, 18, 0.45)),
-    repeating-linear-gradient(
-      90deg,
-      #3d2a1d 0px,
-      #3d2a1d 12px,
-      #5d412d 12px,
-      #5d412d 24px,
-      #2a1f18 24px,
-      #2a1f18 36px
-    );
+    linear-gradient(160deg, rgba(22, 20, 18, 0.82), rgba(22, 20, 18, 0.55)),
+    url("https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1600&q=60")
+      center / cover no-repeat;
   border-right: 3px solid var(--bq-accent-primary);
   color: var(--bq-text-inverse);
   display: flex;

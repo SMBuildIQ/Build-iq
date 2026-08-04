@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Button } from "@/components/Button";
+import { DemoNotice } from "@/components/DemoNotice";
 import { HeroBand } from "@/components/HeroBand";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatCurrency } from "@/lib/format";
-import { mockCabinetryOpps } from "@/lib/mock-data";
+import { TOKEN_COOKIE } from "@/lib/cookies";
+import { fetchCabinetry, tokenFromCookieHeader } from "@/lib/data";
 import type { BadgeTone } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Cabinetry" };
 
 function stageTone(stage: string): BadgeTone {
   if (stage.toLowerCase().includes("accept")) return "success";
-  if (stage.toLowerCase().includes("lead")) return "draft";
+  if (stage.toLowerCase().includes("lead") || stage.toLowerCase() === "new") return "draft";
   return "progress";
 }
 
@@ -21,7 +24,11 @@ const PRODUCT_LINES = [
   { name: "Flat-panel walnut", finish: "Walnut / oil", lead: "21–28 days" },
 ];
 
-export default function CabinetryPage() {
+export default async function CabinetryPage() {
+  const jar = await cookies();
+  const token = tokenFromCookieHeader(jar.get(TOKEN_COOKIE)?.value);
+  const { data: opps, demo } = await fetchCabinetry(token);
+
   return (
     <>
       <HeroBand
@@ -36,37 +43,44 @@ export default function CabinetryPage() {
       />
 
       <div className="bq-content" style={{ paddingTop: 32 }}>
+        <DemoNotice show={demo} />
         <section className="bq-section" style={{ marginTop: 0 }}>
           <div className="bq-section-head">
             <h2 className="bq-title">Opportunities</h2>
           </div>
           <div className="bq-panel">
-            <table className="bq-table">
-              <thead>
-                <tr>
-                  <th>Project</th>
-                  <th>Product line</th>
-                  <th>Stage</th>
-                  <th>Designer</th>
-                  <th>Value</th>
-                  <th>Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockCabinetryOpps.map((opp) => (
-                  <tr key={opp.id}>
-                    <td>{opp.projectName}</td>
-                    <td>{opp.productLine}</td>
-                    <td>
-                      <StatusBadge label={opp.stage} tone={stageTone(opp.stage)} />
-                    </td>
-                    <td>{opp.designer}</td>
-                    <td>{formatCurrency(opp.value)}</td>
-                    <td className="bq-mono">{opp.updatedAt}</td>
+            {opps.length === 0 ? (
+              <p className="bq-body" style={{ color: "var(--bq-text-secondary)", margin: 0 }}>
+                No cabinetry opportunities yet.
+              </p>
+            ) : (
+              <table className="bq-table">
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Product line</th>
+                    <th>Stage</th>
+                    <th>Designer</th>
+                    <th>Value</th>
+                    <th>Updated</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {opps.map((opp) => (
+                    <tr key={opp.id}>
+                      <td>{opp.projectName}</td>
+                      <td>{opp.productLine}</td>
+                      <td>
+                        <StatusBadge label={opp.stage} tone={stageTone(opp.stage)} />
+                      </td>
+                      <td>{opp.designer}</td>
+                      <td>{formatCurrency(opp.value)}</td>
+                      <td className="bq-mono">{opp.updatedAt}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
 

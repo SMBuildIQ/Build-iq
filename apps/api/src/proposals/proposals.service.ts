@@ -174,19 +174,20 @@ export class ProposalsService {
     });
     if (!existing) throw new NotFoundException("Proposal not found");
 
-    const stubPdf = Buffer.from(`%PDF-1.4 stub proposal ${existing.number}\n`);
-    const uploaded = await this.storage.upload(
-      `proposals/${existing.id}.pdf`,
-      stubPdf,
-      "application/pdf",
+    const filename = `${existing.number}.pdf`;
+    // Minimal synthetic PDF bytes — real renderer TBD.
+    const stubPdf = Buffer.from(
+      `%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%% BuildIQ stub proposal ${existing.number}\n%%EOF\n`,
     );
+    await this.storage.upload(`proposals/${existing.id}.pdf`, stubPdf, "application/pdf");
 
     return {
+      buffer: stubPdf,
+      filename,
       stub: true,
       proposalId: existing.id,
       number: existing.number,
-      storage: uploaded,
-      contentType: "application/pdf",
+      contentType: "application/pdf" as const,
     };
   }
 }
