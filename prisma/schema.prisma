@@ -24,6 +24,9 @@ model Company {
   spruceSettings SpruceSettings?
   cart           Cart?
   orders         Order[]
+  customers      Customer[]
+  cabinetryProductLines CabinetryProductLine[]
+  cabinetryOpportunities CabinetryOpportunity[]
 }
 
 model User {
@@ -87,12 +90,15 @@ model Project {
   companyId   String
   company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdById String?
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   blueprints  Blueprint[]
   materials   MaterialItem[]
   estimate    Estimate?
   bidPackages BidPackage[]
   spruceSyncs SpruceSyncLog[]
+  cabinetryOpportunities CabinetryOpportunity[]
 }
 
 model Blueprint {
@@ -432,5 +438,111 @@ model ModuleRegistry {
   status      String   @default("PLANNED") // PLANNED | PARTIAL | FULL
   description String?
   updatedAt   DateTime @updatedAt
+}
+
+/// Shared customer party (builder / homeowner / GC) — platform foundation for cabinetry + CRM.
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  /// BUILDER | HOMEOWNER | GC | OTHER
+  type      String   @default("BUILDER")
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  zip       String?
+  notes     String?
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdById String?
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  contacts      Contact[]
+  projects      Project[]
+  opportunities CabinetryOpportunity[]
+
+  @@index([companyId, name])
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  /// ARCHITECT | DESIGNER | PM | OTHER
+  role      String?
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdById String?
+
+  companyId  String
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, customerId])
+}
+
+/// Editable cabinetry product lines (Mesa / Summit / Pinnacle) — specs in DB, not hard-coded prices.
+model CabinetryProductLine {
+  id          String   @id @default(cuid())
+  slug        String
+  name        String
+  description String?
+  /// JSON construction / finish specifications (admin-editable)
+  specsJson   String   @default("{}")
+  status      String   @default("ACTIVE")
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  opportunities CabinetryOpportunity[]
+
+  @@unique([companyId, slug])
+}
+
+model CabinetryOpportunity {
+  id        String   @id @default(cuid())
+  /// NEW | DOCUMENTS_REQUESTED | ... | ACCEPTED | LOST | EXPIRED
+  stage     String   @default("NEW")
+  status    String   @default("OPEN")
+  version   Int      @default(1)
+  builderName    String?
+  architectName  String?
+  designerName   String?
+  projectAddress String?
+  requestedProposalDate DateTime?
+  targetInstallDate     DateTime?
+  /// NEW_CONSTRUCTION | REMODEL
+  constructionType String?
+  /// SUPPLY_ONLY | SUPPLY_AND_INSTALL
+  supplyScope      String?
+  taxStatus        String?
+  notes            String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdById String?
+  salespersonId String?
+  estimatorId   String?
+
+  companyId     String
+  company       Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  projectId     String
+  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  productLineId String?
+  productLine   CabinetryProductLine? @relation(fields: [productLineId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, stage])
+  @@index([projectId])
+  @@index([customerId])
 }
 

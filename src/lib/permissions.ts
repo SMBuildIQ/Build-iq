@@ -43,6 +43,9 @@ export const PERMISSIONS = [
   "account:delete",
   "settings:view",
   "module:planned:view",
+  "cabinetry:view",
+  "cabinetry:opportunity:write",
+  "cabinetry:catalog:edit",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -68,6 +71,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "account:export",
     "settings:view",
     "module:planned:view",
+    "cabinetry:view",
+    "cabinetry:opportunity:write",
   ],
   SUPERINTENDENT: [
     "team:view",
@@ -94,6 +99,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "account:export",
     "settings:view",
     "module:planned:view",
+    "cabinetry:view",
+    "cabinetry:opportunity:write",
   ],
   PURCHASING: [
     "team:view",
@@ -125,6 +132,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "account:export",
     "settings:view",
     "module:planned:view",
+    "cabinetry:view",
+    "cabinetry:opportunity:write",
   ],
   SALES: [
     "team:view",
@@ -134,6 +143,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "account:export",
     "settings:view",
     "module:planned:view",
+    "cabinetry:view",
+    "cabinetry:opportunity:write",
   ],
   SUBCONTRACTOR: [
     "project:read",

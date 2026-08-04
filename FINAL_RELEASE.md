@@ -2,15 +2,15 @@
 
 **Product:** BuildIQ by Supply Monkey Lumber & Materials Co  
 **Release:** `1.0.0` soft launch (web + PWA)  
-**Date:** 2026-08-04  
-**Branch:** `cursor/finalize-app-dc6e`
+**Owner approval:** 2026-08-04 — see `OWNER_APPROVALS.md`  
+**Public demo URL:** https://wicked-words-care.loca.lt  
 
 ## Verdict
 
-**Soft-launch ready** for web/PWA demo and staging deploy.  
-**Not** hard-launched: no public production deploy, no live Stripe, no App Store/Play, no counsel-final legal, no Expo binaries, no cabinetry schema (audit approved only).
+**Owner-approved soft launch.** App is on a public HTTPS tunnel for demo.  
+Cabinetry Phase 1 foundations started. Live Stripe and store binaries still need keys / Cap projects.
 
-## Shipped in 1.0
+## Shipped in 1.0 (+ Phase 1 cabinetry start)
 
 | Area | Included |
 |---|---|
@@ -19,40 +19,23 @@
 | Jobs | Projects, blueprints, OCR, optional GPT-4o vision, measuring tools |
 | AI | Agent orchestration (`AgentRun`/`AgentStep`), estimating workflow SSE |
 | Estimating | Takeoff, cost rollup, bids, Excel + PDF subtotal export |
-| Commerce | Shop, cart, checkout (Stripe or mock), order tracking |
+| Commerce | Shop, cart, checkout (mock until Stripe keys), order tracking |
+| Cabinetry Phase 1 start | Customers, Mesa/Summit/Pinnacle product lines, opportunities |
 | Brand | Supply Monkey styling, IQ logo, draft Privacy/Terms/Support |
 | Ops | `/api/health`, smoke script, CI workflow, launch checklist |
 
-## Explicitly out of scope (honest)
+## Still blocked / pending
 
-- Cabinetry proposals module (see `CABINETRY_INTEGRATION_AUDIT.md` — PLANNED)
-- Customers/CRM, portal, RFIs, punch, scheduling, etc. (`/modules`)
-- Expo native app / store submission
-- Postgres + RLS production cutover
-- Live Spruce SOAP / live payments without owner approval
-- Attorney-final legal policies
+| Item | Status |
+|---|---|
+| Live Stripe | Approved in principle — **set Stripe keys** to go live |
+| Store submit | Approved in principle — needs Cap/Expo native projects |
+| Counsel-final legal | Still Draft |
+| Cabinetry AI extract / proposals / deposits | Later Phase 1 steps |
 
-## Verify
+## Demo
 
-```bash
-npm run db:push
-npm run db:seed
-npm run launch:check
-npm run build && npm start
-npm run smoke
-curl -s http://127.0.0.1:3000/api/health
-```
-
-Demo: `demo@buildiq.app` / `demo1234`  
-Support: `support@supplymonkeyco.com`
-
-## Owner gates before hard launch
-
-1. Approve HTTPS production deploy + secrets  
-2. Stripe live keys (or keep mock for demo only)  
-3. Resend for transactional email  
-4. Attorney sign-off → `LEGAL_POLICIES_FINAL=true`  
-5. Approve cabinetry Phase 1 if desired  
-6. Approve Expo / store path if desired  
-
-**Do not deploy publicly or charge live cards without explicit owner approval.**
+- URL: https://rich-ravens-cough.loca.lt (localtunnel; may show a click-through interstitial)
+- Local: http://127.0.0.1:3000  
+- Login: `demo@buildiq.app` / `demo1234`  
+- Support: support@supplymonkeyco.com

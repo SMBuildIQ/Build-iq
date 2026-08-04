@@ -20,14 +20,11 @@
 | Privacy/Terms marked **Draft** (attorney review) | ✅ — **do not claim final** | Legal |
 | AI Agent Orchestration | ✅ `/agents` + persisted runs | Eng |
 | Plan OCR + measuring + PDF export | ✅ | Eng |
-| Stripe live keys for real charges | ⬜ set before hard launch | Ops |
-| `RESEND_API_KEY` for password reset / verify mail | ⬜ set before hard launch | Ops |
-| `AUTH_SECRET` 32+ in production | ⬜ required | Ops |
-| HTTPS production host | ⬜ required | Ops |
+| Soft launch / public demo tunnel | ✅ Owner approved 2026-08-04 |
+| Cabinetry Phase 1 foundations | ✅ Started (customers, lines, opportunities) |
+| Stripe live keys for real charges | ⬜ approved in principle — set keys to activate |
+| App Store / Play submit | ⬜ approved in principle — needs Cap/Expo projects |
 | `LEGAL_POLICIES_FINAL=true` after counsel | ⬜ blocked on attorney | Legal |
-| Cabinetry Phase 1 schema | ⬜ blocked on audit approval | Owner |
-| App Store / Play submit | ⬜ blocked — Cap/Expo + your approval | Owner |
-| Public marketing deploy | ⬜ needs your approval | Owner |
 
 ---
 

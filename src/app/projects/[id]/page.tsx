@@ -307,6 +307,20 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
+        <section className="mt-8 border border-[var(--line)] bg-white px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-display text-xl font-semibold">Cabinetry</h2>
+              <p className="text-sm text-[var(--sage)]">
+                Project tab for cabinetry opportunities (Phase 1).
+              </p>
+            </div>
+            <Link href="/cabinetry" className="btn-secondary !py-2 text-sm">
+              Open Cabinetry
+            </Link>
+          </div>
+        </section>
+
         <div className="mt-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
           <section>
             <h2 className="font-display text-2xl font-semibold">Blueprints</h2>

@@ -38,7 +38,7 @@ export async function GET() {
       planMeasuring: true,
       excelExport: true,
       pdfExport: true,
-      cabinetryModule: "planned",
+      cabinetryModule: "partial",
     },
     legalPoliciesDraft: LEGAL.policiesAreDrafts,
     release: "1.0.0-soft",

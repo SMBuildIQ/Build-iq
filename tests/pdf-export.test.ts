@@ -20,6 +20,7 @@ function baseProject(overrides: Partial<Project> = {}): Project & { company: { n
     updatedAt: now,
     companyId: "co_1",
     createdById: null,
+    customerId: null,
     company: { name: "Demo Builders LLC" },
     ...overrides,
   };

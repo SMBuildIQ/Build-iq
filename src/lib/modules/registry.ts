@@ -43,9 +43,9 @@ export const PLATFORM_MODULES: PlatformModule[] = [
   {
     slug: "cabinetry",
     name: "AI Cabinetry Proposals",
-    status: "PLANNED",
+    status: "PARTIAL",
     description:
-      "Opportunities, AI extraction, catalog pricing, proposals, deposits — see CABINETRY_INTEGRATION_AUDIT.md. Not started pending plan approval.",
+      "Phase 1 started: customers, Mesa/Summit/Pinnacle product lines, opportunities. See OWNER_APPROVALS.md.",
   },
   { slug: "company-settings", name: "Company settings and permissions", status: "PARTIAL", description: "Team invites and RBAC; deeper settings planned." },
 ];
