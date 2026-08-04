@@ -17,6 +17,7 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - name: Typecheck
+        # Soft-launch Next only (apps/* have their own typecheck via workspaces)
         run: npm run typecheck
       - name: Unit tests
         run: npm test
