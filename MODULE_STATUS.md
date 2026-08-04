@@ -38,6 +38,7 @@ Legend: **FULL** = usable in production paths · **PARTIAL** = real code but inc
 | Order tracking | PARTIAL (simulated advance button) |
 | ECI Spruce | PARTIAL (mock default; live SOAP stubby) |
 | Excel export | FULL |
+| PDF estimate / subtotals export | FULL |
 | Account deletion / data export | FULL (API + UI) |
 | Privacy / Terms / Support pages | PARTIAL (entity placeholders remain) |
 

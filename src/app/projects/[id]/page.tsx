@@ -158,6 +158,27 @@ export default function ProjectDetailPage() {
     setMessage("Excel workbook downloaded.");
   }
 
+  async function exportPdf() {
+    setBusy("export-pdf");
+    setError("");
+    const res = await fetch(`/api/projects/${id}/export/pdf`);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setBusy(null);
+      setError(data.error || "PDF export failed");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${project?.name || "estimate"}-subtotals.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setBusy(null);
+    setMessage("Estimate subtotal PDF downloaded.");
+  }
+
   async function spruceAction(action: "sync-pricing" | "submit-quote") {
     setBusy(action);
     setError("");
@@ -235,7 +256,7 @@ export default function ProjectDetailPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <button
               onClick={runBots}
               disabled={!!busy || botsOpen}
@@ -245,6 +266,13 @@ export default function ProjectDetailPage() {
             </button>
             <button onClick={exportExcel} disabled={!!busy || !project.materials.length} className="btn-secondary !py-3">
               {busy === "export" ? "Exporting…" : "Export Excel"}
+            </button>
+            <button
+              onClick={exportPdf}
+              disabled={!!busy || !project.materials.length}
+              className="btn-secondary !py-3"
+            >
+              {busy === "export-pdf" ? "Building PDF…" : "Export PDF"}
             </button>
             <button
               onClick={() => spruceAction("submit-quote")}

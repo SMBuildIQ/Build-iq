@@ -35,6 +35,7 @@ Base: same origin `/api/*`. Auth: HTTP-only cookie `buildiq_session` (JWT).
 | POST | `/api/projects/:id/estimate` | estimate:run |
 | GET/PATCH | `/api/projects/:id/bids` | bid:manage |
 | GET | `/api/projects/:id/export` | project:read |
+| GET | `/api/projects/:id/export/pdf` | project:read (estimate subtotals PDF) |
 | POST | `/api/projects/:id/spruce` | spruce:sync |
 
 ## Commerce
