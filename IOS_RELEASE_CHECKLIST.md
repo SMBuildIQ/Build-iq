@@ -11,6 +11,8 @@
 - [ ] Account deletion tested on TestFlight
 - [ ] Demo account in App Review notes
 - [ ] Privacy / Terms / Support URLs live on HTTPS
+- [ ] Store contacts match `store/CONTACT.md` (Supply Monkey / support@supplymonkeyco.com)
+- [ ] Privacy & Terms attorney-approved before treating as final (`LEGAL_POLICIES_FINAL`)
 - [ ] No placeholder screens or dead buttons in review path
 - [ ] Push / Face ID only if implemented and disclosed
 - [ ] **Do not submit without owner approval**
