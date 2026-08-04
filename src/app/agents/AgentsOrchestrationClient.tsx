@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { useMe } from "@/hooks/useMe";
 
 type Agent = {
   id: string;
@@ -50,6 +51,7 @@ type RunDetailStep = {
 export default function AgentsOrchestrationClient() {
   const search = useSearchParams();
   const highlightRun = search.get("run");
+  const { user } = useMe();
 
   const [agents, setAgents] = useState<Agent[]>([]);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
@@ -105,7 +107,7 @@ export default function AgentsOrchestrationClient() {
   }, [selected]);
 
   return (
-    <AppShell user={{ name: "You" }}>
+    <AppShell user={user || { name: "You" }}>
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--copper-deep)]">
           Platform

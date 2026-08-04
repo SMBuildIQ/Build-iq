@@ -6,8 +6,10 @@ COOKIE_JAR="$(mktemp)"
 trap 'rm -f "$COOKIE_JAR"' EXIT
 
 echo "== health =="
-curl -sf "$BASE/api/health" | head -c 400
+HEALTH=$(curl -sf "$BASE/api/health")
+echo "$HEALTH" | head -c 600
 echo
+echo "$HEALTH" | grep -q '"status":"ok"'
 
 echo "== public pages =="
 for path in / /privacy /terms /support /login /signup; do
@@ -38,7 +40,21 @@ echo "== modules =="
 curl -sf -b "$COOKIE_JAR" "$BASE/api/modules" | head -c 200
 echo
 
+echo "== orchestration =="
+ORCH=$(curl -sf -b "$COOKIE_JAR" "$BASE/api/orchestration")
+echo "$ORCH" | head -c 400
+echo
+echo "$ORCH" | grep -q 'estimating-pipeline'
+
+echo "== authenticated pages =="
+for path in /dashboard /agents /cabinetry /shop /cart /orders /modules /team /settings/account; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "$BASE$path")
+  echo "$path $code"
+  # App Router may return 200 for client shells
+  test "$code" = "200" -o "$code" = "307" -o "$code" = "308"
+done
+
 echo "== logout =="
 curl -sf -b "$COOKIE_JAR" -c "$COOKIE_JAR" -X POST "$BASE/api/auth/logout"
 echo
-echo "SMOKE OK"
+echo "SMOKE OK — BuildIQ soft-launch paths healthy"

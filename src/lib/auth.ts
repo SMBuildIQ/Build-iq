@@ -171,10 +171,10 @@ export function jsonError(error: unknown, fallback = "Something went wrong") {
   // Avoid leaking internal stack/messages in production
   if (process.env.NODE_ENV === "production") {
     console.error("[api]", error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: fallback }, { status: 400 });
+    return NextResponse.json({ error: fallback }, { status: 500 });
   }
   const message = error instanceof Error ? error.message : fallback;
-  return NextResponse.json({ error: message }, { status: 400 });
+  return NextResponse.json({ error: message }, { status: 500 });
 }
 
 export async function ensureOwnedProject(projectId: string, companyId: string) {

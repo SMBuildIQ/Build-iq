@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
+import { useMe } from "@/hooks/useMe";
 
 const SECTIONS = [
   { name: "Opportunities", note: "Linked to company, customer, and project" },
@@ -18,8 +19,10 @@ const SECTIONS = [
 ] as const;
 
 export default function CabinetryHubPage() {
+  const { user } = useMe();
+
   return (
-    <AppShell user={{ name: "You" }}>
+    <AppShell user={user || { name: "You" }}>
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--copper-deep)]">
           Planned module

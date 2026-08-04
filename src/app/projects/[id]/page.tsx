@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/AppNav";
 import { BotRunner } from "@/components/BotRunner";
 import { formatCurrency, formatCurrencyExact, formatNumber } from "@/lib/format";
 import { TRADE_ORDER } from "@/lib/materials/catalog";
+import { useMe } from "@/hooks/useMe";
 
 type Material = {
   id: string;
@@ -77,6 +78,7 @@ export default function ProjectDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const { user: me } = useMe();
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -221,7 +223,7 @@ export default function ProjectDetailPage() {
 
   if (!project && !error) {
     return (
-      <AppShell user={{ name: "You" }}>
+      <AppShell user={me || { name: "You" }}>
         <p className="py-10 text-[var(--sage)]">Loading project…</p>
       </AppShell>
     );
@@ -229,7 +231,7 @@ export default function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <AppShell user={{ name: "You" }}>
+      <AppShell user={me || { name: "You" }}>
         <p className="text-red-700">{error}</p>
         <Link href="/dashboard" className="btn-secondary mt-4 inline-flex">
           Back to projects
@@ -239,7 +241,7 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <AppShell user={{ name: "You" }}>
+    <AppShell user={me || { name: "You" }}>
         <div className="flex flex-col gap-4">
           <div>
             <Link href="/dashboard" className="text-sm text-[var(--sage)] hover:text-[var(--ink)]">

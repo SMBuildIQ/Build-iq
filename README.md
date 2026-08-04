@@ -1,6 +1,8 @@
 # BuildIQ
 
-Residential construction estimating platform: blueprint upload, AI material takeoff, cost estimates, subcontractor bid packages, Excel export, and ECI Spruce sync.
+Residential construction estimating platform: blueprint upload, AI agent orchestration, material takeoff, cost estimates, subcontractor bid packages, Excel/PDF export, and ECI Spruce sync.
+
+**Release:** Soft launch **1.0.0** — see `FINAL_RELEASE.md` and `LAUNCH_CHECKLIST.md`.
 
 ## Platform audit (read first)
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PlanViewer, type MeasurementRow } from "@/components/PlanViewer";
+import { useMe } from "@/hooks/useMe";
 
 type BlueprintDetail = {
   id: string;
@@ -29,6 +30,7 @@ export default function PlanWorkspacePage() {
   const params = useParams();
   const projectId = params.id as string;
   const blueprintId = params.blueprintId as string;
+  const { user: me } = useMe();
 
   const [blueprint, setBlueprint] = useState<BlueprintDetail | null>(null);
   const [measurements, setMeasurements] = useState<MeasurementRow[]>([]);
@@ -107,14 +109,14 @@ export default function PlanWorkspacePage() {
 
   if (!blueprint && !error) {
     return (
-      <AppShell user={{ name: "You" }}>
+      <AppShell user={me || { name: "You" }}>
         <p className="py-10 text-[var(--sage)]">Loading plan workspace…</p>
       </AppShell>
     );
   }
 
   return (
-    <AppShell user={{ name: "You" }}>
+    <AppShell user={me || { name: "You" }}>
       <div className="mb-4">
         <Link href={`/projects/${projectId}`} className="text-sm text-[var(--sage)] hover:text-[var(--ink)]">
           ← Back to project
