@@ -56,7 +56,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         },
       ];
     });
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
     // Best-effort sync; keep optimistic local cart either way
     void apiAddToCart({ packageId: pkg.id, quantity: qty });
   }, []);
