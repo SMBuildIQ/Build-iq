@@ -263,7 +263,7 @@ export default function ProjectDetailPage() {
               disabled={!!busy || botsOpen}
               className="btn-copper !py-3"
             >
-              {botsOpen ? "Bots running…" : "Run AI bots"}
+              {botsOpen ? "Orchestrating…" : "Run AI agents"}
             </button>
             <button onClick={exportExcel} disabled={!!busy || !project.materials.length} className="btn-secondary !py-3">
               {busy === "export" ? "Exporting…" : "Export Excel"}
