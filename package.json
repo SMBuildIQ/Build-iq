@@ -17,7 +17,9 @@
     "cap:add:ios": "npx cap add ios",
     "cap:add:android": "npx cap add android",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "tsx --test tests/**/*.test.ts",
+    "smoke": "bash scripts/smoke.sh",
+    "launch:check": "npm run typecheck && npm test && npm run build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

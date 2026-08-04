@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, "cursor/**"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+      - name: Production build
+        env:
+          DATABASE_URL: file:./ci.db
+          AUTH_SECRET: ci-build-secret-at-least-32-characters-long
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          npx prisma db push
+          npm run build

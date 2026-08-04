@@ -32,7 +32,8 @@ Honest inventory after the incomplete-items fix pass.
 | Email delivery | Console in dev without `RESEND_API_KEY` |
 | Legal entity mailing address | Completed — Supply Monkey Lumber & Materials Co, Prescott AZ |
 | Privacy/Terms final counsel approval | Drafts labeled; set `LEGAL_POLICIES_FINAL=true` only after attorney sign-off |
-| CI workflows | Not added yet |
+| CI workflows | Added (`.github/workflows/ci.yml`) |
+| Launch checklist + smoke script | Added — web/PWA soft-launch ready |
 | Expo mobile client | Not started (awaits architecture execution phase) |
 
 ## Intentionally not faked

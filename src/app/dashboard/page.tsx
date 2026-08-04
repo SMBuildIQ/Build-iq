@@ -22,24 +22,26 @@ export default async function DashboardPage() {
   return (
     <AppShell user={user}>
       <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--sage)]">
-              {user.companyName || "Your company"}
-            </p>
-            <h1 className="mt-1 font-display text-3xl font-semibold text-[var(--ink)]">Jobs</h1>
-          </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--sage)]">
+            {user.companyName || "Your company"}
+          </p>
+          <h1 className="mt-1 font-display text-3xl text-[var(--brown)]">Jobs</h1>
+        </div>
         <Link href="/projects/new" className="btn-copper !px-3.5 !py-2.5 !text-sm">
           New
         </Link>
       </div>
 
       {projects.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-[var(--line)] px-5 py-12 text-center">
-          <h2 className="font-display text-2xl font-semibold">No projects yet</h2>
+        <div className="surface mt-10 border-dashed px-5 py-12 text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/banana-icon.png" alt="" className="mx-auto h-10 w-10" />
+          <h2 className="mt-4 font-display text-2xl text-[var(--brown)]">No projects yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--sage)]">
             Create a residential project, upload blueprints, and let BuildIQ build the takeoff.
           </p>
-          <Link href="/projects/new" className="btn-primary mt-6">
+          <Link href="/projects/new" className="btn-copper mt-6">
             Create first project
           </Link>
         </div>
@@ -49,12 +51,12 @@ export default async function DashboardPage() {
             <li key={p.id}>
               <Link
                 href={`/projects/${p.id}`}
-                className="block rounded-2xl border border-[var(--line)] bg-white/50 p-4 transition active:scale-[0.99] hover:bg-white/80"
+                className="surface block p-4 transition active:scale-[0.99] hover:border-[var(--orange)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-display text-lg font-semibold text-[var(--ink)]">{p.name}</h2>
+                      <h2 className="font-display text-lg text-[var(--brown)]">{p.name}</h2>
                       <StatusBadge status={p.status} />
                     </div>
                     <p className="mt-1 text-sm text-[var(--sage)]">
@@ -66,7 +68,7 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="font-display text-xl font-semibold text-[var(--ink)]">
+                    <p className="font-display text-xl text-[var(--orange)]">
                       {p.estimate ? formatCurrency(p.estimate.grandTotal) : "—"}
                     </p>
                   </div>

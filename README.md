@@ -6,6 +6,7 @@ Residential construction estimating platform: blueprint upload, AI material take
 
 | Doc | Purpose |
 |---|---|
+| [LAUNCH_CHECKLIST.md](./LAUNCH_CHECKLIST.md) | **Start here for go-live** |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Current vs recommended architecture |
 | [MODULE_STATUS.md](./MODULE_STATUS.md) | Full / partial / planned module map |
 | [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md) | Mocks, placeholders, security gaps |
@@ -20,6 +21,13 @@ Residential construction estimating platform: blueprint upload, AI material take
 **Backup branch (frozen):** `cursor/backup-pre-platform-rebuild-dc6e` — original project preserved.
 
 In-app module roadmap: **/modules** (planned modules show honest empty states — no fake CRUD).
+
+### Launch commands
+
+```bash
+npm run launch:check   # typecheck + tests + production build
+npm run smoke          # hit /api/health + auth + projects (server must be up)
+```
 
 ## Features
 

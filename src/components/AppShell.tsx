@@ -151,7 +151,7 @@ export function MarketingShell({
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/logo-vertical.png" alt="Supply Monkey" className="h-9 w-auto" />
+            <img src="/brand/logo-iq.png" alt="Supply Monkey IQ" className="h-10 w-auto" />
           </Link>
           <div className="flex items-center gap-2">
             <Link
@@ -169,7 +169,7 @@ export function MarketingShell({
       {children}
       <footer className="border-t border-[var(--line)] bg-[var(--dark)] px-4 py-8 text-center text-xs text-white/70">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/logo-vertical.png" alt="" className="mx-auto mb-4 h-10 w-auto opacity-95" />
+        <img src="/brand/logo-iq.png" alt="" className="mx-auto mb-4 h-12 w-auto opacity-95" />
         <p className="mb-2 font-display text-sm tracking-wide text-[var(--orange)]">
           BuildIQ · Supply Monkey Lumber &amp; Materials Co
         </p>
