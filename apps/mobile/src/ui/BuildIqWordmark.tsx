@@ -17,7 +17,7 @@ function BananaPeel({ size }: { size: number }) {
   const w = size;
   const h = size * 0.72;
   return (
-    <Svg width={w} height={h} viewBox="0 0 32 22" accessibilityElementsHidden>
+    <Svg width={w} height={h} viewBox="0 0 32 22">
       {/* stem */}
       <Path d="M15.2 1.2c.4-.8 1.2-.8 1.6 0l.6 1.4c.2.4 0 .8-.4.9h-2c-.4 0-.6-.5-.4-.9l.6-1.4z" fill="#6B4A2A" />
       {/* left peel */}
@@ -88,7 +88,7 @@ export function BuildIqWordmark({
         },
         style,
       ]}
-      accessibilityRole="text"
+      accessible
       accessibilityLabel="BuildIQ"
     >
       <Text style={[baseText, { color }, textStyle]}>Build</Text>
