@@ -32,7 +32,7 @@ export function AppNav({
     <header className="relative z-20 border-b border-[var(--line)] bg-[var(--paper)]/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <Link href={user ? "/dashboard" : "/"} className="font-display text-2xl font-semibold tracking-tight text-[var(--ink)]">
-          Fieldline
+          BuildIQ
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2">
           {links.map((l) => (

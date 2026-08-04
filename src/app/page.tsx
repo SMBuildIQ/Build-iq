@@ -16,7 +16,7 @@ export default async function HomePage() {
         <section className="relative mx-auto grid min-h-[calc(100vh-73px)] max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 lg:py-0">
           <div>
             <p className="animate-rise font-display text-5xl font-semibold leading-[0.95] tracking-tight text-[var(--ink)] sm:text-6xl md:text-7xl">
-              Fieldline
+              BuildIQ
             </p>
             <h1 className="animate-rise-delay-1 mt-5 max-w-xl text-2xl font-medium leading-snug text-[var(--ink-soft)] sm:text-3xl">
               Residential takeoffs that build themselves.
@@ -44,7 +44,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-6xl px-5 py-20">
             <h2 className="font-display text-3xl font-semibold sm:text-4xl">One path from plan to price</h2>
             <p className="mt-3 max-w-xl text-[var(--mist)]">
-              Fieldline replaces spreadsheet takeoffs with a single workflow built for residential builders.
+              BuildIQ replaces spreadsheet takeoffs with a single workflow built for residential builders.
             </p>
 
             <ol className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -52,7 +52,7 @@ export default async function HomePage() {
                 {
                   step: "01",
                   title: "Upload blueprints",
-                  body: "Drop PDF or image plan sets. Fieldline classifies sheets and prepares them for takeoff.",
+                  body: "Drop PDF or image plan sets. BuildIQ classifies sheets and prepares them for takeoff.",
                 },
                 {
                   step: "02",
@@ -81,7 +81,7 @@ export default async function HomePage() {
         </section>
 
         <footer className="border-t border-[var(--line)] px-5 py-8 text-center text-sm text-[var(--sage)]">
-          Fieldline · Residential construction estimating · ECI Spruce connected
+          BuildIQ · Residential construction estimating · ECI Spruce connected
         </footer>
       </main>
     </div>

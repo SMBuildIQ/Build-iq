@@ -38,7 +38,7 @@ export default async function DashboardPage() {
           <div className="mt-16 border border-dashed border-[var(--line)] px-6 py-16 text-center">
             <h2 className="font-display text-2xl font-semibold">No projects yet</h2>
             <p className="mx-auto mt-2 max-w-md text-[var(--sage)]">
-              Create a residential project, upload blueprints, and let Fieldline build the takeoff.
+              Create a residential project, upload blueprints, and let BuildIQ build the takeoff.
             </p>
             <Link href="/projects/new" className="btn-primary mt-6">
               Create first project

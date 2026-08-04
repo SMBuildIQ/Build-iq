@@ -38,7 +38,7 @@ export default function LoginPage() {
       <AppNav />
       <main className="mx-auto flex max-w-md flex-col px-5 py-16">
         <h1 className="font-display text-4xl font-semibold text-[var(--ink)]">Welcome back</h1>
-        <p className="mt-2 text-[var(--sage)]">Sign in to your Fieldline workspace.</p>
+        <p className="mt-2 text-[var(--sage)]">Sign in to your BuildIQ workspace.</p>
 
         <form onSubmit={onSubmit} className="surface mt-8 space-y-4 p-6">
           <div>

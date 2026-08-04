@@ -1,18 +1,18 @@
 services:
-  fieldline:
+  buildiq:
     build: .
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: file:./data/prod.db
-      AUTH_SECRET: ${AUTH_SECRET:-fieldline-change-me}
+      AUTH_SECRET: ${AUTH_SECRET:-buildiq-change-me}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       NODE_ENV: production
     volumes:
-      - fieldline-data:/app/data
-      - fieldline-uploads:/app/uploads
+      - buildiq-data:/app/data
+      - buildiq-uploads:/app/uploads
     restart: unless-stopped
 
 volumes:
-  fieldline-data:
-  fieldline-uploads:
+  buildiq-data:
+  buildiq-uploads:

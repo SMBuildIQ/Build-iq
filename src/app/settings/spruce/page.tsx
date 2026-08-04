@@ -94,7 +94,7 @@ export default function SpruceSettingsPage() {
         </Link>
         <h1 className="mt-3 font-display text-4xl font-semibold">ECI Spruce</h1>
         <p className="mt-2 max-w-2xl text-[var(--sage)]">
-          Connect Fieldline to your Spruce ecommerce API for inventory pricing and quote submission.
+          Connect BuildIQ to your Spruce ecommerce API for inventory pricing and quote submission.
           Ask your ECI Implementation specialist for the endpoint URL and API key. Mock mode works
           without credentials using the built-in catalog.
         </p>

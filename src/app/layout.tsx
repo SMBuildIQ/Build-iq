@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fieldline — Residential Construction Estimating",
+  title: "BuildIQ — Residential Construction Estimating",
   description:
     "Upload blueprints, AI takeoffs, cost estimates, subcontractor bid packages, Excel export, and ECI Spruce sync.",
 };

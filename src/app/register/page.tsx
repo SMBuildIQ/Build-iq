@@ -40,7 +40,7 @@ export default function RegisterPage() {
       <AppNav />
       <main className="mx-auto flex max-w-md flex-col px-5 py-16">
         <h1 className="font-display text-4xl font-semibold text-[var(--ink)]">Start estimating</h1>
-        <p className="mt-2 text-[var(--sage)]">Create your Fieldline account in under a minute.</p>
+        <p className="mt-2 text-[var(--sage)]">Create your BuildIQ account in under a minute.</p>
 
         <form onSubmit={onSubmit} className="surface mt-8 space-y-4 p-6">
           <div>

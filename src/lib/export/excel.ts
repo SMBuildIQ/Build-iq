@@ -16,7 +16,7 @@ function money(n: number) {
 
 export async function buildEstimateWorkbook(data: ExportPayload): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Fieldline";
+  wb.creator = "BuildIQ";
   wb.created = new Date();
 
   const summary = wb.addWorksheet("Summary", {
@@ -24,7 +24,7 @@ export async function buildEstimateWorkbook(data: ExportPayload): Promise<Buffer
   });
 
   summary.mergeCells("A1:B1");
-  summary.getCell("A1").value = "Fieldline Cost Estimate";
+  summary.getCell("A1").value = "BuildIQ Cost Estimate";
   summary.getCell("A1").font = { bold: true, size: 16, color: { argb: "FF1C2B24" } };
 
   summary.getCell("A3").value = "Project";

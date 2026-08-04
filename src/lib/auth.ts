@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
-const COOKIE_NAME = "fieldline_session";
+const COOKIE_NAME = "buildiq_session";
 
 function getSecret() {
-  const secret = process.env.AUTH_SECRET || "fieldline-dev-secret";
+  const secret = process.env.AUTH_SECRET || "buildiq-dev-secret";
   return new TextEncoder().encode(secret);
 }
 

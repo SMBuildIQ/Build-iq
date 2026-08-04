@@ -1,4 +1,4 @@
-# Fieldline
+# BuildIQ
 
 Residential construction estimating platform: blueprint upload, AI material takeoff, cost estimates, subcontractor bid packages, Excel export, and ECI Spruce sync.
 
@@ -16,7 +16,6 @@ Residential construction estimating platform: blueprint upload, AI material take
 ## Quick start
 
 ```bash
-cd fieldline
 npm install
 cp .env.example .env   # or use the included .env
 npx prisma migrate dev --name init
@@ -26,7 +25,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-**Demo login:** `demo@fieldline.app` / `demo1234`
+**Demo login:** `demo@buildiq.app` / `demo1234`
 
 ## Environment
 
@@ -47,7 +46,7 @@ App listens on port 3000. Persist DB/uploads via named volumes.
 
 ## ECI Spruce
 
-Spruce exposes a SOAP ecommerce API (inventory, pricing, quotes) provisioned by ECI. In Fieldline:
+Spruce exposes a SOAP ecommerce API (inventory, pricing, quotes) provisioned by ECI. In BuildIQ:
 
 1. Open **ECI Spruce** in the app
 2. Enter API/SOAP endpoints, API key, branch, and account from your ECI specialist
