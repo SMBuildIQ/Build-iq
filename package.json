@@ -1,8 +1,20 @@
 {
-  "name": "buildiq",
-  "version": "1.0.0",
+  "name": "buildiq-platform",
+  "version": "0.1.0",
   "private": true,
+  "description": "BuildIQ monorepo — Expo · Next.js · NestJS · shared packages. Legacy Next soft-launch remains at repo root.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
+    "dev:api": "npm run dev -w @buildiq/api",
+    "dev:web": "npm run dev -w @buildiq/web",
+    "dev:mobile": "npm run start -w @buildiq/mobile",
+    "build:packages": "npm run build -w @buildiq/design-tokens && npm run build -w @buildiq/types && npm run build -w @buildiq/validation && npm run build -w @buildiq/permissions && npm run build -w @buildiq/pricing",
+    "build:platform": "npm run build:packages && npm run build -w @buildiq/api && npm run build -w @buildiq/web",
+    "typecheck:platform": "npm run typecheck --workspaces --if-present",
+    "test:platform": "npm run test --workspaces --if-present",
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
@@ -11,15 +23,13 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "cap:sync": "npx cap sync",
-    "cap:ios": "npx cap open ios",
-    "cap:android": "npx cap open android",
-    "cap:add:ios": "npx cap add ios",
-    "cap:add:android": "npx cap add android",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
     "smoke": "bash scripts/smoke.sh",
     "launch:check": "npm run typecheck && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

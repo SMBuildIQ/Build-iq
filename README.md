@@ -4,6 +4,8 @@ Residential construction estimating platform: blueprint upload, AI agent orchest
 
 **Release:** Soft launch **1.0.0** — see `FINAL_RELEASE.md` and `LAUNCH_CHECKLIST.md`.
 
+**Platform rebuild (Expo · NestJS · Postgres):** see **[`PLATFORM.md`](./PLATFORM.md)** and design specs in [`docs/design/`](./docs/design/). Soft-launch Next.js remains at repo root; new apps live under `apps/`.
+
 ## Platform audit (read first)
 
 | Doc | Purpose |

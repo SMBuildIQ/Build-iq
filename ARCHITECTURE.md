@@ -1,8 +1,9 @@
 # BuildIQ Architecture (Current + Target)
 
-> Status: **Audit complete. No major migration started.**  
+> Status: **Monorepo scaffold in progress** — see [`PLATFORM.md`](./PLATFORM.md)  
+> Design specs: [`docs/design/DESIGN_SYSTEM.md`](./docs/design/DESIGN_SYSTEM.md) · [`docs/design/SCREENS.md`](./docs/design/SCREENS.md)  
 > Backup branch: `cursor/backup-pre-platform-rebuild-dc6e`  
-> Working plan branch: `cursor/platform-audit-plan-dc6e`
+> Platform branch: `cursor/monorepo-expo-nestjs-dc6e`
 
 ## Current architecture (as shipped today)
 
@@ -30,24 +31,23 @@
 | Mobile | PWA + Capacitor config | **No `ios/` or `android/` projects**; remote WebView |
 | Deploy | Docker standalone | Requires runtime `AUTH_SECRET` |
 
-## Target architecture (recommended — pending your approval)
+## Target architecture (approved — scaffolded under `apps/`)
 
 **Do not wrap the entire product forever in a bare WebView.** Apple Guideline 4.2 and your offline/jobsite requirements need a real native client.
-
-**Lowest-risk path that supports both stores:**
 
 ```
 ┌──────────────────────┐     ┌──────────────────────┐
 │  Expo (React Native) │     │  Next.js Web (admin /│
-│  iOS + Android apps  │     │  estimating desktop) │
+│  apps/mobile         │     │  apps/web :3001)     │
 └──────────┬───────────┘     └──────────┬───────────┘
            │  HTTPS JSON API            │
 ┌──────────▼────────────────────────────▼───────────┐
-│  Next.js (or extracted Nest/Hono) API             │
+│  NestJS API (apps/api :4000)                      │
 │  Prisma → PostgreSQL                              │
 │  S3-compatible object storage                     │
 │  Redis (rate limits, queues, sessions)            │
-│  Stripe · email provider · push (APNs/FCM)        │
+│  Shared packages: types · validation · permissions│
+│  · pricing · design-tokens                        │
 └───────────────────────────────────────────────────┘
 ```
 
@@ -67,28 +67,19 @@
 | Flutter | Viable, but Dart duplicates TS skills; higher rewrite cost |
 | Native Swift + Kotlin | Highest polish, **2× cost**; wrong until product-market fit on core modules |
 
-## Folder structure (target mobile app — not created yet)
+## Folder structure (scaffolded)
 
 ```
 apps/
-  mobile/                 # Expo Router app
-    app/                  # screens (file-based routes)
-    src/
-      components/         # reusable UI
-      features/           # domain modules (projects, estimates, …)
-      services/           # API clients
-      state/              # Zustand/TanStack Query
-      storage/            # SecureStore, SQLite offline
-      theme/              # design tokens
-      config/             # env (dev/staging/prod)
-  web/                    # existing Next.js app (moved)
+  mobile/                 # Expo Router · Millwork Studio UI kit
+  web/                    # Next.js dashboard (:3001)
+  api/                    # NestJS + Prisma Postgres (:4000)
 packages/
-  api-contract/           # shared Zod types / OpenAPI
-  permissions/            # RBAC matrix shared by API + clients
-services/
-  api/                    # Next API or extracted service
-docs/                     # architecture, security, privacy, checklists
+  design-tokens/ types/ validation/ permissions/ pricing/
+docs/design/              # Exact design system + screen specs
 ```
+
+Legacy soft-launch Next.js remains at repo root (`src/`, `prisma/` SQLite). See [`PLATFORM.md`](./PLATFORM.md).
 
 ## Module status
 
@@ -96,4 +87,4 @@ See [MODULE_STATUS.md](./MODULE_STATUS.md).
 
 ## Decision gate
 
-No Expo scaffold, DB migration to Postgres, or deletion of existing features proceeds until you approve **Recommended architecture** and answer the decisions in [IMPLEMENTATION_CHECKLIST.md](./IMPLEMENTATION_CHECKLIST.md).
+**Approved:** Expo + NestJS + PostgreSQL + shared packages. Soft-launch root app stays until Nest API reaches feature parity. Live Stripe stays off without keys.
