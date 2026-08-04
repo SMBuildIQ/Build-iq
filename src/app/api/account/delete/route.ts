@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { AuthError, clearSessionCookie, ForbiddenError, jsonError, requireUser } from "@/lib/auth";
+import { AuthError, clearSessionCookie, ForbiddenError, jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { deleteUploadFiles } from "@/lib/security/upload-paths";
 import { z } from "zod";
 
@@ -15,7 +16,7 @@ const schema = z.object({
  */
 export async function DELETE(req: Request) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("account:delete");
     schema.parse(await req.json());
 
     const memberships = await prisma.membership.findMany({

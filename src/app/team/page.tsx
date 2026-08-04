@@ -118,9 +118,16 @@ export default function TeamPage() {
                 Role
               </label>
               <select id="role" name="role" className="input-field !rounded-xl !py-3" defaultValue="ESTIMATOR">
-                <option value="ESTIMATOR">Estimator</option>
-                <option value="VIEWER">Viewer</option>
                 <option value="OWNER">Owner</option>
+                <option value="ADMIN">Admin</option>
+                <option value="PROJECT_MANAGER">Project manager</option>
+                <option value="SUPERINTENDENT">Superintendent</option>
+                <option value="ESTIMATOR">Estimator</option>
+                <option value="PURCHASING">Purchasing</option>
+                <option value="ACCOUNTANT">Accountant</option>
+                <option value="DESIGNER">Designer</option>
+                <option value="SALES">Sales</option>
+                <option value="VIEWER">Viewer</option>
               </select>
             </div>
             {error && <p className="text-sm text-red-700">{error}</p>}

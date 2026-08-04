@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { lookupInventory, toSpruceConfig } from "@/lib/spruce/client";
 
 export async function GET() {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("spruce:sync");
     const settings = await prisma.spruceSettings.findUnique({ where: { companyId: user.companyId } });
     const config = toSpruceConfig(settings);
     const inventory = await lookupInventory(config);

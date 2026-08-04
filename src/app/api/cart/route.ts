@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { cartTotals, getOrCreateCart } from "@/lib/commerce/cart";
 import { z } from "zod";
 
 export async function GET() {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("cart:manage");
     const cart = await getOrCreateCart(user.companyId);
     const totals = cartTotals(cart.items);
     return NextResponse.json({ cart, totals });
@@ -23,7 +24,7 @@ const addSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("cart:manage");
     const body = addSchema.parse(await req.json());
     const cart = await getOrCreateCart(user.companyId);
 
@@ -71,7 +72,7 @@ const patchSchema = z.object({
 
 export async function PATCH(req: NextRequest) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("cart:manage");
     const body = patchSchema.parse(await req.json());
     const cart = await getOrCreateCart(user.companyId);
     const item = await prisma.cartItem.findFirst({
@@ -99,7 +100,7 @@ const deleteSchema = z.object({ itemId: z.string() });
 
 export async function DELETE(req: NextRequest) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("cart:manage");
     const body = deleteSchema.parse(await req.json());
     const cart = await getOrCreateCart(user.companyId);
     await prisma.cartItem.deleteMany({

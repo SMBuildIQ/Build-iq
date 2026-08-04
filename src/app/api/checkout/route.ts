@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { cartTotals, getOrCreateCart } from "@/lib/commerce/cart";
 import { processPayment, paymentConfigured } from "@/lib/commerce/payments";
 import { walletLabel } from "@/lib/commerce/wallet-label";
@@ -25,7 +26,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("order:place");
     const body = schema.parse(await req.json());
     const cart = await getOrCreateCart(user.companyId);
 

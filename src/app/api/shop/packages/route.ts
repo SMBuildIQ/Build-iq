@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { MATERIAL_PACKAGES } from "@/lib/materials/packages";
 
 export async function GET() {
   try {
-    await requireUser();
+    await requirePermission("shop:browse");
     let packages = await prisma.materialPackage.findMany({
       where: { active: true },
       orderBy: { sortOrder: "asc" },

@@ -3,7 +3,8 @@ import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { ensureOwnedProject, jsonError, requireUser } from "@/lib/auth";
+import { ensureOwnedProject, jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { validateUploadBuffer, validateUploadFile } from "@/lib/security/uploads";
 import { uploadDir } from "@/lib/security/upload-paths";
 
@@ -24,7 +25,7 @@ function inferSheetType(filename: string) {
 
 export async function POST(req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("blueprint:upload");
     const { id } = await ctx.params;
     await ensureOwnedProject(id, user.companyId);
 

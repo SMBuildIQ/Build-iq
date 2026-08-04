@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -16,7 +17,7 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("project:read");
     const projects = await prisma.project.findMany({
       where: { companyId: user.companyId },
       orderBy: { updatedAt: "desc" },
@@ -33,7 +34,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("project:write");
     const body = createSchema.parse(await req.json());
     const project = await prisma.project.create({
       data: {

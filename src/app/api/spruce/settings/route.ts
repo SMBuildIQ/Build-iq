@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { z } from "zod";
 
 export async function GET() {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("settings:view");
     let settings = await prisma.spruceSettings.findUnique({ where: { companyId: user.companyId } });
     if (!settings) {
       settings = await prisma.spruceSettings.create({
@@ -37,7 +38,7 @@ const schema = z.object({
 
 export async function PUT(req: NextRequest) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("spruce:configure");
     const body = schema.parse(await req.json());
 
     const data: Record<string, unknown> = {};

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ensureOwnedProject, jsonError, requireUser } from "@/lib/auth";
+import { ensureOwnedProject, jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { calculateEstimate } from "@/lib/estimate/calculator";
 import { z } from "zod";
 
@@ -15,7 +16,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("estimate:run");
     const { id } = await ctx.params;
     await ensureOwnedProject(id, user.companyId);
 

@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { z } from "zod";
+
+const INVITE_ROLES = [
+  "OWNER",
+  "ADMIN",
+  "PROJECT_MANAGER",
+  "SUPERINTENDENT",
+  "ESTIMATOR",
+  "PURCHASING",
+  "ACCOUNTANT",
+  "DESIGNER",
+  "SALES",
+  "VIEWER",
+] as const;
 
 function createInviteCode() {
   return randomBytes(4).toString("hex").toUpperCase();
@@ -10,7 +24,7 @@ function createInviteCode() {
 
 export async function GET() {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("team:view");
     const invites = await prisma.invite.findMany({
       where: { companyId: user.companyId, acceptedAt: null, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: "desc" },
@@ -23,15 +37,12 @@ export async function GET() {
 
 const schema = z.object({
   email: z.string().email().optional(),
-  role: z.enum(["ESTIMATOR", "VIEWER", "OWNER"]).default("ESTIMATOR"),
+  role: z.enum(INVITE_ROLES).default("ESTIMATOR"),
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireUser();
-    if (user.role !== "OWNER") {
-      return NextResponse.json({ error: "Only company owners can invite builders" }, { status: 403 });
-    }
+    const user = await requirePermission("team:invite");
 
     const body = schema.parse(await req.json().catch(() => ({})));
     const expiresAt = new Date();

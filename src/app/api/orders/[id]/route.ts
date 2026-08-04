@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { TRACKING_SEQUENCE, nextStep, stepMeta } from "@/lib/commerce/tracking";
 import { z } from "zod";
 
@@ -8,7 +9,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("order:view");
     const { id } = await ctx.params;
     const order = await prisma.order.findFirst({
       where: {
@@ -39,7 +40,7 @@ const advanceSchema = z.object({
 /** Advance tracking one step (owners/estimators — simulates yard/ops updates) */
 export async function POST(req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("order:advance");
     const { id } = await ctx.params;
     advanceSchema.parse(await req.json().catch(() => ({})));
 

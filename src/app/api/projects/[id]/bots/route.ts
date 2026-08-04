@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
-import { ensureOwnedProject, getSession } from "@/lib/auth";
+import { AuthError, ensureOwnedProject, ForbiddenError, getSession } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { BOT_ROSTER, runBotPipeline, type BotEvent } from "@/lib/ai/bots";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(_req: NextRequest, ctx: Ctx) {
+export async function GET(_req: NextRequest, _ctx: Ctx) {
   const user = await getSession();
   if (!user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
@@ -14,12 +15,23 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 
 /** SSE stream — AI bots run the full post-upload pipeline */
 export async function POST(req: NextRequest, ctx: Ctx) {
-  const user = await getSession();
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  let user;
+  try {
+    user = await requirePermission("estimate:run");
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (error instanceof ForbiddenError) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    throw error;
   }
 
   const { id } = await ctx.params;

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ensureOwnedProject, jsonError, requireUser } from "@/lib/auth";
+import { ensureOwnedProject, jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { z } from "zod";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("project:read");
     const { id } = await ctx.params;
     await ensureOwnedProject(id, user.companyId);
 
@@ -44,7 +45,7 @@ const updateSchema = z.object({
 
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("project:write");
     const { id } = await ctx.params;
     await ensureOwnedProject(id, user.companyId);
     const body = updateSchema.parse(await req.json());
@@ -61,7 +62,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("project:delete");
     const { id } = await ctx.params;
     await ensureOwnedProject(id, user.companyId);
     await prisma.project.delete({ where: { id } });

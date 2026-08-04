@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ensureOwnedProject, jsonError, requireUser } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { submitQuote, syncPricing, toSpruceConfig } from "@/lib/spruce/client";
 import { calculateEstimate } from "@/lib/estimate/calculator";
 import { z } from "zod";
@@ -13,7 +14,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("spruce:sync");
     const { id } = await ctx.params;
     const project = await ensureOwnedProject(id, user.companyId);
     const body = schema.parse(await req.json().catch(() => ({})));

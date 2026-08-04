@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 
 /** Data portability export for privacy compliance (GDPR / App Store transparency) */
 export async function GET() {
   try {
-    const session = await requireUser();
+    const session = await requirePermission("account:export");
     const user = await prisma.user.findUnique({
       where: { id: session.id },
       select: {

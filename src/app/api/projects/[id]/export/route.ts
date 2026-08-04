@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ensureOwnedProject, jsonError, requireUser } from "@/lib/auth";
+import { ensureOwnedProject, jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { buildEstimateWorkbook } from "@/lib/export/excel";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("project:read");
     const { id } = await ctx.params;
     await ensureOwnedProject(id, user.companyId);
 

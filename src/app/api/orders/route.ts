@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 
 export async function GET() {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("order:view");
     const orders = await prisma.order.findMany({
       where: { companyId: user.companyId },
       orderBy: { createdAt: "desc" },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jsonError, requireUser } from "@/lib/auth";
+import { jsonError } from "@/lib/auth";
+import { requirePermission } from "@/lib/require-permission";
 import { cartTotals, getOrCreateCart } from "@/lib/commerce/cart";
 import {
   createWalletPaymentIntent,
@@ -11,7 +12,7 @@ import { generateOrderNumber } from "@/lib/commerce/tracking";
 /** Prepare a PaymentIntent for Apple Pay / Google Pay on the client */
 export async function POST(_req: NextRequest) {
   try {
-    const user = await requireUser();
+    const user = await requirePermission("order:place");
     const cart = await getOrCreateCart(user.companyId);
     if (!cart.items.length) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -47,7 +48,7 @@ export async function POST(_req: NextRequest) {
 
 export async function GET() {
   try {
-    await requireUser();
+    await requirePermission("order:place");
     return NextResponse.json({
       stripeConfigured: paymentConfigured(),
       publishableKey: publishableKey(),
