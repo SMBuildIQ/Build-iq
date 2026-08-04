@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, type Href } from "expo-router";
 import type { ProjectSummary } from "@buildiq/types";
 import {
   Button,
@@ -10,15 +10,15 @@ import {
   Screen,
   StatusBadge,
   useTheme,
-} from "../../../src/ui";
+} from "../../../../src/ui";
 import { calculateEstimate } from "@buildiq/pricing";
 import {
   MOCK_JOBS,
   MOCK_TAKEOFF,
   formatCurrency,
   projectStatusTone,
-} from "../../../src/data/mock";
-import { getProject, getProjectEstimate, orchestrateProject } from "../../../src/api/resources";
+} from "../../../../src/data/mock";
+import { getProject, getProjectEstimate, orchestrateProject } from "../../../../src/api/resources";
 
 /** M3 — Job detail (tablet split ≥768) with API + mock fallback */
 export default function JobDetailScreen() {
@@ -172,6 +172,16 @@ export default function JobDetailScreen() {
           onPress={() => void runAi()}
           accessibilityLabel="Run AI takeoff"
         />
+        <Button
+          label="Upload drawings"
+          variant="secondary"
+          compact
+          style={{ minWidth: 140 }}
+          accessibilityLabel="Upload drawings"
+          onPress={() =>
+            router.push(`/(tabs)/jobs/${job.id}/drawings` as Href)
+          }
+        />
         <Button label="Export" variant="secondary" compact style={{ minWidth: 100 }} />
         <Button
           label="Create proposal"
@@ -185,6 +195,15 @@ export default function JobDetailScreen() {
       <Section title="Blueprints">
         <MetaRow label="Sheets uploaded" value={String(job.blueprintCount)} />
         <MetaRow label="Stories" value={String(job.stories)} />
+        <Button
+          label="Manage drawings"
+          variant="ghost"
+          compact
+          onPress={() =>
+            router.push(`/(tabs)/jobs/${job.id}/drawings` as Href)
+          }
+          accessibilityLabel="Manage drawings"
+        />
       </Section>
 
       <Section title="Cost estimate">

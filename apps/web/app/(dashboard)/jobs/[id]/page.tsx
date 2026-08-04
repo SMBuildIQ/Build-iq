@@ -7,6 +7,7 @@ import { DemoNotice } from "@/components/DemoNotice";
 import { HeroBand } from "@/components/HeroBand";
 import { RunAiButton } from "@/components/RunAiButton";
 import { StatusBadge } from "@/components/StatusBadge";
+import { UploadDrawings } from "@/components/UploadDrawings";
 import { formatAddress, formatCurrency, formatSf, labelStatus, projectStatusTone } from "@/lib/format";
 import { TOKEN_COOKIE } from "@/lib/cookies";
 import { fetchJobDetail, tokenFromCookieHeader } from "@/lib/data";
@@ -68,6 +69,9 @@ export default async function JobDetailPage({ params }: Props) {
               </span>
             </div>
             <div className="bq-panel">
+              <div style={{ marginBottom: 20 }}>
+                <UploadDrawings projectId={project.id} />
+              </div>
               {blueprints.length === 0 ? (
                 <div className="bq-empty" style={{ padding: "32px 16px" }}>
                   <p className="bq-hand" style={{ color: "var(--bq-accent-primary)", fontSize: 20 }}>

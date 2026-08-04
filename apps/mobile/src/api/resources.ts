@@ -145,6 +145,69 @@ export async function getProjectEstimate(
   return res?.estimate ?? null;
 }
 
+export type BlueprintSummary = {
+  id: string;
+  name: string;
+  sheets: number;
+  uploadedAt: string;
+  mimeType?: string;
+  sizeBytes?: number;
+};
+
+export async function listBlueprints(projectId: string): Promise<BlueprintSummary[] | null> {
+  const res = await tryApi(() =>
+    apiFetch<{
+      project?: {
+        blueprints?: Array<{
+          id: string;
+          originalName?: string;
+          filename?: string;
+          mimeType?: string;
+          sizeBytes?: number;
+          createdAt?: string;
+          pageCount?: number | null;
+        }>;
+      };
+      blueprints?: BlueprintSummary[];
+    }>(`/projects/${projectId}`)
+  );
+  if (!res) return null;
+  if (res.blueprints) return res.blueprints;
+  const list = res.project?.blueprints;
+  if (!list) return [];
+  return list.map((bp) => ({
+    id: bp.id,
+    name: bp.originalName ?? bp.filename ?? "Drawing set",
+    sheets: bp.pageCount ?? 1,
+    uploadedAt: bp.createdAt?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+    mimeType: bp.mimeType,
+    sizeBytes: bp.sizeBytes,
+  }));
+}
+
+export async function uploadBlueprint(
+  projectId: string,
+  input: { filename: string; contentType: string; size?: number }
+): Promise<{ id: string; name: string } | null> {
+  const res = await tryApi(() =>
+    apiFetch<{
+      blueprint: {
+        id: string;
+        originalName?: string;
+        filename?: string;
+      };
+    }>(`/projects/${projectId}/blueprints`, {
+      method: "POST",
+      body: input,
+    })
+  );
+  if (!res?.blueprint) return null;
+  return {
+    id: res.blueprint.id,
+    name: res.blueprint.originalName ?? res.blueprint.filename ?? input.filename,
+  };
+}
+
 export async function listProposals(): Promise<ProposalSummary[] | null> {
   const res = await tryApi(() =>
     apiFetch<{ proposals: ProposalSummary[] }>("/proposals")

@@ -346,3 +346,56 @@ export function proposalStatusTone(
       return "draft";
   }
 }
+
+export type MockBlueprint = {
+  id: string;
+  name: string;
+  sheets: number;
+  uploadedAt: string;
+  mimeType?: string;
+  sizeBytes?: number;
+};
+
+/** Seed drawings per job for offline demo. */
+export const MOCK_BLUEPRINTS: Record<string, MockBlueprint[]> = {
+  job_oak_ridge: [
+    {
+      id: "bp_oak_arch",
+      name: "Architectural Set A.pdf",
+      sheets: 8,
+      uploadedAt: "2026-07-20",
+      mimeType: "application/pdf",
+      sizeBytes: 24_500_000,
+    },
+    {
+      id: "bp_oak_struct",
+      name: "Structural Framing.pdf",
+      sheets: 4,
+      uploadedAt: "2026-07-22",
+      mimeType: "application/pdf",
+      sizeBytes: 12_200_000,
+    },
+  ],
+  job_lake_house: [
+    {
+      id: "bp_lake_1",
+      name: "Remodel Plans.pdf",
+      sheets: 6,
+      uploadedAt: "2026-07-28",
+      mimeType: "application/pdf",
+      sizeBytes: 18_000_000,
+    },
+  ],
+  job_cedar_park: [
+    {
+      id: "bp_cedar_1",
+      name: "Spec House Set.pdf",
+      sheets: 9,
+      uploadedAt: "2026-07-15",
+      mimeType: "application/pdf",
+      sizeBytes: 31_000_000,
+    },
+  ],
+  job_mueller: [],
+};
+
