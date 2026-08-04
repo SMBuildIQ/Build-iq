@@ -23,10 +23,11 @@ export type SessionUser = {
   companyId: string;
   companyName: string;
   role: string;
+  tokenVersion: number;
 };
 
 export async function hashPassword(password: string) {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hash(password, 12);
 }
 
 export async function verifyPassword(password: string, hash: string) {
@@ -41,6 +42,7 @@ export async function createSessionToken(user: SessionUser) {
     companyId: user.companyId,
     companyName: user.companyName,
     role: user.role,
+    tv: user.tokenVersion,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -64,21 +66,59 @@ export async function clearSessionCookie() {
   cookieStore.delete(COOKIE_NAME);
 }
 
+type JwtPayload = {
+  id?: string;
+  email?: string;
+  name?: string;
+  companyId?: string;
+  companyName?: string;
+  role?: string;
+  tv?: number;
+};
+
+async function hydrateSession(payload: JwtPayload): Promise<SessionUser | null> {
+  if (!payload.id || !payload.companyId) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      tokenVersion: true,
+      memberships: {
+        where: { companyId: payload.companyId },
+        include: { company: true },
+        take: 1,
+      },
+    },
+  });
+
+  if (!user) return null;
+  const tokenVersion = typeof payload.tv === "number" ? payload.tv : 0;
+  if (user.tokenVersion !== tokenVersion) return null;
+
+  const membership = user.memberships[0];
+  if (!membership) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    companyId: membership.companyId,
+    companyName: membership.company.name,
+    role: membership.role,
+    tokenVersion: user.tokenVersion,
+  };
+}
+
 export async function getSession(): Promise<SessionUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecret());
-    if (!payload.companyId) return null;
-    return {
-      id: payload.id as string,
-      email: payload.email as string,
-      name: payload.name as string,
-      companyId: payload.companyId as string,
-      companyName: (payload.companyName as string) || "",
-      role: (payload.role as string) || "OWNER",
-    };
+    return hydrateSession(payload as JwtPayload);
   } catch {
     return null;
   }
@@ -95,15 +135,7 @@ export async function getUserFromRequest(req: NextRequest): Promise<SessionUser 
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecret());
-    if (!payload.companyId) return null;
-    return {
-      id: payload.id as string,
-      email: payload.email as string,
-      name: payload.name as string,
-      companyId: payload.companyId as string,
-      companyName: (payload.companyName as string) || "",
-      role: (payload.role as string) || "OWNER",
-    };
+    return hydrateSession(payload as JwtPayload);
   } catch {
     return null;
   }
@@ -116,9 +148,24 @@ export class AuthError extends Error {
   }
 }
 
+export class ForbiddenError extends Error {
+  status = 403;
+  constructor(message = "Forbidden") {
+    super(message);
+  }
+}
+
 export function jsonError(error: unknown, fallback = "Something went wrong") {
-  if (error instanceof AuthError) {
+  if (error instanceof AuthError || error instanceof ForbiddenError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+  if (error && typeof error === "object" && "name" in error && (error as { name: string }).name === "ZodError") {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+  // Avoid leaking internal stack/messages in production
+  if (process.env.NODE_ENV === "production") {
+    console.error("[api]", error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: fallback }, { status: 400 });
   }
   const message = error instanceof Error ? error.message : fallback;
   return NextResponse.json({ error: message }, { status: 400 });
@@ -171,5 +218,14 @@ export async function sessionFromMembership(userId: string, companyId?: string):
     companyId: membership.companyId,
     companyName: membership.company.name,
     role: membership.role,
+    tokenVersion: user.tokenVersion,
   };
+}
+
+/** Invalidate all JWTs for a user (call before password change or sensitive ops). */
+export async function bumpTokenVersion(userId: string) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { tokenVersion: { increment: 1 } },
+  });
 }

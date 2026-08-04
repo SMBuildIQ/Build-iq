@@ -35,7 +35,7 @@ export default function LoginPage() {
 
   return (
     <MarketingShell>
-      <main className="mx-auto max-w-md px-4 py-10">
+      <main id="main-content" className="mx-auto max-w-md px-4 py-10">
         <h1 className="font-display text-3xl font-semibold text-[var(--ink)]">Welcome back</h1>
         <p className="mt-2 text-sm text-[var(--sage)]">Sign in to your BuildIQ app.</p>
 
@@ -52,7 +52,6 @@ export default function LoginPage() {
               autoComplete="email"
               className="input-field !rounded-xl !py-3"
               placeholder="you@builder.com"
-              defaultValue="demo@buildiq.app"
             />
           </div>
           <div>
@@ -66,7 +65,6 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
               className="input-field !rounded-xl !py-3"
-              defaultValue="demo1234"
             />
           </div>
           {error && <p className="text-sm text-red-700">{error}</p>}

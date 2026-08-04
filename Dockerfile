@@ -18,7 +18,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="file:./data/prod.db"
-ENV AUTH_SECRET="change-me-in-production"
+# AUTH_SECRET must be provided at runtime (32+ chars). Do not bake secrets into the image.
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /app/data /app/uploads \
   && groupadd --system --gid 1001 nodejs \

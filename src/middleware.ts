@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-/** Lightweight in-memory rate limit for auth endpoints (per-instance). */
+/** Lightweight in-memory rate limit for sensitive endpoints (per-instance). */
 const buckets = new Map<string, { count: number; resetAt: number }>();
 
 function rateLimit(key: string, limit: number, windowMs: number) {
@@ -18,18 +18,26 @@ function rateLimit(key: string, limit: number, windowMs: number) {
   return { ok: true, remaining: limit - entry.count };
 }
 
+function clientIp(req: NextRequest) {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const ip = clientIp(req);
 
-  if (
-    pathname.startsWith("/api/auth/login") ||
-    pathname.startsWith("/api/auth/register")
-  ) {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
-    const result = rateLimit(`${pathname}:${ip}`, 20, 60_000);
+  const authSensitive =
+    pathname.startsWith("/api/auth/login") || pathname.startsWith("/api/auth/register");
+  const accountDelete = pathname.startsWith("/api/account/delete");
+  const checkout = pathname.startsWith("/api/checkout");
+
+  if (authSensitive || accountDelete || checkout) {
+    const limit = authSensitive ? 20 : accountDelete ? 5 : 30;
+    const result = rateLimit(`${pathname}:${ip}`, limit, 60_000);
     if (!result.ok) {
       return NextResponse.json(
         { error: "Too many attempts. Please wait and try again." },

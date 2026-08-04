@@ -1,13 +1,15 @@
 {
   "appId": "app.buildiq.estimator",
   "appName": "BuildIQ",
-  "webDir": "out",
+  "webDir": "native-shell",
   "bundledWebRuntime": false,
   "server": {
+    "url": "https://app.buildiq.com",
+    "cleartext": false,
     "androidScheme": "https",
     "iosScheme": "https",
     "hostname": "app.buildiq.com",
-    "allowNavigation": ["*.stripe.com", "*.buildiq.com"]
+    "allowNavigation": ["*.stripe.com", "*.buildiq.com", "app.buildiq.com"]
   },
   "ios": {
     "contentInset": "automatic",

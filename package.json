@@ -14,7 +14,10 @@
     "cap:sync": "npx cap sync",
     "cap:ios": "npx cap open ios",
     "cap:android": "npx cap open android",
-    "typecheck": "tsc --noEmit"
+    "cap:add:ios": "npx cap add ios",
+    "cap:add:android": "npx cap add android",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

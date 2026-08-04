@@ -14,27 +14,30 @@ export default function TermsPage() {
 
         <Section title="Agreement">
           By creating a BuildIQ account or using the app, you agree to these Terms on behalf of yourself and your company.
+          Replace governing-law placeholders with your operating entity before store submission.
         </Section>
 
         <Section title="The service">
           BuildIQ provides estimating tools, AI-assisted takeoffs, bid packages, material package ordering, and optional ECI Spruce sync.
           Estimates and AI outputs are decision-support tools — not stamped engineering, architectural, or bidding guarantees.
-          You must field-verify quantities before purchasing or awarding work.
+          You must field-verify quantities before purchasing or awarding work. AI outputs may contain errors; you remain responsible
+          for job costs and purchasing decisions.
         </Section>
 
         <Section title="Accounts">
           You are responsible for account credentials and for activity under your company workspace. Invite only authorized team members.
-          You must provide accurate company information and keep it updated.
+          You must provide accurate company information and keep it updated. You must accept the Privacy Policy at signup.
         </Section>
 
         <Section title="Acceptable use">
-          Do not upload unlawful content, attempt to break security, misuse payment features, or process plans you lack rights to use.
+          Do not upload unlawful content, attempt to break security, misuse payment features, scrape the service, or process plans you lack rights to use.
           We may suspend accounts that abuse the service or create risk for other customers.
         </Section>
 
-        <Section title="Orders & payments">
+        <Section title="Orders, payments & refunds">
           Material package purchases are for physical/construction materials fulfillment workflows. Payments may use Apple Pay, Google Pay, or card via Stripe.
           Taxes shown are estimates. Delivery timing depends on suppliers and tracking status in the app.
+          Refunds for undelivered or incorrect material packages are handled case-by-case via support; digital estimating features are provided as a software service and are non-refundable except where required by law.
         </Section>
 
         <Section title="Subscriptions / stores">
@@ -54,6 +57,11 @@ export default function TermsPage() {
         <Section title="Limitation of liability">
           To the maximum extent allowed by law, BuildIQ’s total liability for claims relating to the service is limited to the amounts you paid us in the three months before the claim.
           We are not liable for indirect, incidental, or consequential damages, including job cost overruns.
+        </Section>
+
+        <Section title="Governing law">
+          These Terms are governed by the laws of the State of [Your State], USA, excluding conflict-of-law rules, unless mandatory local consumer law provides otherwise.
+          Courts in that state have exclusive jurisdiction for disputes, except where arbitration or small-claims venues are required by applicable platform or consumer rules.
         </Section>
 
         <Section title="Termination">

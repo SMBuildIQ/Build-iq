@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { clearSessionCookie, jsonError, requireUser } from "@/lib/auth";
+import { AuthError, clearSessionCookie, ForbiddenError, jsonError, requireUser } from "@/lib/auth";
+import { deleteUploadFiles } from "@/lib/security/upload-paths";
 import { z } from "zod";
 
 const schema = z.object({
@@ -9,35 +10,65 @@ const schema = z.object({
 
 /**
  * Apple App Store Guideline 5.1.1(v) — account deletion must be available in-app.
- * Deletes the user membership; if they are the sole owner, deletes the company workspace.
+ * Purges company workspace when sole owner; otherwise requires ownership transfer first.
+ * Deletes blueprint files on disk and invalidates sessions.
  */
 export async function DELETE(req: Request) {
   try {
     const user = await requireUser();
-    const body = schema.parse(await req.json());
-    void body;
+    schema.parse(await req.json());
 
     const memberships = await prisma.membership.findMany({
       where: { userId: user.id },
-      include: { company: { include: { _count: { select: { members: true } } } } },
+      include: {
+        company: { include: { _count: { select: { members: true } } } },
+      },
     });
 
     for (const m of memberships) {
-      if (m.role === "OWNER" && m.company._count.members <= 1) {
-        await prisma.company.delete({ where: { id: m.companyId } });
-      } else {
-        await prisma.membership.delete({ where: { id: m.id } });
+      if (m.role === "OWNER" && m.company._count.members > 1) {
+        throw new ForbiddenError(
+          "Transfer ownership or remove other team members before deleting your owner account."
+        );
       }
     }
 
-    const remaining = await prisma.membership.count({ where: { userId: user.id } });
-    if (remaining === 0) {
-      await prisma.user.delete({ where: { id: user.id } });
-    }
+    const companyIdsToDelete = memberships
+      .filter((m) => m.role === "OWNER" && m.company._count.members <= 1)
+      .map((m) => m.companyId);
 
+    const blueprints =
+      companyIdsToDelete.length > 0
+        ? await prisma.blueprint.findMany({
+            where: { project: { companyId: { in: companyIdsToDelete } } },
+            select: { filename: true },
+          })
+        : [];
+
+    await prisma.$transaction(async (tx) => {
+      // Invalidate any outstanding JWTs first
+      await tx.user.update({
+        where: { id: user.id },
+        data: { tokenVersion: { increment: 1 } },
+      });
+
+      for (const companyId of companyIdsToDelete) {
+        await tx.company.delete({ where: { id: companyId } });
+      }
+
+      // Remove leftover memberships (invite-join paths with no company wipe)
+      await tx.membership.deleteMany({ where: { userId: user.id } });
+      await tx.user.delete({ where: { id: user.id } });
+    });
+
+    await deleteUploadFiles(blueprints.map((b) => b.filename));
     await clearSessionCookie();
+
     return NextResponse.json({ ok: true, deleted: true });
   } catch (error) {
-    return jsonError(error);
+    if (error instanceof AuthError || error instanceof ForbiddenError) {
+      return jsonError(error);
+    }
+    return jsonError(error, "Unable to delete account");
   }
 }

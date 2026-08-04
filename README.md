@@ -75,7 +75,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-**Demo login:** `demo@buildiq.app` / `demo1234`
+**Demo login (local seed / App Review notes only — not shown in the shipping UI):** `demo@buildiq.app` / `demo1234`
 
 ## Environment
 

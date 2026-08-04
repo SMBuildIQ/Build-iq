@@ -92,7 +92,8 @@ export default function AccountSettingsPage() {
       <section className="mt-4 rounded-2xl border border-red-200 bg-red-50/60 p-4">
         <h2 className="font-display text-lg font-semibold text-red-900">Delete account</h2>
         <p className="mt-1 text-sm text-red-900/80">
-          Permanently deletes your login. If you are the only owner, your company workspace and jobs are removed.
+          Permanently deletes your login and related blueprint files. If you are the only owner, your company
+          workspace and jobs are removed. If other team members remain, transfer ownership first.
           This meets Apple’s in-app account deletion requirement.
         </p>
         <label className="label mt-4 !text-red-900/70" htmlFor="confirm">

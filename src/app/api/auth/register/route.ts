@@ -12,13 +12,14 @@ import { z } from "zod";
 const schema = z
   .object({
     email: z.string().email(),
-    password: z.string().min(8),
-    name: z.string().min(2),
+    password: z.string().min(8).max(128),
+    name: z.string().min(2).max(120),
     companyName: z.string().optional(),
-    phone: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
+    phone: z.string().max(40).optional(),
+    city: z.string().max(80).optional(),
+    state: z.string().max(40).optional(),
     inviteCode: z.string().optional(),
+    acceptTerms: z.literal(true),
   })
   .superRefine((val, ctx) => {
     if (!val.inviteCode && (!val.companyName || val.companyName.trim().length < 2)) {
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = schema.parse(await req.json());
     const email = body.email.toLowerCase();
+    const termsAcceptedAt = new Date();
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -54,6 +56,7 @@ export async function POST(req: NextRequest) {
           email,
           name: body.name,
           passwordHash: await hashPassword(body.password),
+          termsAcceptedAt,
           memberships: {
             create: {
               companyId: invite.companyId,
@@ -75,6 +78,7 @@ export async function POST(req: NextRequest) {
         companyId: invite.companyId,
         companyName: invite.company.name,
         role: invite.role,
+        tokenVersion: user.tokenVersion,
       };
       await setSessionCookie(await createSessionToken(session));
       return NextResponse.json({ user: session, joinedExisting: true });
@@ -105,6 +109,7 @@ export async function POST(req: NextRequest) {
                 email,
                 name: body.name,
                 passwordHash: await hashPassword(body.password),
+                termsAcceptedAt,
               },
             },
           },
@@ -121,6 +126,7 @@ export async function POST(req: NextRequest) {
       companyId: company.id,
       companyName: company.name,
       role: "OWNER",
+      tokenVersion: owner.tokenVersion,
     };
     await setSessionCookie(await createSessionToken(session));
 

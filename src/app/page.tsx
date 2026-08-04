@@ -10,7 +10,7 @@ export default async function HomePage() {
 
   return (
     <MarketingShell>
-      <main className="mx-auto max-w-3xl px-4 pb-16 pt-8">
+      <main id="main-content" className="mx-auto max-w-3xl px-4 pb-16 pt-8">
         <section className="text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -35,9 +35,6 @@ export default async function HomePage() {
               Sign in to your company
             </Link>
           </div>
-          <p className="mt-4 text-xs text-[var(--sage)]">
-            Demo company: demo@buildiq.app / demo1234
-          </p>
         </section>
 
         <div className="relative mt-10 animate-rise-delay-1">

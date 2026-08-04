@@ -5,8 +5,11 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: file:./data/prod.db
-      AUTH_SECRET: ${AUTH_SECRET:-buildiq-change-me}
+      # Required: export AUTH_SECRET with 32+ random characters before `docker compose up`
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET to a 32+ character secret}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
       NODE_ENV: production
     volumes:
       - buildiq-data:/app/data

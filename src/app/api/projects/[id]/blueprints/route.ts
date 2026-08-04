@@ -4,11 +4,10 @@ import path from "path";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { ensureOwnedProject, jsonError, requireUser } from "@/lib/auth";
-import { validateUploadFile } from "@/lib/security/uploads";
+import { validateUploadBuffer, validateUploadFile } from "@/lib/security/uploads";
+import { uploadDir } from "@/lib/security/upload-paths";
 
 type Ctx = { params: Promise<{ id: string }> };
-
-const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 function inferSheetType(filename: string) {
   const n = filename.toLowerCase();
@@ -46,14 +45,20 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       }
     }
 
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    const dir = uploadDir();
+    await fs.mkdir(dir, { recursive: true });
 
     const created = [];
     for (const file of files) {
       const ext = path.extname(file.name).toLowerCase() || ".bin";
-      const filename = `${id}-${randomUUID()}${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
+      const contentError = validateUploadBuffer(buffer, ext);
+      if (contentError) {
+        return NextResponse.json({ error: `${file.name}: ${contentError}` }, { status: 400 });
+      }
+
+      const filename = `${id}-${randomUUID()}${ext}`;
+      await fs.writeFile(path.join(dir, filename), buffer);
 
       const blueprint = await prisma.blueprint.create({
         data: {

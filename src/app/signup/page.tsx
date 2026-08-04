@@ -34,6 +34,7 @@ function SignupForm() {
         email: form.get("email"),
         password: form.get("password"),
         inviteCode: form.get("inviteCode") || undefined,
+        acceptTerms: true,
       }),
     });
     const data = await res.json();
@@ -52,7 +53,7 @@ function SignupForm() {
 
   return (
     <MarketingShell>
-      <main className="mx-auto max-w-md px-4 py-8">
+      <main id="main-content" className="mx-auto max-w-md px-4 py-8">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--copper-deep)]">
           {inviteCode ? "Join your builder team" : "For residential builders"}
         </p>

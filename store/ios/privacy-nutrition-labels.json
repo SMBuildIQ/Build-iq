@@ -3,7 +3,7 @@
     "contactInfo": {
       "emailAddress": ["App Functionality", "Account Management"],
       "name": ["App Functionality", "Account Management"],
-      "physicalAddress": ["App Functionality", "Product Personalization"]
+      "physicalAddress": ["App Functionality"]
     },
     "userContent": {
       "emailsOrTextMessages": [],
@@ -11,7 +11,7 @@
       "otherUserContent": ["App Functionality"]
     },
     "identifiers": {
-      "userId": ["App Functionality", "Analytics"]
+      "userId": ["App Functionality"]
     },
     "purchases": {
       "purchaseHistory": ["App Functionality"]
@@ -22,6 +22,6 @@
     },
     "dataLinkedToUser": true,
     "dataUsedToTrackUser": false,
-    "notes": "Plan uploads and job addresses are processed to provide estimating. Payments handled by Stripe. No third-party advertising."
+    "notes": "Plan uploads and job addresses are processed to provide estimating. Payments handled by Stripe. No third-party advertising or analytics SDKs. Align App Privacy answers with PrivacyInfo.xcprivacy and /privacy."
   }
 }
