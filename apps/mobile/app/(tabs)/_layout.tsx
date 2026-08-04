@@ -9,11 +9,21 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTheme } from "../../src/ui";
 import { useCart } from "../../src/context/CartContext";
+import { TabGlyph, type TabIconName } from "../../src/ui/TabIcons";
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
+function TabIcon({
+  name,
+  label,
+  focused,
+}: {
+  name: TabIconName;
+  label: string;
+  focused: boolean;
+}) {
   const { theme, reduceMotion } = useTheme();
   const indicatorOpacity = useSharedValue(focused ? 1 : 0);
   const indicatorWidth = useSharedValue(focused ? 1 : 0.35);
+  const color = focused ? theme.colors.accent : theme.colors.textMuted;
 
   useEffect(() => {
     const duration = reduceMotion ? 0 : theme.motion.base;
@@ -41,16 +51,9 @@ function TabIcon({ label, focused }: { label: string; focused: boolean }) {
           hairlineStyle,
         ]}
       />
-      <View
-        style={{
-          width: 18,
-          height: 18,
-          borderWidth: 1.5,
-          borderColor: focused ? theme.colors.accent : theme.colors.textMuted,
-          backgroundColor: focused ? theme.colors.accent : "transparent",
-          marginBottom: 4,
-        }}
-      />
+      <View style={{ marginBottom: 3, height: 24, width: 24, alignItems: "center", justifyContent: "center" }}>
+        <TabGlyph name={name} color={color} focused={focused} size={24} />
+      </View>
       <Text
         style={{
           fontFamily: "Questrial",
@@ -58,7 +61,7 @@ function TabIcon({ label, focused }: { label: string; focused: boolean }) {
           fontWeight: "700",
           letterSpacing: 1.6,
           textTransform: "uppercase",
-          color: focused ? theme.colors.accent : theme.colors.textMuted,
+          color,
         }}
       >
         {label}
@@ -94,7 +97,7 @@ export default function TabsLayout() {
         name="jobs"
         options={{
           title: "Jobs",
-          tabBarIcon: ({ focused }) => <TabIcon label="Jobs" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="jobs" label="Jobs" focused={focused} />,
           tabBarAccessibilityLabel: "Jobs",
         }}
       />
@@ -102,7 +105,9 @@ export default function TabsLayout() {
         name="proposals"
         options={{
           title: "Proposals",
-          tabBarIcon: ({ focused }) => <TabIcon label="Proposals" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="proposals" label="Proposals" focused={focused} />
+          ),
           tabBarAccessibilityLabel: "Proposals",
         }}
       />
@@ -110,7 +115,7 @@ export default function TabsLayout() {
         name="shop"
         options={{
           title: "Shop",
-          tabBarIcon: ({ focused }) => <TabIcon label="Shop" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="shop" label="Shop" focused={focused} />,
           tabBarAccessibilityLabel: "Shop",
         }}
       />
@@ -128,7 +133,7 @@ export default function TabsLayout() {
             height: 18,
             lineHeight: 18,
           },
-          tabBarIcon: ({ focused }) => <TabIcon label="Cart" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="cart" label="Cart" focused={focused} />,
           tabBarAccessibilityLabel: "Cart",
         }}
       />
@@ -143,7 +148,7 @@ export default function TabsLayout() {
         name="more"
         options={{
           title: "More",
-          tabBarIcon: ({ focused }) => <TabIcon label="More" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="more" label="More" focused={focused} />,
           tabBarAccessibilityLabel: "More",
         }}
       />

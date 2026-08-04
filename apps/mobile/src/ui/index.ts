@@ -14,3 +14,5 @@ export { Screen } from "./Screen";
 export { BrandMark } from "./BrandMark";
 export { BuildIqWordmark } from "./BuildIqWordmark";
 export { Sheet } from "./Sheet";
+export { TabGlyph } from "./TabIcons";
+export type { TabIconName } from "./TabIcons";
