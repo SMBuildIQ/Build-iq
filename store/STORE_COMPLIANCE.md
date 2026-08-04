@@ -66,20 +66,26 @@ Native shells should point `server.url` at your production HTTPS origin (default
 ## Before you submit
 
 1. Deploy to HTTPS with real `AUTH_SECRET`, Stripe keys, and privacy/terms/support URLs  
-2. Replace placeholder support emails and legal entity name/address in Privacy & Terms  
-3. `npx cap add ios && npx cap add android` from a machine with Xcode / Android Studio  
-4. Confirm `server.url` matches production; sync PrivacyInfo.xcprivacy into the iOS project  
-5. Fill App Store Connect / Play Console questionnaires using the `store/` files  
-6. Test account deletion end-to-end on a TestFlight / internal testing build  
-7. Provide demo login credentials **only** in App Review notes (not in the shipping UI): `demo@buildiq.app` / `demo1234`  
+2. Confirm store contacts in **[store/CONTACT.md](./CONTACT.md)** (Supply Monkey Lumber & Materials Co)  
+3. Have counsel approve Privacy/Terms, then set `LEGAL_POLICIES_FINAL=true` (drafts are not final published policies)  
+4. `npx cap add ios && npx cap add android` from a machine with Xcode / Android Studio  
+5. Confirm `server.url` matches production; sync PrivacyInfo.xcprivacy into the iOS project  
+6. Fill App Store Connect / Play Console questionnaires using the `store/` files  
+7. Test account deletion end-to-end on a TestFlight / internal testing build  
+8. Provide demo login credentials **only** in App Review notes (not in the shipping UI): `demo@buildiq.app` / `demo1234`  
 
 ## Review notes template
 
-> BuildIQ is a B2B construction estimating app. Create an account or use demo@buildiq.app / demo1234.  
+> BuildIQ is a B2B construction estimating app operated by Supply Monkey Lumber & Materials Co  
+> (710 N Montezuma St, Prescott, Arizona 86302, United States).  
+> Support: support@supplymonkeyco.com  
+> Create an account or use demo@buildiq.app / demo1234.  
 > Upload a PDF plan on a job → AI bots run automatically.  
 > Account deletion: Account tab → Delete account (type DELETE). Owners with teammates must transfer ownership first.  
+> Or email support@supplymonkeyco.com with subject “Account deletion request”.  
 > Payments purchase physical building material packages via Stripe (Apple Pay / Google Pay).  
+> Privacy Policy and Terms shown in-app are drafts pending attorney review unless LEGAL_POLICIES_FINAL is enabled.  
 
 ## Legal disclaimer
 
-This guide helps engineering readiness. It is not legal advice. Have counsel review Privacy Policy and Terms before store submission.
+Privacy Policy and Terms of Service in this repository are **drafts for attorney review**. They are not legal advice and must not be treated as final published policies until counsel approves them.

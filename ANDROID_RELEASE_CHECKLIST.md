@@ -10,6 +10,8 @@
 - [ ] Target audience 18+ (`store/android/audience.md`)
 - [ ] Content rating
 - [ ] Account deletion in-app + web URL
+- [ ] Store contacts match `store/CONTACT.md` (Supply Monkey / support@supplymonkeyco.com)
+- [ ] Privacy & Terms attorney-approved before treating as final (`LEGAL_POLICIES_FINAL`)
 - [ ] Review credentials in Play Console
 - [ ] Internal testing track validated
 - [ ] **Do not submit without owner approval**

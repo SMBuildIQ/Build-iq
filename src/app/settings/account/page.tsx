@@ -116,7 +116,8 @@ export default function AccountSettingsPage() {
         <p className="mt-1 text-sm text-red-900/80">
           Permanently deletes your login and related blueprint files. If you are the only owner, your company
           workspace and jobs are removed. If other team members remain, transfer ownership first.
-          This meets Apple’s in-app account deletion requirement.
+          This meets Apple’s in-app account deletion requirement. Operated by Supply Monkey Lumber &amp; Materials Co.
+          For help, email support@supplymonkeyco.com with subject “Account deletion request”.
         </p>
         <label className="label mt-4 !text-red-900/70" htmlFor="confirm">
           Type DELETE to confirm

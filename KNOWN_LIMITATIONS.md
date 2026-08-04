@@ -30,7 +30,8 @@ Honest inventory after the incomplete-items fix pass.
 | True plan vision OCR | Still metadata/heuristic takeoff |
 | 16 construction modules marked PLANNED | Scaffolded only — see `/modules` |
 | Email delivery | Console in dev without `RESEND_API_KEY` |
-| Legal entity mailing address | Set `LEGAL_ENTITY_ADDRESS` before store submit |
+| Legal entity mailing address | Completed — Supply Monkey Lumber & Materials Co, Prescott AZ |
+| Privacy/Terms final counsel approval | Drafts labeled; set `LEGAL_POLICIES_FINAL=true` only after attorney sign-off |
 | CI workflows | Not added yet |
 | Expo mobile client | Not started (awaits architecture execution phase) |
 

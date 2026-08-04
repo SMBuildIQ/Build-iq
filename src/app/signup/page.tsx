@@ -158,13 +158,13 @@ function SignupForm() {
             <span>
               I agree to the{" "}
               <Link href="/terms" className="font-semibold text-[var(--copper-deep)] underline-offset-2 hover:underline">
-                Terms of Service
+                Terms of Service (Draft)
               </Link>{" "}
               and{" "}
               <Link href="/privacy" className="font-semibold text-[var(--copper-deep)] underline-offset-2 hover:underline">
-                Privacy Policy
+                Privacy Policy (Draft)
               </Link>
-              .
+              . These documents are drafts pending attorney review. BuildIQ is operated by Supply Monkey Lumber &amp; Materials Co.
             </span>
           </label>
 

@@ -1,6 +1,12 @@
 # Privacy data map
 
+Operator: **Supply Monkey Lumber & Materials Co**, 710 N Montezuma St, Prescott, Arizona 86302, United States.  
+Support / privacy: **support@supplymonkeyco.com**.  
+Governing law: **Arizona, United States**.
+
 Suitable starting inventory for Apple App Privacy and Google Play Data Safety.
+
+**Policy status:** in-app Privacy Policy and Terms are drafts requiring attorney review (`LEGAL_POLICIES_FINAL` unset).
 
 | Data | Why collected | Stored where | Retention | Linked to user | Shared |
 |---|---|---|---|---|---|

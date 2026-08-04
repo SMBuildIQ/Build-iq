@@ -1,27 +1,43 @@
 import Link from "next/link";
 import { MarketingShell } from "@/components/AppShell";
+import { LEGAL, draftPolicyBanner } from "@/lib/legal";
 
 export const metadata = {
-  title: "Privacy Policy — BuildIQ",
-  description: "How BuildIQ collects, uses, and protects builder data.",
+  title: "Privacy Policy (Draft) — BuildIQ",
+  description: "Draft privacy policy for BuildIQ by Supply Monkey Lumber & Materials Co — requires attorney review.",
+  robots: LEGAL.policiesAreDrafts ? { index: false, follow: false } : undefined,
 };
 
 export default function PrivacyPage() {
-  const entity = process.env.LEGAL_ENTITY_NAME || "BuildIQ";
-  const address = process.env.LEGAL_ENTITY_ADDRESS || "";
-  const privacyEmail = process.env.PRIVACY_EMAIL || "privacy@buildiq.app";
+  const { entityName, addressLines, privacyEmail, productName, policiesAreDrafts } = LEGAL;
 
   return (
     <MarketingShell>
       <main id="main-content" className="mx-auto max-w-2xl px-4 py-10 prose-buildiq">
-        <h1 className="font-display text-3xl font-semibold">Privacy Policy</h1>
+        {policiesAreDrafts && (
+          <p
+            className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-950"
+            role="status"
+          >
+            {draftPolicyBanner()}
+          </p>
+        )}
+
+        <h1 className="mt-6 font-display text-3xl font-semibold">
+          Privacy Policy{policiesAreDrafts ? " (Draft)" : ""}
+        </h1>
         <p className="mt-2 text-sm text-[var(--sage)]">Last updated: August 4, 2026</p>
 
         <Section title="Who we are">
-          {entity} (“we”, “us”) provides a residential construction estimating application for building companies.
-          {address ? <> Mailing address: {address}.</> : null}
-          {" "}Contact: <a href={`mailto:${privacyEmail}`}>{privacyEmail}</a>.
-          Confirm legal entity details before App Store / Play submission.
+          {productName} is operated by <strong>{entityName}</strong> (“we”, “us”).
+          <br />
+          {addressLines.map((line) => (
+            <span key={line}>
+              {line}
+              <br />
+            </span>
+          ))}
+          Privacy contact: <a href={`mailto:${privacyEmail}`}>{privacyEmail}</a>.
         </Section>
 
         <Section title="Data we collect">
@@ -35,13 +51,13 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="How we use data">
-          We use data to operate BuildIQ: authentication, estimating workflows, AI takeoff assistance, material package ordering,
+          We use data to operate {productName}: authentication, estimating workflows, AI takeoff assistance, material package ordering,
           payment processing via Stripe, and optional Spruce sync. We do not sell personal information and we do not use data for
           third-party advertising or cross-app tracking.
         </Section>
 
         <Section title="Payments">
-          Card and wallet payments (Apple Pay, Google Pay) are processed by Stripe. BuildIQ does not store full card numbers.
+          Card and wallet payments (Apple Pay, Google Pay) are processed by Stripe. {productName} does not store full card numbers.
           After account deletion, payment records may be retained by Stripe as required for fraud prevention, tax, and financial compliance.
         </Section>
 
@@ -62,6 +78,7 @@ export default function PrivacyPage() {
         <Section title="Retention & deletion">
           We retain account and job data while your account is active. Blueprint files are deleted when you delete your account
           (or when a sole-owner company workspace is removed). Export or delete in Settings → Account.
+          For deletion help, email <a href={`mailto:${privacyEmail}`}>{privacyEmail}</a>.
           Deleted accounts are removed from the application database; backups may linger up to 30 days.
         </Section>
 
@@ -71,13 +88,19 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="Children">
-          BuildIQ is a business productivity tool. It is not directed to children under 13 and is not intended for users under 16.
+          {productName} is a business productivity tool. It is not directed to children under 13 and is not intended for users under 16.
         </Section>
 
         <Section title="Your choices (including CCPA)">
           Access/export your data, delete your account, and manage Spruce credentials in the app. We do not sell or “share”
           personal information for cross-context behavioral advertising under CCPA/CPRA.
           Contact <a href={`mailto:${privacyEmail}`}>{privacyEmail}</a>.
+        </Section>
+
+        <Section title="Legal notice">
+          {policiesAreDrafts
+            ? "This Privacy Policy is a draft generated for engineering readiness. It requires review and approval by qualified legal counsel before it is treated as a final, published policy for App Store, Google Play, or customer contracting."
+            : `This Privacy Policy is maintained by ${entityName}.`}
         </Section>
 
         <p className="mt-10 text-sm text-[var(--sage)]">

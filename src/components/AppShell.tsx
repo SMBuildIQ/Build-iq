@@ -147,17 +147,21 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
       </header>
       {children}
       <footer className="border-t border-[var(--line)] px-4 py-6 text-center text-xs text-[var(--sage)]">
+        <p className="mb-2">BuildIQ by Supply Monkey Lumber &amp; Materials Co · Prescott, Arizona</p>
         <Link href="/privacy" className="hover:text-[var(--ink)]">
-          Privacy
+          Privacy (Draft)
         </Link>
         {" · "}
         <Link href="/terms" className="hover:text-[var(--ink)]">
-          Terms
+          Terms (Draft)
         </Link>
         {" · "}
         <Link href="/support" className="hover:text-[var(--ink)]">
           Support
         </Link>
+        <p className="mt-2 max-w-md mx-auto text-[10px] leading-relaxed opacity-80">
+          Legal pages are drafts requiring attorney review and are not final published policies.
+        </p>
       </footer>
     </div>
   );

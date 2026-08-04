@@ -1,13 +1,25 @@
+import { LEGAL, legalEmailFooter } from "@/lib/legal";
+
 type Mail = { to: string; subject: string; text: string; html?: string };
+
+function withFooter(text: string) {
+  return `${text.trim()}\n\n${legalEmailFooter()}`;
+}
 
 /**
  * Email provider. Production requires RESEND_API_KEY or SMTP_URL.
  * Development logs messages and returns ok so auth flows are testable.
  */
 export async function sendEmail(mail: Mail): Promise<{ ok: boolean; provider: string; id?: string }> {
+  const text = withFooter(mail.text);
+  const html =
+    mail.html ||
+    `<pre style="font-family:system-ui,sans-serif;white-space:pre-wrap">${text.replace(/</g, "&lt;")}</pre>`;
+
   const resendKey = process.env.RESEND_API_KEY;
   if (resendKey) {
-    const from = process.env.EMAIL_FROM || "BuildIQ <noreply@buildiq.app>";
+    const from =
+      process.env.EMAIL_FROM || `${LEGAL.productName} <noreply@supplymonkeyco.com>`;
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -18,8 +30,8 @@ export async function sendEmail(mail: Mail): Promise<{ ok: boolean; provider: st
         from,
         to: mail.to,
         subject: mail.subject,
-        text: mail.text,
-        html: mail.html || `<pre>${mail.text}</pre>`,
+        text,
+        html,
       }),
     });
     if (!res.ok) {
@@ -34,7 +46,7 @@ export async function sendEmail(mail: Mail): Promise<{ ok: boolean; provider: st
     throw new Error("Email is not configured (set RESEND_API_KEY)");
   }
 
-  console.info("[email:dev]", { to: mail.to, subject: mail.subject, text: mail.text });
+  console.info("[email:dev]", { to: mail.to, subject: mail.subject, text });
   return { ok: true, provider: "console" };
 }
 

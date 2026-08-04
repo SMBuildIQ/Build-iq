@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { AuthError, clearSessionCookie, ForbiddenError, jsonError } from "@/lib/auth";
 import { requirePermission } from "@/lib/require-permission";
 import { deleteUploadFiles } from "@/lib/security/upload-paths";
+import { sendEmail } from "@/lib/email";
+import { LEGAL } from "@/lib/legal";
+import { writeAuditLog } from "@/lib/audit";
 import { z } from "zod";
 
 const schema = z.object({
@@ -46,18 +49,19 @@ export async function DELETE(req: Request) {
           })
         : [];
 
+    const email = user.email;
+    const companyId = user.companyId;
+
     await prisma.$transaction(async (tx) => {
-      // Invalidate any outstanding JWTs first
       await tx.user.update({
         where: { id: user.id },
         data: { tokenVersion: { increment: 1 } },
       });
 
-      for (const companyId of companyIdsToDelete) {
-        await tx.company.delete({ where: { id: companyId } });
+      for (const id of companyIdsToDelete) {
+        await tx.company.delete({ where: { id } });
       }
 
-      // Remove leftover memberships (invite-join paths with no company wipe)
       await tx.membership.deleteMany({ where: { userId: user.id } });
       await tx.user.delete({ where: { id: user.id } });
     });
@@ -65,7 +69,40 @@ export async function DELETE(req: Request) {
     await deleteUploadFiles(blueprints.map((b) => b.filename));
     await clearSessionCookie();
 
-    return NextResponse.json({ ok: true, deleted: true });
+    await writeAuditLog({
+      companyId,
+      actorUserId: null,
+      action: "account.deleted",
+      detail: `Account deleted for ${email}`,
+    });
+
+    // Confirmation correspondence (best-effort; account already removed)
+    try {
+      await sendEmail({
+        to: email,
+        subject: `${LEGAL.productName} account deletion confirmation`,
+        text: [
+          `This confirms that your ${LEGAL.productName} account (${email}) was deleted as requested.`,
+          "",
+          `Operator: ${LEGAL.entityName}`,
+          LEGAL.addressOneLine,
+          "",
+          "If you did not request this deletion, or need further privacy assistance, contact:",
+          LEGAL.privacyEmail,
+          "",
+          "Payment processors such as Stripe may retain transaction records as required by law.",
+        ].join("\n"),
+      });
+    } catch (err) {
+      console.error("[account-delete-email]", err);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      deleted: true,
+      supportEmail: LEGAL.supportEmail,
+      message: `Account deleted. A confirmation was sent when email delivery is configured. Questions: ${LEGAL.supportEmail}`,
+    });
   } catch (error) {
     if (error instanceof AuthError || error instanceof ForbiddenError) {
       return jsonError(error);
