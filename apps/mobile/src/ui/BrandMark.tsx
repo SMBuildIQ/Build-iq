@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { Image } from "expo-image";
 import { useTheme } from "./ThemeContext";
+import { BuildIqWordmark } from "./BuildIqWordmark";
 
 /** Transparent Supply Monkey circle mark (no black plate). */
 const markAsset = require("../../assets/brand/monkey-mark.png");
@@ -24,6 +25,7 @@ export function BrandMark({
 }: BrandMarkProps) {
   const { theme } = useTheme();
   const titleColor = inverse ? "#FFFDF9" : theme.colors.text;
+  const accentColor = theme.colors.accent;
   const subColor = theme.colors.accent;
 
   const mark = (
@@ -34,6 +36,9 @@ export function BrandMark({
       accessibilityIgnoresInvertColors
     />
   );
+
+  const wordmarkSize = Math.max(22, size * (inverse || variant === "stacked" ? 0.55 : 0.48));
+  const wordmarkAlign = variant === "stacked" || inverse ? "center" : "left";
 
   if (variant === "lockup") {
     return (
@@ -48,19 +53,13 @@ export function BrandMark({
           contentFit="contain"
           accessibilityIgnoresInvertColors
         />
-        <Text
-          style={{
-            marginTop: 10,
-            fontFamily: "Staatliches",
-            fontSize: Math.max(22, size * 0.48),
-            letterSpacing: 1.6,
-            textTransform: "uppercase",
-            color: titleColor,
-            textAlign: "center",
-          }}
-        >
-          BuildIQ
-        </Text>
+        <BuildIqWordmark
+          fontSize={Math.max(22, size * 0.48)}
+          color={titleColor}
+          accentColor={accentColor}
+          align="center"
+          style={{ marginTop: 10 }}
+        />
       </View>
     );
   }
@@ -74,19 +73,13 @@ export function BrandMark({
   }
 
   const wordmark = (
-    <View style={{ alignItems: variant === "stacked" || inverse ? "center" : "flex-start", gap: 2 }}>
-      <Text
-        style={{
-          fontFamily: "Staatliches",
-          fontSize: Math.max(22, size * (inverse || variant === "stacked" ? 0.55 : 0.48)),
-          letterSpacing: inverse || variant === "stacked" ? 2 : 1.6,
-          textTransform: "uppercase",
-          color: titleColor,
-          textAlign: variant === "stacked" || inverse ? "center" : "left",
-        }}
-      >
-        BuildIQ
-      </Text>
+    <View style={{ alignItems: wordmarkAlign === "center" ? "center" : "flex-start", gap: 2 }}>
+      <BuildIqWordmark
+        fontSize={wordmarkSize}
+        color={titleColor}
+        accentColor={accentColor}
+        align={wordmarkAlign}
+      />
       <Text
         style={{
           fontFamily: "Questrial",
@@ -94,7 +87,7 @@ export function BrandMark({
           letterSpacing: 1.6,
           textTransform: "uppercase",
           color: subColor,
-          textAlign: variant === "stacked" || inverse ? "center" : "left",
+          textAlign: wordmarkAlign,
         }}
       >
         Supply Monkey

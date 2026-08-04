@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BuildIqWordmark } from "@/components/BuildIqWordmark";
 
 const LINKS = [
   { href: "/jobs", label: "Jobs" },
@@ -22,7 +23,7 @@ export function DashboardNav() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/mark.png" alt="" className="bq-nav-logo" width={36} height={36} />
           <span className="bq-nav-brand-text">
-            <span className="bq-nav-brand-mark">BuildIQ</span>
+            <BuildIqWordmark size="nav" className="bq-nav-brand-mark" />
             <span className="bq-nav-brand-sub">Supply Monkey</span>
           </span>
         </Link>

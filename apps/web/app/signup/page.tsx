@@ -6,6 +6,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { registerSchema } from "@buildiq/validation";
 import type { UserSession } from "@buildiq/types";
 import { Button } from "@/components/Button";
+import { BuildIqWordmark } from "@/components/BuildIqWordmark";
 import { apiFetch, ApiError } from "@/lib/api";
 import { setAuthCookies } from "@/lib/cookies";
 
@@ -73,7 +74,9 @@ export default function SignupPage() {
           Supply Monkey Lumber & Materials Co
         </p>
         <p className="bq-hand">Join the yard</p>
-        <h1 className="bq-display">BuildIQ</h1>
+        <h1 className="bq-display">
+          <BuildIqWordmark size="display" />
+        </h1>
         <p className="bq-body" style={{ marginTop: 16, maxWidth: "36ch", color: "rgba(255,253,249,0.72)" }}>
           Create a company workspace for jobs, proposals, and millwork packages.
         </p>

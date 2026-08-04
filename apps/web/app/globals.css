@@ -169,6 +169,10 @@ img {
   flex-shrink: 0;
 }
 
+.bq-nav-brand .bq-wordmark {
+  color: var(--bq-text-inverse);
+}
+
 .bq-nav-logo {
   width: 36px;
   height: 36px;
@@ -189,6 +193,62 @@ img {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
+}
+
+/* BUILD + orange IQ + banana peel on the I */
+.bq-wordmark {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: flex-end;
+  font-family: var(--font-staatliches), Impact, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding-top: 0.55em;
+  white-space: nowrap;
+}
+
+.bq-wordmark-build {
+  color: inherit;
+}
+
+.bq-wordmark-iq {
+  position: relative;
+  display: inline-flex;
+  color: var(--bq-accent-primary, #ff8833);
+}
+
+.bq-wordmark-iq-letters {
+  color: inherit;
+}
+
+.bq-wordmark-banana {
+  position: absolute;
+  left: 0.05em;
+  top: -0.72em;
+  width: 0.48em;
+  height: 0.35em;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bq-wordmark--nav {
+  font-size: 22px;
+}
+
+.bq-wordmark--display {
+  font-size: clamp(48px, 8vw, 72px);
+  letter-spacing: 0.06em;
+}
+
+.bq-wordmark--hero {
+  font-size: clamp(40px, 7vw, 64px);
+  letter-spacing: 0.06em;
+}
+
+.bq-login-visual .bq-wordmark,
+.bq-login-visual .bq-wordmark-build {
+  color: #fffdf9;
 }
 
 .bq-nav-brand-sub {

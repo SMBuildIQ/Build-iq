@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, useTransition, type FormEvent } from "react";
 import { loginSchema } from "@buildiq/validation";
 import { Button } from "@/components/Button";
+import { BuildIqWordmark } from "@/components/BuildIqWordmark";
 import { apiFetch, ApiError } from "@/lib/api";
 import { setAuthCookies } from "@/lib/cookies";
 import type { UserSession } from "@buildiq/types";
@@ -80,7 +81,9 @@ function LoginForm() {
           Supply Monkey Lumber & Materials Co
         </p>
         <p className="bq-hand">Welcome back</p>
-        <h1 className="bq-display">BuildIQ</h1>
+        <h1 className="bq-display">
+          <BuildIqWordmark size="display" />
+        </h1>
         <p className="bq-body" style={{ marginTop: 16, maxWidth: "36ch", color: "rgba(255,253,249,0.72)" }}>
           Job estimates, proposals, and millwork packages — built for the yard, not another SaaS grid.
         </p>
