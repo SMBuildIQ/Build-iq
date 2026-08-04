@@ -58,3 +58,14 @@ prisma/prod.db
 # Tesseract OCR language packs (downloaded at runtime)
 *.traineddata
 /tessdata/
+
+# Handoff artifacts (do not commit)
+buildiq-handoff*.zip
+buildiq-full-history.bundle
+public/buildiq-handoff.zip
+public/buildiq-full-history.bundle
+public/handoff/
+public/screenshots/buildiq-handoff.zip
+public/screenshots/buildiq-full-history.bundle
+public/mobile-shots/buildiq-handoff.zip
+public/mobile-shots/buildiq-full-history.bundle
