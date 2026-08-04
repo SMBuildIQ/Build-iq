@@ -89,10 +89,11 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Docker
 
 ```bash
+export AUTH_SECRET="$(openssl rand -hex 32)"
 docker compose up --build
 ```
 
-App listens on port 3000. Persist DB/uploads via named volumes.
+App listens on port 3000. `AUTH_SECRET` (32+ chars) is required. Persist DB/uploads via named volumes.
 
 ## ECI Spruce
 
