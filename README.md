@@ -13,6 +13,16 @@ Residential construction estimating platform: blueprint upload, AI material take
 - **Excel export** — summary, takeoff, per-trade bids, Spruce SKU sheet
 - **ECI Spruce** — mock inventory/pricing/quotes by default; live SOAP stubs when credentials are configured
 
+## Material package shop
+
+Builders can order takeoff packages from **Shop**:
+
+Windows · Doors · Lumber · Trusses · Cabinetry · Masonry Stone · Door Hardware · Millwork
+
+Flow: add to **Cart** → checkout/pay (Stripe when `STRIPE_SECRET_KEY` is set, otherwise mock) → **Track** sequence:
+
+Order received → Payment confirmed → Takeoff review → Procurement → Fabrication/staging → Shipped → Delivered
+
 ## For your builders
 
 1. Send them to **Builder signup** (`/signup`)

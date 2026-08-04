@@ -22,6 +22,8 @@ model Company {
   projects       Project[]
   invites        Invite[]
   spruceSettings SpruceSettings?
+  cart           Cart?
+  orders         Order[]
 }
 
 model User {
@@ -188,3 +190,108 @@ model SpruceSyncLog {
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
+
+// Catalog of residential material takeoff packages
+model MaterialPackage {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  category    String
+  name        String
+  description String
+  contents    String
+  unit        String   @default("package")
+  unitPrice   Float
+  leadDays    Int      @default(7)
+  spruceSku   String?
+  imageHint   String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  companyId String  @unique
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  items CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cartId    String
+  cart      Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  packageId String
+  package   MaterialPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  projectId String?
+
+  @@unique([cartId, packageId, projectId])
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique
+  status          String   @default("PLACED")
+  trackingStep    String   @default("ORDER_RECEIVED")
+  subtotal        Float
+  tax             Float
+  total           Float
+  currency        String   @default("usd")
+  paymentStatus   String   @default("pending")
+  paymentMethod   String?
+  paymentIntentId String?
+  paidAt          DateTime?
+  shipToName      String?
+  shipToAddress   String?
+  shipToCity      String?
+  shipToState     String?
+  shipToZip       String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  placedById  String?
+  projectId   String?
+
+  items    OrderItem[]
+  tracking TrackingEvent[]
+}
+
+model OrderItem {
+  id         String @id @default(cuid())
+  name       String
+  category   String
+  quantity   Int
+  unitPrice  Float
+  lineTotal  Float
+  spruceSku  String?
+
+  orderId   String
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  packageId String?
+  package   MaterialPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+}
+
+model TrackingEvent {
+  id        String   @id @default(cuid())
+  step      String
+  label     String
+  detail    String?
+  createdAt DateTime @default(now())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+

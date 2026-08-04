@@ -1,12 +1,29 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { MATERIAL_PACKAGES } from "../src/lib/materials/packages";
 
 const prisma = new PrismaClient();
 
 async function main() {
   const passwordHash = await bcrypt.hash("demo1234", 10);
 
-  // Wipe demo if schema changed - upsert company
+  for (const pkg of MATERIAL_PACKAGES) {
+    await prisma.materialPackage.upsert({
+      where: { slug: pkg.slug },
+      create: pkg,
+      update: {
+        name: pkg.name,
+        description: pkg.description,
+        contents: pkg.contents,
+        unitPrice: pkg.unitPrice,
+        leadDays: pkg.leadDays,
+        spruceSku: pkg.spruceSku,
+        sortOrder: pkg.sortOrder,
+        active: true,
+      },
+    });
+  }
+
   let company = await prisma.company.findUnique({ where: { slug: "ridge-homes" } });
   if (!company) {
     company = await prisma.company.create({
@@ -74,6 +91,7 @@ async function main() {
     });
   }
 
+  console.log(`Seeded ${MATERIAL_PACKAGES.length} material takeoff packages`);
   console.log("Seeded builder company Ridge Homes");
   console.log("Demo login: demo@buildiq.app / demo1234");
 }
