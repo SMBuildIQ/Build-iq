@@ -3,13 +3,14 @@ import { Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { Image } from "expo-image";
 import { useTheme } from "./ThemeContext";
 
-const markAsset = require("../../assets/brand/mark.png");
+/** Transparent Supply Monkey circle mark (no black plate). */
+const markAsset = require("../../assets/brand/monkey-mark.png");
 const logoIqAsset = require("../../assets/brand/logo-iq.png");
 
 type BrandMarkProps = {
   size?: number;
-  /** iq = monkey mark only · full = mark + BuildIQ wordmark · lockup = Supply Monkey IQ bar */
-  variant?: "iq" | "full" | "lockup";
+  /** iq = mark only · full = mark + BuildIQ (row) · stacked = centered column · lockup = IQ bar art */
+  variant?: "iq" | "full" | "stacked" | "lockup";
   inverse?: boolean;
   style?: StyleProp<ViewStyle>;
 };
@@ -23,12 +24,21 @@ export function BrandMark({
 }: BrandMarkProps) {
   const { theme } = useTheme();
   const titleColor = inverse ? "#FFFDF9" : theme.colors.text;
-  const subColor = inverse ? theme.colors.accent : theme.colors.accent;
+  const subColor = theme.colors.accent;
+
+  const mark = (
+    <Image
+      source={markAsset}
+      style={{ width: size, height: size }}
+      contentFit="contain"
+      accessibilityIgnoresInvertColors
+    />
+  );
 
   if (variant === "lockup") {
     return (
       <View
-        style={[{ alignItems: "flex-start" }, style]}
+        style={[{ alignItems: "center" }, style]}
         accessibilityLabel="BuildIQ by Supply Monkey"
         accessible
       >
@@ -40,39 +50,20 @@ export function BrandMark({
         />
         <Text
           style={{
-            marginTop: 8,
+            marginTop: 10,
             fontFamily: "Staatliches",
             fontSize: Math.max(22, size * 0.48),
             letterSpacing: 1.6,
             textTransform: "uppercase",
             color: titleColor,
+            textAlign: "center",
           }}
         >
           BuildIQ
         </Text>
-        <Text
-          style={{
-            fontFamily: "Questrial",
-            fontSize: 11,
-            letterSpacing: 1.6,
-            textTransform: "uppercase",
-            color: subColor,
-          }}
-        >
-          Supply Monkey Lumber & Materials
-        </Text>
       </View>
     );
   }
-
-  const mark = (
-    <Image
-      source={markAsset}
-      style={{ width: size, height: size }}
-      contentFit="contain"
-      accessibilityIgnoresInvertColors
-    />
-  );
 
   if (variant === "iq") {
     return (
@@ -82,8 +73,36 @@ export function BrandMark({
     );
   }
 
-  // Splash / inverse: stacked mark + BuildIQ wordmark
-  if (inverse) {
+  const wordmark = (
+    <View style={{ alignItems: variant === "stacked" || inverse ? "center" : "flex-start", gap: 2 }}>
+      <Text
+        style={{
+          fontFamily: "Staatliches",
+          fontSize: Math.max(22, size * (inverse || variant === "stacked" ? 0.55 : 0.48)),
+          letterSpacing: inverse || variant === "stacked" ? 2 : 1.6,
+          textTransform: "uppercase",
+          color: titleColor,
+          textAlign: variant === "stacked" || inverse ? "center" : "left",
+        }}
+      >
+        BuildIQ
+      </Text>
+      <Text
+        style={{
+          fontFamily: "Questrial",
+          fontSize: 10,
+          letterSpacing: 1.6,
+          textTransform: "uppercase",
+          color: subColor,
+          textAlign: variant === "stacked" || inverse ? "center" : "left",
+        }}
+      >
+        Supply Monkey
+      </Text>
+    </View>
+  );
+
+  if (variant === "stacked" || inverse) {
     return (
       <View
         style={[{ alignItems: "center", gap: 14 }, style]}
@@ -91,30 +110,7 @@ export function BrandMark({
         accessible
       >
         {mark}
-        <View style={{ alignItems: "center", gap: 4 }}>
-          <Text
-            style={{
-              fontFamily: "Staatliches",
-              fontSize: Math.max(28, size * 0.55),
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              color: titleColor,
-            }}
-          >
-            BuildIQ
-          </Text>
-          <Text
-            style={{
-              fontFamily: "Questrial",
-              fontSize: 11,
-              letterSpacing: 1.8,
-              textTransform: "uppercase",
-              color: subColor,
-            }}
-          >
-            Supply Monkey
-          </Text>
-        </View>
+        {wordmark}
       </View>
     );
   }
@@ -126,30 +122,7 @@ export function BrandMark({
       accessible
     >
       {mark}
-      <View style={{ gap: 2 }}>
-        <Text
-          style={{
-            fontFamily: "Staatliches",
-            fontSize: Math.max(22, size * 0.48),
-            letterSpacing: 1.6,
-            textTransform: "uppercase",
-            color: titleColor,
-          }}
-        >
-          BuildIQ
-        </Text>
-        <Text
-          style={{
-            fontFamily: "Questrial",
-            fontSize: 10,
-            letterSpacing: 1.6,
-            textTransform: "uppercase",
-            color: subColor,
-          }}
-        >
-          Supply Monkey
-        </Text>
-      </View>
+      {wordmark}
     </View>
   );
 }
