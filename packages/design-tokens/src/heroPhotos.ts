@@ -1,6 +1,6 @@
 /**
- * Full-bleed hero photography mapped to Supply Monkey site content:
- * lumber, trusses, doors/windows, millwork, stone, cabinetry, delivery, takeoffs.
+ * Full-bleed hero photography — editorial luxury residential & millwork.
+ * Warm wood, custom cabinetry, finished homes (not stock construction/warehouse).
  *
  * Web apps load these from `/heroes/*.jpg` (apps/web/public/heroes).
  * Mobile maps the same filenames via require() in HeroBand.
@@ -26,62 +26,62 @@ export const HERO_PHOTOS: Record<
   jobs: {
     file: "jobs-framing.jpg",
     path: "/heroes/jobs-framing.jpg",
-    alt: "Residential framing crew on an active build",
+    alt: "Modern residence with wood soffits and infinity pool",
   },
   jobDetail: {
     file: "job-blueprints.jpg",
     path: "/heroes/job-blueprints.jpg",
-    alt: "Architectural blueprints on a workbench",
+    alt: "Open-concept living with wood millwork wall and patio",
   },
   proposals: {
     file: "proposals-home.jpg",
     path: "/heroes/proposals-home.jpg",
-    alt: "Finished residential home with glass and patio",
+    alt: "Contemporary home with horizontal wood siding",
   },
   proposalDetail: {
     file: "proposal-kitchen.jpg",
     path: "/heroes/proposal-kitchen.jpg",
-    alt: "Finished kitchen millwork and cabinetry",
+    alt: "Oak cabinetry kitchen with marble waterfall island",
   },
   shop: {
     file: "shop-lumber.jpg",
     path: "/heroes/shop-lumber.jpg",
-    alt: "Lumber yard timber stacks",
+    alt: "Floor-to-ceiling wood millwork and fluted island",
   },
   cart: {
     file: "cart-windows.jpg",
     path: "/heroes/cart-windows.jpg",
-    alt: "Residential windows and exterior detailing",
+    alt: "Dusk facade with vertical wood cladding and glass",
   },
   track: {
     file: "track-warehouse.jpg",
     path: "/heroes/track-warehouse.jpg",
-    alt: "Materials warehouse aisle ready for yard pull",
+    alt: "Bright living hall with open-tread wood staircase",
   },
   orders: {
     file: "orders-warehouse.jpg",
     path: "/heroes/orders-warehouse.jpg",
-    alt: "Staged materials ready for jobsite delivery",
+    alt: "Pool terrace with cedar siding and outdoor lounge",
   },
   account: {
     file: "account-tools.jpg",
     path: "/heroes/account-tools.jpg",
-    alt: "Jobsite fabrication and tools",
+    alt: "Curated cane millwork sideboard in a designer living room",
   },
   cabinetry: {
     file: "cabinetry-kitchen.jpg",
     path: "/heroes/cabinetry-kitchen.jpg",
-    alt: "Custom kitchen cabinetry showroom",
+    alt: "Marble island kitchen with handleless cabinetry",
   },
   settings: {
     file: "settings-office.jpg",
     path: "/heroes/settings-office.jpg",
-    alt: "Estimating office workspace",
+    alt: "Quiet studio corridor with integrated cabinetry",
   },
   login: {
     file: "login-lumber.jpg",
     path: "/heroes/login-lumber.jpg",
-    alt: "Supply Monkey lumber yard corridor",
+    alt: "Twilight entry with vertical timber cladding",
   },
 };
 
