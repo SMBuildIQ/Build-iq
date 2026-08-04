@@ -28,8 +28,12 @@ export function statusLabel(status: string) {
     SYNCED: "Synced to Spruce",
     ARCHIVED: "Archived",
     SENT: "Sent",
+    VIEWED: "Viewed",
+    ACCEPTED: "Accepted",
     AWARDED: "Awarded",
     DECLINED: "Declined",
+    EXPIRED: "Expired",
+    SUPERSEDED: "Superseded",
   };
   return map[status] || status;
 }

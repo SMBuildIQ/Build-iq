@@ -27,6 +27,7 @@ model Company {
   customers      Customer[]
   cabinetryProductLines CabinetryProductLine[]
   cabinetryOpportunities CabinetryOpportunity[]
+  proposals      Proposal[]
 }
 
 model User {
@@ -99,6 +100,7 @@ model Project {
   bidPackages BidPackage[]
   spruceSyncs SpruceSyncLog[]
   cabinetryOpportunities CabinetryOpportunity[]
+  proposals   Proposal[]
 }
 
 model Blueprint {
@@ -464,6 +466,7 @@ model Customer {
   contacts      Contact[]
   projects      Project[]
   opportunities CabinetryOpportunity[]
+  proposals     Proposal[]
 
   @@index([companyId, name])
 }
@@ -544,5 +547,113 @@ model CabinetryOpportunity {
   @@index([companyId, stage])
   @@index([projectId])
   @@index([customerId])
+}
+
+/// Customer-facing material proposal across shop categories
+/// (Windows, Doors, Lumber, Trusses, Cabinetry, Masonry, Hardware, Millwork, …).
+model Proposal {
+  id          String   @id @default(cuid())
+  /// Human-readable e.g. PRO-2026-00042
+  number      String
+  title       String
+  /// DRAFT | SENT | VIEWED | ACCEPTED | DECLINED | EXPIRED | SUPERSEDED
+  status      String   @default("DRAFT")
+  version     Int      @default(1)
+  intro       String?
+  scopeNotes  String?
+  exclusions  String?
+  terms       String?
+  validUntil  DateTime?
+  depositPct  Float    @default(0.3)
+  materialSubtotal   Float @default(0)
+  laborSubtotal      Float @default(0)
+  wasteSubtotal      Float @default(0)
+  contingencyAmount  Float @default(0)
+  overheadAmount     Float @default(0)
+  profitAmount       Float @default(0)
+  taxAmount          Float @default(0)
+  grandTotal         Float @default(0)
+  depositAmount      Float @default(0)
+  /// Unguessable token for public customer view / accept
+  publicToken String   @unique
+  sentAt      DateTime?
+  viewedAt    DateTime?
+  acceptedAt  DateTime?
+  declinedAt  DateTime?
+  customerEmail String?
+  customerName  String?
+  projectAddress String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  cabinetryOpportunityId String?
+
+  sections    ProposalSection[]
+  acceptance  ProposalAcceptance?
+
+  @@unique([companyId, number])
+  @@index([companyId, status])
+  @@index([projectId])
+  @@index([customerId])
+  @@index([publicToken])
+}
+
+model ProposalSection {
+  id        String  @id @default(cuid())
+  /// Canonical category: Windows | Doors | Lumber | Trusses | Cabinetry | …
+  category  String
+  title     String
+  sortOrder Int     @default(0)
+  subtotal  Float   @default(0)
+  notes     String?
+
+  proposalId String
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  lines ProposalLine[]
+
+  @@index([proposalId, sortOrder])
+}
+
+model ProposalLine {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  quantity    Float
+  unit        String
+  unitPrice   Float
+  lineTotal   Float
+  spruceSku   String?
+  sortOrder   Int     @default(0)
+  sourceMaterialId String?
+
+  sectionId String
+  section   ProposalSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, sortOrder])
+}
+
+model ProposalAcceptance {
+  id          String   @id @default(cuid())
+  /// ACCEPTED | DECLINED
+  decision    String
+  signerName  String
+  signerEmail String?
+  signerTitle String?
+  notes       String?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  proposalId String   @unique
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 }
 

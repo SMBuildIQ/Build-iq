@@ -41,11 +41,18 @@ export const PLATFORM_MODULES: PlatformModule[] = [
       "Multi-agent workflows with AgentRun/AgentStep persistence, registry, and SSE streaming.",
   },
   {
+    slug: "proposals",
+    name: "Customer proposals",
+    status: "FULL",
+    description:
+      "Polished multi-category proposals (Windows, Doors, Lumber, Trusses, Cabinetry, Masonry, Hardware, Millwork) with PDF, send, and public accept.",
+  },
+  {
     slug: "cabinetry",
     name: "AI Cabinetry Proposals",
     status: "PARTIAL",
     description:
-      "Phase 1 started: customers, Mesa/Summit/Pinnacle product lines, opportunities. See OWNER_APPROVALS.md.",
+      "Phase 1 started: customers, Mesa/Summit/Pinnacle product lines, opportunities. Full catalog AI extract still planned — use Proposals for customer-facing packages.",
   },
   { slug: "company-settings", name: "Company settings and permissions", status: "PARTIAL", description: "Team invites and RBAC; deeper settings planned." },
 ];

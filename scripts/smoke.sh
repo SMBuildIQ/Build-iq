@@ -36,8 +36,8 @@ echo "== shop =="
 curl -sf -b "$COOKIE_JAR" "$BASE/api/shop/packages" | head -c 200
 echo
 
-echo "== modules =="
-curl -sf -b "$COOKIE_JAR" "$BASE/api/modules" | head -c 200
+echo "== proposals =="
+curl -sf -b "$COOKIE_JAR" "$BASE/api/proposals" | head -c 200
 echo
 
 echo "== orchestration =="
@@ -47,7 +47,7 @@ echo
 echo "$ORCH" | grep -q 'estimating-pipeline'
 
 echo "== authenticated pages =="
-for path in /dashboard /agents /cabinetry /shop /cart /orders /modules /team /settings/account; do
+for path in /dashboard /agents /cabinetry /proposals /shop /cart /orders /modules /team /settings/account; do
   code=$(curl -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "$BASE$path")
   echo "$path $code"
   # App Router may return 200 for client shells

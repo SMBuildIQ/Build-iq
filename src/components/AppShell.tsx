@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FolderKanban, ShoppingBag, ShoppingCart, PackageSearch, LogOut, Boxes } from "lucide-react";
+import { FolderKanban, ShoppingBag, ShoppingCart, PackageSearch, LogOut, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const tabs = [
   { href: "/dashboard", label: "Jobs", icon: FolderKanban },
-  { href: "/cabinetry", label: "Cabinetry", icon: Boxes },
+  { href: "/proposals", label: "Proposals", icon: FileText },
   { href: "/shop", label: "Shop", icon: ShoppingBag },
   { href: "/cart", label: "Cart", icon: ShoppingCart },
   { href: "/orders", label: "Track", icon: PackageSearch },
@@ -53,6 +53,12 @@ export function AppShell({
           </Link>
           {user ? (
             <div className="flex items-center gap-0.5">
+              <Link
+                href="/cabinetry"
+                className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"
+              >
+                Cabinetry
+              </Link>
               <Link
                 href="/agents"
                 className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-white/70 hover:text-[var(--orange)]"

@@ -37,7 +37,7 @@ Honest inventory after the incomplete-items fix pass.
 | CI workflows | Added (`.github/workflows/ci.yml`) |
 | Launch checklist + smoke script | Added — web/PWA soft-launch ready |
 | AI Agent Orchestration | FULL — registry, workflows, AgentRun/AgentStep, `/agents` |
-| Cabinetry proposals module | PLANNED — audit only; no schema until approved |
+| Cabinetry proposals module | PARTIAL — opportunities + shared Proposals engine for package PDFs; AI extract/catalog still planned |
 | Expo mobile client | Not started (awaits architecture execution phase) |
 
 ## Intentionally not faked

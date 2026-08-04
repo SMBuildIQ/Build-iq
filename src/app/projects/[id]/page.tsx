@@ -259,7 +259,7 @@ export default function ProjectDetailPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
             <button
               onClick={runBots}
               disabled={!!busy || botsOpen}
@@ -276,6 +276,29 @@ export default function ProjectDetailPage() {
               className="btn-secondary !py-3"
             >
               {busy === "export-pdf" ? "Building PDF…" : "Export PDF"}
+            </button>
+            <button
+              onClick={async () => {
+                setBusy("proposal");
+                setError("");
+                setMessage("");
+                const res = await fetch("/api/proposals", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ projectId: id }),
+                });
+                const data = await res.json().catch(() => ({}));
+                setBusy("");
+                if (!res.ok) {
+                  setError(data.error || "Could not create proposal");
+                  return;
+                }
+                router.push(`/proposals/${data.proposal.id}`);
+              }}
+              disabled={!!busy || !project.materials.length}
+              className="btn-secondary !py-3"
+            >
+              {busy === "proposal" ? "Building…" : "Create proposal"}
             </button>
             <button
               onClick={() => spruceAction("submit-quote")}

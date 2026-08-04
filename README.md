@@ -42,6 +42,7 @@ npm run smoke          # hit /api/health + auth + projects (server must be up)
 - **Bid packages** — one package per trade
 - **Excel export** — summary, takeoff, per-trade bids, Spruce SKU sheet
 - **PDF export** — plan estimate & subtotals (cost rollup, trade subtotals, takeoff lines)
+- **Customer proposals** — polished multi-category proposals (Windows, Doors, Lumber, Trusses, Cabinetry, Masonry, Hardware, Millwork) with PDF, email send, and public accept link
 - **ECI Spruce** — mock inventory/pricing/quotes by default; live SOAP stubs when credentials are configured
 
 ## App Store & Play Store

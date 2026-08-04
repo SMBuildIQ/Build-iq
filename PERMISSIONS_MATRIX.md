@@ -28,7 +28,9 @@ Roles: OWNER · ADMIN · PROJECT_MANAGER · SUPERINTENDENT · ESTIMATOR · PURCH
 | settings:view | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | module:planned:view | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-## Enforcement notes
+| proposal:view | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | | | ✓ | ✓ |
+| proposal:write | ✓ | ✓ | ✓ | | ✓ | | | ✓ | ✓ | | | | |
+| proposal:send | ✓ | ✓ | ✓ | | ✓ | | | | ✓ | | | | |
 
 - Tenant isolation (`companyId`) is separate from RBAC and remains mandatory.
 - UI may hide actions; **API denial is authoritative**.

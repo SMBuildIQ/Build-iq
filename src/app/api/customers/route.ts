@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { jsonError } from "@/lib/auth";
-import { requirePermission } from "@/lib/require-permission";
+import { requirePermission, requireAnyPermission } from "@/lib/require-permission";
 import { writeAuditLog } from "@/lib/audit";
 
 const createSchema = z.object({
@@ -19,7 +19,7 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    const user = await requirePermission("cabinetry:view");
+    const user = await requireAnyPermission("cabinetry:view", "proposal:view");
     const customers = await prisma.customer.findMany({
       where: { companyId: user.companyId },
       orderBy: { name: "asc" },

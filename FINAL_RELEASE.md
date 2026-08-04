@@ -19,6 +19,7 @@ Cabinetry Phase 1 foundations started. Live Stripe and store binaries still need
 | Jobs | Projects, blueprints, OCR, optional GPT-4o vision, measuring tools |
 | AI | Agent orchestration (`AgentRun`/`AgentStep`), estimating workflow SSE |
 | Estimating | Takeoff, cost rollup, bids, Excel + PDF subtotal export |
+| Proposals | Multi-category customer proposals (Windows–Millwork), PDF, send, public accept |
 | Commerce | Shop, cart, checkout (mock until Stripe keys), order tracking |
 | Cabinetry Phase 1 start | Customers, Mesa/Summit/Pinnacle product lines, opportunities |
 | Brand | Supply Monkey styling, IQ logo, draft Privacy/Terms/Support |
@@ -31,11 +32,11 @@ Cabinetry Phase 1 foundations started. Live Stripe and store binaries still need
 | Live Stripe | Approved in principle — **set Stripe keys** to go live |
 | Store submit | Approved in principle — needs Cap/Expo native projects |
 | Counsel-final legal | Still Draft |
-| Cabinetry AI extract / proposals / deposits | Later Phase 1 steps |
+| Cabinetry AI extract / catalog pricing / deposits | Later Phase 1 steps (customer package proposals ship via Proposals) |
 
 ## Demo
 
-- URL: https://rich-ravens-cough.loca.lt (localtunnel; may show a click-through interstitial)
+- URL: https://wicked-words-care.loca.lt (localtunnel; may show a click-through interstitial)
 - Local: http://127.0.0.1:3000  
 - Login: `demo@buildiq.app` / `demo1234`  
 - Support: support@supplymonkeyco.com

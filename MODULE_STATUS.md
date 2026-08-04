@@ -29,8 +29,9 @@ Legend: **FULL** = usable in production paths · **PARTIAL** = real code but inc
 | 23 | Notifications | NONE | No in-app / push / email system |
 | 24 | AI assistant | PARTIAL | Bot pipeline after upload; conversational assistant planned |
 | 25 | AI Agent Orchestration | FULL | Registry, workflows, AgentRun/AgentStep, SSE, `/agents` UI |
-| 25 | AI Cabinetry Proposals | PARTIAL | Phase 1: customers, product lines, opportunities (owner-approved) |
-| 27 | Company settings and team permissions | PARTIAL | Invites + Spruce + account; roles mostly labels |
+| 26 | AI Cabinetry Proposals | PARTIAL | Phase 1: customers, product lines, opportunities; customer PDFs via Proposals module |
+| 27 | Customer proposals | FULL | Multi-category proposals + PDF + send + public accept |
+| 28 | Company settings and team permissions | PARTIAL | Invites + Spruce + account; roles mostly labels |
 
 ## Related commerce (not in the 25)
 

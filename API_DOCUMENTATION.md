@@ -49,6 +49,13 @@ Base: same origin `/api/*`. Auth: HTTP-only cookie `buildiq_session` (JWT).
 | Method | Path | Permission |
 |---|---|---|
 | GET | `/api/shop/packages` | shop:browse |
+| GET/POST | `/api/proposals` | proposal:view / proposal:write |
+| GET/PATCH/DELETE | `/api/proposals/[id]` | proposal:view / proposal:write |
+| POST | `/api/proposals/[id]/send` | proposal:send |
+| GET | `/api/proposals/[id]/pdf` | proposal:view |
+| GET | `/api/proposals/public/[token]` | public |
+| POST | `/api/proposals/public/[token]/accept` | public |
+| GET | `/api/proposals/public/[token]/pdf` | public |
 | GET/POST/PATCH/DELETE | `/api/cart` | cart:manage |
 | POST | `/api/checkout` | order:place |
 | GET/POST | `/api/checkout/wallet` | order:place |

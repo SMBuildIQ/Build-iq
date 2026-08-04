@@ -46,6 +46,9 @@ export const PERMISSIONS = [
   "cabinetry:view",
   "cabinetry:opportunity:write",
   "cabinetry:catalog:edit",
+  "proposal:view",
+  "proposal:write",
+  "proposal:send",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -73,6 +76,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "module:planned:view",
     "cabinetry:view",
     "cabinetry:opportunity:write",
+    "proposal:view",
+    "proposal:write",
+    "proposal:send",
   ],
   SUPERINTENDENT: [
     "team:view",
@@ -84,6 +90,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "account:export",
     "settings:view",
     "module:planned:view",
+    "proposal:view",
   ],
   ESTIMATOR: [
     "team:view",
@@ -101,6 +108,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "module:planned:view",
     "cabinetry:view",
     "cabinetry:opportunity:write",
+    "proposal:view",
+    "proposal:write",
+    "proposal:send",
   ],
   PURCHASING: [
     "team:view",
@@ -114,6 +124,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "account:export",
     "settings:view",
     "module:planned:view",
+    "proposal:view",
   ],
   ACCOUNTANT: [
     "team:view",
@@ -123,6 +134,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "account:export",
     "settings:view",
     "module:planned:view",
+    "proposal:view",
   ],
   DESIGNER: [
     "team:view",
@@ -134,6 +146,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "module:planned:view",
     "cabinetry:view",
     "cabinetry:opportunity:write",
+    "proposal:view",
+    "proposal:write",
   ],
   SALES: [
     "team:view",
@@ -145,6 +159,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "module:planned:view",
     "cabinetry:view",
     "cabinetry:opportunity:write",
+    "proposal:view",
+    "proposal:write",
+    "proposal:send",
   ],
   SUBCONTRACTOR: [
     "project:read",
@@ -153,8 +170,16 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "module:planned:view",
   ],
   SUPPLIER: ["order:view", "shop:browse", "settings:view", "module:planned:view"],
-  HOMEOWNER: ["project:read", "settings:view", "module:planned:view"],
-  VIEWER: ["team:view", "project:read", "order:view", "shop:browse", "settings:view", "module:planned:view"],
+  HOMEOWNER: ["project:read", "settings:view", "module:planned:view", "proposal:view"],
+  VIEWER: [
+    "team:view",
+    "project:read",
+    "order:view",
+    "shop:browse",
+    "settings:view",
+    "module:planned:view",
+    "proposal:view",
+  ],
 };
 
 export function normalizeRole(role: string | null | undefined): Role {

@@ -72,8 +72,12 @@ export function StatusBadge({ status }: { status: string }) {
     SYNCED: "bg-[var(--mist)] text-[var(--ink)]",
     ARCHIVED: "bg-neutral-200 text-neutral-600",
     SENT: "bg-sky-100 text-sky-900",
+    VIEWED: "bg-violet-100 text-violet-900",
+    ACCEPTED: "bg-emerald-100 text-emerald-900",
     AWARDED: "bg-emerald-100 text-emerald-900",
     DECLINED: "bg-rose-100 text-rose-900",
+    EXPIRED: "bg-neutral-200 text-neutral-600",
+    SUPERSEDED: "bg-neutral-200 text-neutral-600",
   };
 
   const labels: Record<string, string> = {
@@ -84,8 +88,12 @@ export function StatusBadge({ status }: { status: string }) {
     SYNCED: "Spruce synced",
     ARCHIVED: "Archived",
     SENT: "Sent",
+    VIEWED: "Viewed",
+    ACCEPTED: "Accepted",
     AWARDED: "Awarded",
     DECLINED: "Declined",
+    EXPIRED: "Expired",
+    SUPERSEDED: "Superseded",
   };
 
   return (
