@@ -15,10 +15,10 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    const project = await ensureOwnedProject(id, user.id);
+    const project = await ensureOwnedProject(id, user.companyId);
     const body = schema.parse(await req.json().catch(() => ({})));
 
-    const settings = await prisma.spruceSettings.findUnique({ where: { userId: user.id } });
+    const settings = await prisma.spruceSettings.findUnique({ where: { companyId: user.companyId } });
     const config = toSpruceConfig(settings);
 
     const materials = await prisma.materialItem.findMany({

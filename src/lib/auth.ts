@@ -15,7 +15,9 @@ export type SessionUser = {
   id: string;
   email: string;
   name: string;
-  companyName: string | null;
+  companyId: string;
+  companyName: string;
+  role: string;
 };
 
 export async function hashPassword(password: string) {
@@ -31,11 +33,13 @@ export async function createSessionToken(user: SessionUser) {
     id: user.id,
     email: user.email,
     name: user.name,
+    companyId: user.companyId,
     companyName: user.companyName,
+    role: user.role,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime("30d")
     .sign(getSecret());
 }
 
@@ -46,7 +50,7 @@ export async function setSessionCookie(token: string) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 30,
   });
 }
 
@@ -61,11 +65,14 @@ export async function getSession(): Promise<SessionUser | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecret());
+    if (!payload.companyId) return null;
     return {
       id: payload.id as string,
       email: payload.email as string,
       name: payload.name as string,
-      companyName: (payload.companyName as string) || null,
+      companyId: payload.companyId as string,
+      companyName: (payload.companyName as string) || "",
+      role: (payload.role as string) || "OWNER",
     };
   } catch {
     return null;
@@ -83,11 +90,14 @@ export async function getUserFromRequest(req: NextRequest): Promise<SessionUser 
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecret());
+    if (!payload.companyId) return null;
     return {
       id: payload.id as string,
       email: payload.email as string,
       name: payload.name as string,
-      companyName: (payload.companyName as string) || null,
+      companyId: payload.companyId as string,
+      companyName: (payload.companyName as string) || "",
+      role: (payload.role as string) || "OWNER",
     };
   } catch {
     return null;
@@ -109,10 +119,52 @@ export function jsonError(error: unknown, fallback = "Something went wrong") {
   return NextResponse.json({ error: message }, { status: 400 });
 }
 
-export async function ensureOwnedProject(projectId: string, userId: string) {
+export async function ensureOwnedProject(projectId: string, companyId: string) {
   const project = await prisma.project.findFirst({
-    where: { id: projectId, userId },
+    where: { id: projectId, companyId },
   });
   if (!project) throw new Error("Project not found");
   return project;
+}
+
+export function slugifyCompany(name: string) {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
+  return base || "builder";
+}
+
+export async function uniqueCompanySlug(name: string) {
+  const base = slugifyCompany(name);
+  let slug = base;
+  let i = 1;
+  while (await prisma.company.findUnique({ where: { slug } })) {
+    slug = `${base}-${i++}`;
+  }
+  return slug;
+}
+
+export async function sessionFromMembership(userId: string, companyId?: string): Promise<SessionUser | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      memberships: {
+        include: { company: true },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+  if (!user?.memberships.length) return null;
+  const membership =
+    (companyId && user.memberships.find((m) => m.companyId === companyId)) || user.memberships[0];
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    companyId: membership.companyId,
+    companyName: membership.company.name,
+    role: membership.role,
+  };
 }

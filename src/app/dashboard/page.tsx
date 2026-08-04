@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
 
   const projects = await prisma.project.findMany({
-    where: { userId: user.id },
+    where: { companyId: user.companyId },
     orderBy: { updatedAt: "desc" },
     include: {
       estimate: true,
@@ -22,12 +22,12 @@ export default async function DashboardPage() {
   return (
     <AppShell user={user}>
       <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--sage)]">
-            {user.companyName || "Your workspace"}
-          </p>
-          <h1 className="mt-1 font-display text-3xl font-semibold text-[var(--ink)]">Projects</h1>
-        </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--sage)]">
+              {user.companyName || "Your company"}
+            </p>
+            <h1 className="mt-1 font-display text-3xl font-semibold text-[var(--ink)]">Jobs</h1>
+          </div>
         <Link href="/projects/new" className="btn-copper !rounded-xl !px-3.5 !py-2.5 !text-sm">
           New
         </Link>

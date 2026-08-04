@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    await ensureOwnedProject(id, user.id);
+    await ensureOwnedProject(id, user.companyId);
 
     const form = await req.formData();
     const files = form.getAll("files").filter((f): f is File => f instanceof File);

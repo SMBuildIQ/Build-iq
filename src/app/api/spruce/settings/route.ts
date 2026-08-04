@@ -6,10 +6,10 @@ import { z } from "zod";
 export async function GET() {
   try {
     const user = await requireUser();
-    let settings = await prisma.spruceSettings.findUnique({ where: { userId: user.id } });
+    let settings = await prisma.spruceSettings.findUnique({ where: { companyId: user.companyId } });
     if (!settings) {
       settings = await prisma.spruceSettings.create({
-        data: { userId: user.id, mockMode: true, enabled: true, branchCode: "MAIN" },
+        data: { companyId: user.companyId, mockMode: true, enabled: true, branchCode: "MAIN" },
       });
     }
 
@@ -52,9 +52,9 @@ export async function PUT(req: NextRequest) {
     if (body.mockMode !== undefined) data.mockMode = body.mockMode;
 
     const settings = await prisma.spruceSettings.upsert({
-      where: { userId: user.id },
+      where: { companyId: user.companyId },
       create: {
-        userId: user.id,
+        companyId: user.companyId,
         mockMode: true,
         enabled: true,
         ...data,

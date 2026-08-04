@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    await ensureOwnedProject(id, user.id);
+    await ensureOwnedProject(id, user.companyId);
 
     const body = schema.parse(await req.json().catch(() => ({})));
     const materials = await prisma.materialItem.findMany({ where: { projectId: id } });

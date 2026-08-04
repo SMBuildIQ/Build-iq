@@ -6,7 +6,7 @@ import { lookupInventory, toSpruceConfig } from "@/lib/spruce/client";
 export async function GET() {
   try {
     const user = await requireUser();
-    const settings = await prisma.spruceSettings.findUnique({ where: { userId: user.id } });
+    const settings = await prisma.spruceSettings.findUnique({ where: { companyId: user.companyId } });
     const config = toSpruceConfig(settings);
     const inventory = await lookupInventory(config);
     return NextResponse.json({

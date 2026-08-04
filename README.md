@@ -13,6 +13,16 @@ Residential construction estimating platform: blueprint upload, AI material take
 - **Excel export** — summary, takeoff, per-trade bids, Spruce SKU sheet
 - **ECI Spruce** — mock inventory/pricing/quotes by default; live SOAP stubs when credentials are configured
 
+## For your builders
+
+1. Send them to **Builder signup** (`/signup`)
+2. They create a **company workspace** (name, email, password)
+3. Onboarding walks them into their first job
+4. Owners invite estimators from **Team** (invite link)
+5. Everyone installs the app to their home screen
+
+Each company only sees its own jobs, team, and Spruce settings.
+
 ## Mobile app
 
 BuildIQ is an **installable web app (PWA)** with a phone-first shell (bottom tabs, home-screen install).

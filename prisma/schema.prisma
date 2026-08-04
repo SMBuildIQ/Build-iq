@@ -7,17 +7,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Company {
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  phone      String?
+  city       String?
+  state      String?
+  onboarded  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  members        Membership[]
+  projects       Project[]
+  invites        Invite[]
+  spruceSettings SpruceSettings?
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String
   passwordHash String
-  companyName  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  projects       Project[]
-  spruceSettings SpruceSettings?
+  memberships Membership[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  role      String   @default("OWNER")
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+}
+
+model Invite {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  email      String?
+  role       String    @default("ESTIMATOR")
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 model Project {
@@ -34,8 +75,9 @@ model Project {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdById String?
 
   blueprints  Blueprint[]
   materials   MaterialItem[]
@@ -131,8 +173,8 @@ model SpruceSettings {
   mockMode      Boolean  @default(true)
   updatedAt     DateTime @updatedAt
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String  @unique
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 model SpruceSyncLog {

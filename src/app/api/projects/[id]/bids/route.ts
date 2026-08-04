@@ -9,7 +9,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    await ensureOwnedProject(id, user.id);
+    await ensureOwnedProject(id, user.companyId);
 
     const bidPackages = await prisma.bidPackage.findMany({
       where: { projectId: id },
@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    await ensureOwnedProject(id, user.id);
+    await ensureOwnedProject(id, user.companyId);
     const body = patchSchema.parse(await req.json());
 
     const pkg = await prisma.bidPackage.findFirst({

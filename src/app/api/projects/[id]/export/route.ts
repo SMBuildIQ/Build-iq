@@ -9,7 +9,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    await ensureOwnedProject(id, user.id);
+    await ensureOwnedProject(id, user.companyId);
 
     const project = await prisma.project.findUnique({
       where: { id },

@@ -9,7 +9,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    await ensureOwnedProject(id, user.id);
+    await ensureOwnedProject(id, user.companyId);
 
     const project = await prisma.project.findUnique({
       where: { id },
@@ -46,7 +46,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    await ensureOwnedProject(id, user.id);
+    await ensureOwnedProject(id, user.companyId);
     const body = updateSchema.parse(await req.json());
 
     const project = await prisma.project.update({
@@ -63,7 +63,7 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    await ensureOwnedProject(id, user.id);
+    await ensureOwnedProject(id, user.companyId);
     await prisma.project.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error) {

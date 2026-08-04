@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FolderKanban, PlusCircle, Settings2, LogOut, Home } from "lucide-react";
+import { FolderKanban, PlusCircle, Settings2, LogOut, Users } from "lucide-react";
 
 const tabs = [
-  { href: "/dashboard", label: "Projects", icon: FolderKanban },
+  { href: "/dashboard", label: "Jobs", icon: FolderKanban },
   { href: "/projects/new", label: "New", icon: PlusCircle },
+  { href: "/team", label: "Team", icon: Users },
   { href: "/settings/spruce", label: "Spruce", icon: Settings2 },
 ];
 
@@ -14,7 +15,7 @@ export function AppShell({
   user,
   children,
 }: {
-  user?: { name: string; companyName?: string | null } | null;
+  user?: { name: string; companyName?: string | null; role?: string } | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -30,10 +31,19 @@ export function AppShell({
     <div className="app-shell min-h-dvh bg-[var(--paper)]">
       <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--paper)]/90 backdrop-blur-md safe-top">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+          <Link href={user ? "/dashboard" : "/"} className="flex min-w-0 items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icon-72.png" alt="" className="h-8 w-8 rounded-lg" />
-            <span className="font-display text-xl font-semibold tracking-tight">BuildIQ</span>
+            <span className="truncate">
+              <span className="block font-display text-lg font-semibold leading-tight tracking-tight">
+                BuildIQ
+              </span>
+              {user?.companyName && (
+                <span className="block truncate text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--sage)]">
+                  {user.companyName}
+                </span>
+              )}
+            </span>
           </Link>
           {user ? (
             <button
@@ -42,7 +52,6 @@ export function AppShell({
               aria-label="Sign out"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign out</span>
             </button>
           ) : (
             <Link href="/login" className="text-sm font-semibold text-[var(--copper-deep)]">
@@ -58,7 +67,7 @@ export function AppShell({
 
       {user && (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--paper)]/95 backdrop-blur-md safe-bottom">
-          <ul className="mx-auto grid max-w-3xl grid-cols-3">
+          <ul className="mx-auto grid max-w-3xl grid-cols-4">
             {tabs.map((tab) => {
               const active =
                 pathname === tab.href ||
@@ -68,7 +77,7 @@ export function AppShell({
                 <li key={tab.href}>
                   <Link
                     href={tab.href}
-                    className={`flex flex-col items-center gap-1 px-2 py-3 text-[11px] font-semibold tracking-wide ${
+                    className={`flex flex-col items-center gap-1 px-1 py-3 text-[11px] font-semibold tracking-wide ${
                       active ? "text-[var(--copper-deep)]" : "text-[var(--sage)]"
                     }`}
                   >
@@ -99,8 +108,8 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
             <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--ink-soft)]">
               Sign in
             </Link>
-            <Link href="/register" className="btn-copper !rounded-lg !px-3.5 !py-2 !text-sm">
-              Get the app
+            <Link href="/signup" className="btn-copper !rounded-lg !px-3.5 !py-2 !text-sm">
+              Builder signup
             </Link>
           </div>
         </div>
@@ -109,5 +118,3 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-export { Home };

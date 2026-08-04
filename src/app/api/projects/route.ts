@@ -18,7 +18,7 @@ export async function GET() {
   try {
     const user = await requireUser();
     const projects = await prisma.project.findMany({
-      where: { userId: user.id },
+      where: { companyId: user.companyId },
       orderBy: { updatedAt: "desc" },
       include: {
         estimate: true,
@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
     const body = createSchema.parse(await req.json());
     const project = await prisma.project.create({
       data: {
-        userId: user.id,
+        companyId: user.companyId,
+        createdById: user.id,
         name: body.name,
         address: body.address || null,
         city: body.city || null,
@@ -48,6 +49,12 @@ export async function POST(req: NextRequest) {
         notes: body.notes || null,
       },
     });
+
+    await prisma.company.update({
+      where: { id: user.companyId },
+      data: { onboarded: true },
+    });
+
     return NextResponse.json({ project }, { status: 201 });
   } catch (error) {
     return jsonError(error);

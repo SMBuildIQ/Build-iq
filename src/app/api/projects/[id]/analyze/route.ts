@@ -11,7 +11,7 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
   try {
     const user = await requireUser();
     const { id } = await ctx.params;
-    const project = await ensureOwnedProject(id, user.id);
+    const project = await ensureOwnedProject(id, user.companyId);
 
     await prisma.project.update({
       where: { id },

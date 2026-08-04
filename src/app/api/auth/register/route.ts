@@ -5,30 +5,91 @@ import {
   hashPassword,
   jsonError,
   setSessionCookie,
+  uniqueCompanySlug,
 } from "@/lib/auth";
 import { z } from "zod";
 
-const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().min(2),
-  companyName: z.string().optional(),
-});
+const schema = z
+  .object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    name: z.string().min(2),
+    companyName: z.string().optional(),
+    phone: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    inviteCode: z.string().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (!val.inviteCode && (!val.companyName || val.companyName.trim().length < 2)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Company name is required",
+        path: ["companyName"],
+      });
+    }
+  });
 
 export async function POST(req: NextRequest) {
   try {
     const body = schema.parse(await req.json());
-    const existing = await prisma.user.findUnique({ where: { email: body.email.toLowerCase() } });
+    const email = body.email.toLowerCase();
+
+    const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }
 
-    const user = await prisma.user.create({
+    if (body.inviteCode) {
+      const invite = await prisma.invite.findUnique({
+        where: { code: body.inviteCode.toUpperCase() },
+        include: { company: true },
+      });
+      if (!invite || invite.acceptedAt || invite.expiresAt < new Date()) {
+        return NextResponse.json({ error: "Invite is invalid or expired" }, { status: 400 });
+      }
+
+      const user = await prisma.user.create({
+        data: {
+          email,
+          name: body.name,
+          passwordHash: await hashPassword(body.password),
+          memberships: {
+            create: {
+              companyId: invite.companyId,
+              role: invite.role,
+            },
+          },
+        },
+      });
+
+      await prisma.invite.update({
+        where: { id: invite.id },
+        data: { acceptedAt: new Date(), email },
+      });
+
+      const session = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        companyId: invite.companyId,
+        companyName: invite.company.name,
+        role: invite.role,
+      };
+      await setSessionCookie(await createSessionToken(session));
+      return NextResponse.json({ user: session, joinedExisting: true });
+    }
+
+    const companyName = body.companyName!.trim();
+    const slug = await uniqueCompanySlug(companyName);
+    const company = await prisma.company.create({
       data: {
-        email: body.email.toLowerCase(),
-        name: body.name,
-        companyName: body.companyName || null,
-        passwordHash: await hashPassword(body.password),
+        name: companyName,
+        slug,
+        phone: body.phone || null,
+        city: body.city || null,
+        state: body.state || null,
+        onboarded: false,
         spruceSettings: {
           create: {
             mockMode: true,
@@ -36,24 +97,42 @@ export async function POST(req: NextRequest) {
             branchCode: "MAIN",
           },
         },
+        members: {
+          create: {
+            role: "OWNER",
+            user: {
+              create: {
+                email,
+                name: body.name,
+                passwordHash: await hashPassword(body.password),
+              },
+            },
+          },
+        },
       },
+      include: { members: { include: { user: true } } },
     });
 
-    const token = await createSessionToken({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      companyName: user.companyName,
-    });
-    await setSessionCookie(token);
+    const owner = company.members[0].user;
+    const session = {
+      id: owner.id,
+      email: owner.email,
+      name: owner.name,
+      companyId: company.id,
+      companyName: company.name,
+      role: "OWNER",
+    };
+    await setSessionCookie(await createSessionToken(session));
 
     return NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        companyName: user.companyName,
+      user: session,
+      company: {
+        id: company.id,
+        name: company.name,
+        slug: company.slug,
+        onboarded: company.onboarded,
       },
+      needsOnboarding: true,
     });
   } catch (error) {
     return jsonError(error);

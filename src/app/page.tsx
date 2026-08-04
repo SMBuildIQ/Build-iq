@@ -22,21 +22,21 @@ export default async function HomePage() {
             BuildIQ
           </p>
           <h1 className="animate-rise-delay-1 mx-auto mt-3 max-w-sm text-xl font-medium leading-snug text-[var(--ink-soft)]">
-            Residential takeoffs that build themselves.
+            The estimating app your builders sign up for.
           </h1>
           <p className="animate-rise-delay-2 mx-auto mt-3 max-w-md text-sm leading-relaxed text-[var(--sage)]">
-            Upload blueprints. AI finds materials. Get estimates, bid packages, Excel export, and ECI Spruce sync — as an installable app.
+            Each building company gets its own workspace. Builders create accounts, invite their team, upload blueprints, and run AI takeoffs from their phones.
           </p>
           <div className="animate-rise-delay-2 mt-8 flex flex-col gap-3 sm:mx-auto sm:max-w-xs">
-            <Link href="/register" className="btn-copper w-full !rounded-xl !py-3.5">
-              Open BuildIQ
+            <Link href="/signup" className="btn-copper w-full !rounded-xl !py-3.5">
+              Builder signup
             </Link>
             <Link href="/login" className="btn-secondary w-full !rounded-xl !py-3.5">
-              Sign in
+              Sign in to your company
             </Link>
           </div>
           <p className="mt-4 text-xs text-[var(--sage)]">
-            Demo: demo@buildiq.app / demo1234
+            Demo company: demo@buildiq.app / demo1234
           </p>
         </section>
 
@@ -45,13 +45,13 @@ export default async function HomePage() {
         </div>
 
         <section id="how" className="mt-12 rounded-2xl bg-[var(--ink)] px-5 py-8 text-[var(--paper)]">
-          <h2 className="font-display text-2xl font-semibold">How the app works</h2>
+          <h2 className="font-display text-2xl font-semibold">Built for builder teams</h2>
           <ol className="mt-6 space-y-5">
             {[
-              ["01", "Upload blueprints", "Drop PDF or image plan sets from your phone or desktop."],
-              ["02", "AI material ID", "BuildIQ maps framing, finishes, and MEP to Spruce SKUs."],
-              ["03", "Estimate & bids", "Cost rollups plus trade-ready subcontractor packages."],
-              ["04", "Excel & Spruce", "Export the workbook or push a quote into ECI Spruce."],
+              ["01", "Company signs up", "Owner creates the BuildIQ company workspace in under a minute."],
+              ["02", "Invite builders", "Share invite links so estimators join the same jobs."],
+              ["03", "Estimate on site", "Upload plans, run AI takeoff, export Excel, sync ECI Spruce."],
+              ["04", "Install the app", "Add BuildIQ to the home screen — works like a native app."],
             ].map(([step, title, body]) => (
               <li key={step} className="flex gap-4">
                 <span className="text-xs font-semibold tracking-[0.2em] text-[var(--copper)]">{step}</span>
