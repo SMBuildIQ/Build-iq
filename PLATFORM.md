@@ -85,6 +85,7 @@ Mobile/web also render from mock data when the API is unreachable.
 | Next.js web dashboard W1–W8 | Done — `apps/web` |
 | NestJS API + Prisma Postgres + Redis + S3 stubs | Done — `apps/api` |
 | Auth, projects, proposals, shop/cart, orders, cabinetry, health | Done |
+| Per-project materials library (lumber → stone categories) | Done — mobile + web + `GET/POST /projects/:id/materials` |
 | Blueprints / orchestrate / estimate endpoints | Done (orchestrate stub honest) |
 | docker-compose Postgres/Redis/MinIO | Done |
 | Soft-launch root Next preserved | Done |

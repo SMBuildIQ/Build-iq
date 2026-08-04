@@ -7,10 +7,10 @@ Legend: **FULL** = usable in production paths · **PARTIAL** = real code but inc
 | 1 | Dashboard | PARTIAL | Job list only; no KPIs, schedule, or alerts |
 | 2 | Leads and CRM | NONE | — |
 | 3 | Clients | NONE | — |
-| 4 | Projects | FULL | Company-scoped CRUD + status |
+| 4 | Projects | FULL | Company-scoped CRUD + status; per-project materials library by specialty category |
 | 5 | Estimates and budgets | PARTIAL | Cost rollup exists; no budget versions / approvals |
-| 6 | Plan and document uploads | PARTIAL | Plans/PDFs/images + plan workspace; no folders/versions/signed URLs |
-| 7 | Material takeoffs | PARTIAL | OCR + GPT-4o vision when keyed; measuring tools; DWG needs PDF export |
+| 6 | Plan and document uploads | PARTIAL | Plans/PDFs/images + plan workspace; mobile/web drawings upload; no folders/versions/signed URLs |
+| 7 | Material takeoffs | PARTIAL | OCR + GPT-4o vision when keyed; measuring tools; DWG needs PDF export; project materials library (lumber → stone) |
 | 8 | Subcontractor bid management | PARTIAL | Internal bid packages; no sub portal or bid invite emails |
 | 9 | Purchase orders | NONE | Shop material orders ≠ POs |
 | 10 | Scheduling | NONE | — |

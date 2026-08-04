@@ -195,7 +195,7 @@ export default function ProjectLibraryScreen() {
           ))}
         </ScrollView>
 
-        <View style={{ paddingHorizontal: gutter, gap: theme.space[3], flex: 1 }}>
+        <View style={{ paddingHorizontal: gutter, gap: theme.space[3], paddingBottom: theme.space[8] }}>
           {loading ? (
             <View style={{ paddingVertical: theme.space[10], alignItems: "center" }}>
               <ActivityIndicator color={theme.colors.accent} accessibilityLabel="Loading library" />
