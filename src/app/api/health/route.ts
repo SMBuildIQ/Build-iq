@@ -38,6 +38,7 @@ export async function GET() {
       planMeasuring: true,
       excelExport: true,
       pdfExport: true,
+      customerProposals: true,
       cabinetryModule: "partial",
     },
     legalPoliciesDraft: LEGAL.policiesAreDrafts,
