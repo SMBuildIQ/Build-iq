@@ -13,6 +13,12 @@ Residential construction estimating platform: blueprint upload, AI material take
 - **Excel export** — summary, takeoff, per-trade bids, Spruce SKU sheet
 - **ECI Spruce** — mock inventory/pricing/quotes by default; live SOAP stubs when credentials are configured
 
+## App Store & Play Store
+
+See **[store/STORE_COMPLIANCE.md](store/STORE_COMPLIANCE.md)** for Apple/Google submission checklists, privacy nutrition labels, Data Safety answers, and Capacitor packaging notes.
+
+In-app: Privacy `/privacy` · Terms `/terms` · Support `/support` · Account deletion `/settings/account`
+
 ## AI bots
 
 After a builder uploads plans, the AI crew runs automatically:

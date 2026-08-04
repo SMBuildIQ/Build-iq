@@ -17,6 +17,11 @@ function SignupForm() {
     setLoading(true);
     setError("");
     const form = new FormData(e.currentTarget);
+    if (form.get("acceptTerms") !== "on") {
+      setLoading(false);
+      setError("Please accept the Terms and Privacy Policy to continue.");
+      return;
+    }
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -146,6 +151,21 @@ function SignupForm() {
               placeholder="At least 8 characters"
             />
           </div>
+
+          <label className="flex items-start gap-2 text-xs leading-relaxed text-[var(--sage)]">
+            <input type="checkbox" name="acceptTerms" className="mt-0.5 h-4 w-4" required />
+            <span>
+              I agree to the{" "}
+              <Link href="/terms" className="font-semibold text-[var(--copper-deep)] underline-offset-2 hover:underline">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="font-semibold text-[var(--copper-deep)] underline-offset-2 hover:underline">
+                Privacy Policy
+              </Link>
+              .
+            </span>
+          </label>
 
           {error && <p className="text-sm text-red-700">{error}</p>}
 

@@ -4,6 +4,7 @@ import path from "path";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { ensureOwnedProject, jsonError, requireUser } from "@/lib/auth";
+import { validateUploadFile } from "@/lib/security/uploads";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -34,12 +35,22 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     if (!files.length) {
       return NextResponse.json({ error: "No files uploaded" }, { status: 400 });
     }
+    if (files.length > 20) {
+      return NextResponse.json({ error: "Maximum 20 files per upload" }, { status: 400 });
+    }
+
+    for (const file of files) {
+      const invalid = validateUploadFile(file);
+      if (invalid) {
+        return NextResponse.json({ error: `${file.name}: ${invalid}` }, { status: 400 });
+      }
+    }
 
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
     const created = [];
     for (const file of files) {
-      const ext = path.extname(file.name) || ".bin";
+      const ext = path.extname(file.name).toLowerCase() || ".bin";
       const filename = `${id}-${randomUUID()}${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
       await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
@@ -48,7 +59,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
         data: {
           projectId: id,
           filename,
-          originalName: file.name,
+          originalName: file.name.slice(0, 255),
           mimeType: file.type || "application/octet-stream",
           sizeBytes: buffer.length,
           sheetType: inferSheetType(file.name),

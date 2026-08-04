@@ -2,15 +2,37 @@
   "appId": "app.buildiq.estimator",
   "appName": "BuildIQ",
   "webDir": "out",
+  "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https",
-    "iosScheme": "https"
+    "iosScheme": "https",
+    "hostname": "app.buildiq.com",
+    "allowNavigation": ["*.stripe.com", "*.buildiq.com"]
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile",
+    "scheme": "buildiq",
+    "limitsNavigationsToAppBoundDomains": true
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#f3efe6",
+    "webContentsDebuggingEnabled": false
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 1500,
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
       "backgroundColor": "#f3efe6",
       "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#f3efe6"
+    },
+    "Keyboard": {
+      "resize": "body"
     }
   }
 }

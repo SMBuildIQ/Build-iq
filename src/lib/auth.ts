@@ -7,8 +7,13 @@ import { prisma } from "./prisma";
 const COOKIE_NAME = "buildiq_session";
 
 function getSecret() {
-  const secret = process.env.AUTH_SECRET || "buildiq-dev-secret";
-  return new TextEncoder().encode(secret);
+  const secret = process.env.AUTH_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    if (!secret || secret.length < 32) {
+      throw new Error("AUTH_SECRET must be a strong 32+ character secret in production");
+    }
+  }
+  return new TextEncoder().encode(secret || "buildiq-dev-secret-change-me-now");
 }
 
 export type SessionUser = {

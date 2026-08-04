@@ -60,8 +60,8 @@ export function AppShell({
               <Link href="/team" className="rounded-lg px-2 py-2 text-xs font-semibold text-[var(--sage)] hover:text-[var(--ink)]">
                 Team
               </Link>
-              <Link href="/settings/spruce" className="rounded-lg px-2 py-2 text-xs font-semibold text-[var(--sage)] hover:text-[var(--ink)]">
-                Spruce
+              <Link href="/settings/account" className="rounded-lg px-2 py-2 text-xs font-semibold text-[var(--sage)] hover:text-[var(--ink)]">
+                Account
               </Link>
               <button
                 onClick={logout}
@@ -79,7 +79,11 @@ export function AppShell({
         </div>
       </header>
 
-      <main className={`mx-auto w-full max-w-3xl px-4 py-5 ${user ? "pb-28" : "pb-10"}`}>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className={`mx-auto w-full max-w-3xl px-4 py-5 outline-none ${user ? "pb-28" : "pb-10"}`}
+      >
         {children}
       </main>
 
@@ -95,6 +99,7 @@ export function AppShell({
                 <li key={tab.href}>
                   <Link
                     href={tab.href}
+                    aria-current={active ? "page" : undefined}
                     className={`relative flex flex-col items-center gap-1 px-1 py-3 text-[11px] font-semibold tracking-wide ${
                       active ? "text-[var(--copper-deep)]" : "text-[var(--sage)]"
                     }`}
@@ -138,6 +143,19 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       {children}
+      <footer className="border-t border-[var(--line)] px-4 py-6 text-center text-xs text-[var(--sage)]">
+        <Link href="/privacy" className="hover:text-[var(--ink)]">
+          Privacy
+        </Link>
+        {" · "}
+        <Link href="/terms" className="hover:text-[var(--ink)]">
+          Terms
+        </Link>
+        {" · "}
+        <Link href="/support" className="hover:text-[var(--ink)]">
+          Support
+        </Link>
+      </footer>
     </div>
   );
 }
