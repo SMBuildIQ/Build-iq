@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { StatusBadge } from "@/components/AppNav";
+import { BotRunner } from "@/components/BotRunner";
 import { formatCurrency, formatCurrencyExact, formatNumber } from "@/lib/format";
 import { TRADE_ORDER } from "@/lib/materials/catalog";
 
@@ -80,6 +81,7 @@ export default function ProjectDetailPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [botsOpen, setBotsOpen] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/projects/${id}`);
@@ -122,25 +124,17 @@ export default function ProjectDetailPage() {
       setError(data.error || "Upload failed");
       return;
     }
-    setMessage(`Uploaded ${data.blueprints.length} blueprint${data.blueprints.length === 1 ? "" : "s"}.`);
+    setMessage(
+      `Uploaded ${data.blueprints.length} plan${data.blueprints.length === 1 ? "" : "s"}. AI bots are taking over…`
+    );
     await load();
+    setBotsOpen(true);
   }
 
-  async function runAnalyze() {
-    setBusy("analyze");
+  function runBots() {
     setError("");
     setMessage("");
-    const res = await fetch(`/api/projects/${id}/analyze`, { method: "POST" });
-    const data = await res.json();
-    setBusy(null);
-    if (!res.ok) {
-      setError(data.error || "Analysis failed");
-      return;
-    }
-    setMessage(
-      `AI identified ${data.materialCount} materials and created ${data.bidPackageCount} bid packages.`
-    );
-    setProject(data.project);
+    setBotsOpen(true);
   }
 
   async function exportExcel() {
@@ -243,11 +237,11 @@ export default function ProjectDetailPage() {
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <button
-              onClick={runAnalyze}
-              disabled={!!busy}
+              onClick={runBots}
+              disabled={!!busy || botsOpen}
               className="btn-copper !rounded-xl !py-3"
             >
-              {busy === "analyze" ? "Analyzing…" : "Run AI takeoff"}
+              {botsOpen ? "Bots running…" : "Run AI bots"}
             </button>
             <button onClick={exportExcel} disabled={!!busy || !project.materials.length} className="btn-secondary !rounded-xl !py-3">
               {busy === "export" ? "Exporting…" : "Export Excel"}
@@ -261,6 +255,16 @@ export default function ProjectDetailPage() {
             </button>
           </div>
         </div>
+
+        <BotRunner
+          open={botsOpen}
+          projectId={id}
+          onClose={() => setBotsOpen(false)}
+          onComplete={() => {
+            load();
+            setMessage("AI bots finished — estimate, bids, cart, and Spruce quote are ready.");
+          }}
+        />
 
         {(error || message) && (
           <div
@@ -276,7 +280,7 @@ export default function ProjectDetailPage() {
           <section>
             <h2 className="font-display text-2xl font-semibold">Blueprints</h2>
             <p className="mt-1 text-sm text-[var(--sage)]">
-              Upload PDF or image plan sheets. AI uses filenames and project size for takeoff.
+              Upload plans — AI bots automatically run takeoff, estimate, bids, cart packages, and Spruce sync.
             </p>
 
             <div

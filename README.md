@@ -13,6 +13,20 @@ Residential construction estimating platform: blueprint upload, AI material take
 - **Excel export** — summary, takeoff, per-trade bids, Spruce SKU sheet
 - **ECI Spruce** — mock inventory/pricing/quotes by default; live SOAP stubs when credentials are configured
 
+## AI bots
+
+After a builder uploads plans, the AI crew runs automatically:
+
+1. **Plan Reader** — classifies sheets  
+2. **Takeoff Bot** — materials & quantities  
+3. **Estimate Bot** — full cost rollup  
+4. **Bid Bot** — trade bid packages  
+5. **Package Bot** — loads Shop cart (windows, doors, lumber, etc.)  
+6. **Spruce Bot** — pricing sync + quote  
+7. **Briefing Bot** — next-step summary  
+
+Progress streams live in the app. Builders can also tap **Run AI bots** anytime.
+
 ## Material package shop
 
 Builders can order takeoff packages from **Shop**:

@@ -24,9 +24,9 @@ export default async function HomePage() {
           <h1 className="animate-rise-delay-1 mx-auto mt-3 max-w-sm text-xl font-medium leading-snug text-[var(--ink-soft)]">
             The estimating app your builders sign up for.
           </h1>
-          <p className="animate-rise-delay-2 mx-auto mt-3 max-w-md text-sm leading-relaxed text-[var(--sage)]">
-            Each building company gets its own workspace. Builders create accounts, invite their team, upload blueprints, and run AI takeoffs from their phones.
-          </p>
+            <p className="animate-rise-delay-2 mx-auto mt-3 max-w-md text-sm leading-relaxed text-[var(--sage)]">
+              Each building company gets its own workspace. Builders upload plans — AI bots handle takeoff, estimates, bids, packages, and Spruce from there.
+            </p>
           <div className="animate-rise-delay-2 mt-8 flex flex-col gap-3 sm:mx-auto sm:max-w-xs">
             <Link href="/signup" className="btn-copper w-full !rounded-xl !py-3.5">
               Builder signup
