@@ -17,8 +17,8 @@ export type BotEvent = {
 };
 
 export const BOT_ROSTER: { id: BotId; name: string; role: string }[] = [
-  { id: "plan-reader", name: "Plan Reader", role: "Classifies uploaded sheets" },
-  { id: "takeoff", name: "Takeoff Bot", role: "Identifies materials & quantities" },
+  { id: "plan-reader", name: "Plan Reader", role: "OCR + drawing vision scan of sheets" },
+  { id: "takeoff", name: "Takeoff Bot", role: "Vision-grounded materials & quantities" },
   { id: "estimate", name: "Estimate Bot", role: "Builds cost rollup" },
   { id: "bids", name: "Bid Bot", role: "Creates trade bid packages" },
   { id: "packages", name: "Package Bot", role: "Loads shop cart from takeoff" },

@@ -34,7 +34,17 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
-  serverExternalPackages: ["exceljs", "@prisma/client", "prisma", "stripe"],
+  serverExternalPackages: [
+    "exceljs",
+    "@prisma/client",
+    "prisma",
+    "stripe",
+    "pdfkit",
+    "tesseract.js",
+    "pdfjs-dist",
+    "@napi-rs/canvas",
+    "sharp",
+  ],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -104,10 +104,44 @@ model Blueprint {
   sheetType    String?
   pageCount    Int      @default(1)
   analysisJson String?
+  /// Raster preview used for vision/OCR (server-generated PNG filename under uploads/)
+  previewFilename String?
+  widthPx         Int?
+  heightPx        Int?
+  /// Calibrated scale: plan pixels per real-world unit (usually feet)
+  pixelsPerUnit   Float?
+  scaleUnit       String  @default("ft")
+  scaleLabel      String?
+  /// IDLE | SCANNING | READY | ERROR | PARTIAL
+  scanStatus      String  @default("IDLE")
+  scanError       String?
+  scannedAt       DateTime?
+  ocrText         String?
+  ocrJson         String?
+  visionJson      String?
   createdAt    DateTime @default(now())
 
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  measurements PlanMeasurement[]
+}
+
+model PlanMeasurement {
+  id          String   @id @default(cuid())
+  /// CALIBRATION | LENGTH | AREA | COUNT | POLYLINE
+  type        String
+  label       String?
+  /// JSON array of {x,y} in plan pixel space
+  pointsJson  String
+  /// Computed value in scale units (ft, sf) or count
+  value       Float?
+  unit        String?
+  metaJson    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blueprintId String
+  blueprint   Blueprint @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
 }
 
 model MaterialItem {

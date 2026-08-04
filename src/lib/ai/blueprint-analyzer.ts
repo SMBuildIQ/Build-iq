@@ -12,7 +12,7 @@ export type DetectedMaterial = {
   laborRate: number;
   wasteFactor: number;
   spruceSku: string;
-  source: "ai" | "ai-openai" | "catalog";
+  source: "ai" | "ai-openai" | "ai-vision" | "catalog" | "measured";
   confidence: number;
 };
 
@@ -22,6 +22,12 @@ export type AnalyzeInput = {
   stories: number;
   blueprintNames: string[];
   notes?: string | null;
+  /** OCR text aggregated across sheets */
+  ocrText?: string | null;
+  /** Vision-suggested materials (sku + qty) from plan scans */
+  visionMaterials?: { spruceSku: string; quantity: number; confidence?: number }[];
+  /** Prefer vision quantities when present */
+  preferVision?: boolean;
 };
 
 function scaleQuantity(item: CatalogItem, squareFeet: number, stories: number) {
@@ -119,12 +125,13 @@ Square feet: ${input.squareFeet}
 Stories: ${input.stories}
 Blueprint files: ${input.blueprintNames.join(", ") || "none"}
 Notes: ${input.notes || "none"}
+OCR / sheet text excerpts: ${(input.ocrText || "none").slice(0, 4000)}
 
 Available catalog (sku|name|unit|cost|trade):
 ${catalogSummary}
 
 Return JSON only: { "materials": [ { "spruceSku": string, "quantity": number, "confidence": number } ] }
-Estimate realistic quantities for a complete residential build. Include most catalog items.`;
+Estimate realistic quantities for a complete residential build. Prefer quantities consistent with OCR dimensions when present. Include most catalog items.`;
 
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -183,6 +190,45 @@ Estimate realistic quantities for a complete residential build. Include most cat
 }
 
 export async function analyzeBlueprints(input: AnalyzeInput): Promise<DetectedMaterial[]> {
+  // Prefer true vision materials when the plan scan produced catalog-mapped lines
+  if (input.preferVision !== false && input.visionMaterials?.length) {
+    const bySku = new Map(MATERIAL_CATALOG.map((c) => [c.spruceSku, c]));
+    const fromVision: DetectedMaterial[] = [];
+    for (const row of input.visionMaterials) {
+      const item = bySku.get(row.spruceSku);
+      if (!item || !(row.quantity > 0)) continue;
+      const qty = Math.round(row.quantity * 10) / 10;
+      fromVision.push({
+        category: item.category,
+        trade: item.trade,
+        name: item.name,
+        description: item.description,
+        quantity: qty,
+        unit: item.unit,
+        unitCost: item.unitCost,
+        laborHours: Math.round(qty * item.laborHoursPerUnit * 10) / 10,
+        laborRate: item.laborRate,
+        wasteFactor: item.wasteFactor,
+        spruceSku: item.spruceSku,
+        source: "ai-vision",
+        confidence: row.confidence ?? 0.82,
+      });
+    }
+    if (fromVision.length >= 5) {
+      // Fill remaining catalog gaps with local scale so estimate stays complete
+      const seen = new Set(fromVision.map((m) => m.spruceSku));
+      const local = analyzeBlueprintsLocal({
+        ...input,
+        blueprintNames: [
+          ...input.blueprintNames,
+          ...(input.ocrText ? ["ocr-enriched"] : []),
+        ],
+      }).filter((m) => !seen.has(m.spruceSku));
+      // Keep vision lines + a subset of missing trades at reduced confidence
+      return [...fromVision, ...local.map((m) => ({ ...m, confidence: Math.min(m.confidence, 0.55) }))];
+    }
+  }
+
   const openai = await analyzeWithOpenAI(input);
   if (openai) return openai;
   return analyzeBlueprintsLocal(input);

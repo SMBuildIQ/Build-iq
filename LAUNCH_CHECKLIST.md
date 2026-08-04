@@ -70,7 +70,7 @@ See `store/CONTACT.md` and `store/STORE_COMPLIANCE.md`.
 |---|---|
 | Auth (signup, login, reset, verify, lockout, delete) | Native Expo app |
 | Multi-tenant companies + RBAC | CRM / RFIs / punch / scheduling |
-| Projects, blueprints, AI bots, estimates, bids, Excel/PDF | Vision OCR of drawings |
+| Projects, blueprints, OCR/vision, measuring, estimates, bids, Excel/PDF | DWG native CAD parse |
 | Shop, cart, checkout, tracking | Live Spruce SOAP (mock default) |
 | PWA install | Store binary submission |
 | Draft legal + support contacts | Final counsel-approved policies |

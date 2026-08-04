@@ -45,7 +45,7 @@ export async function DELETE(req: Request) {
       companyIdsToDelete.length > 0
         ? await prisma.blueprint.findMany({
             where: { project: { companyId: { in: companyIdsToDelete } } },
-            select: { filename: true },
+            select: { filename: true, previewFilename: true },
           })
         : [];
 
@@ -66,7 +66,10 @@ export async function DELETE(req: Request) {
       await tx.user.delete({ where: { id: user.id } });
     });
 
-    await deleteUploadFiles(blueprints.map((b) => b.filename));
+    const filesToDelete = blueprints.flatMap((b) =>
+      [b.filename, b.previewFilename].filter((f): f is string => !!f)
+    );
+    await deleteUploadFiles(filesToDelete);
     await clearSessionCookie();
 
     await writeAuditLog({

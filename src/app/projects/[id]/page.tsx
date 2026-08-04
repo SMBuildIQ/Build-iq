@@ -51,6 +51,7 @@ type Project = {
     sheetType: string | null;
     sizeBytes: number;
     mimeType: string;
+    scanStatus?: string;
   }[];
   materials: Material[];
   estimate: {
@@ -308,7 +309,8 @@ export default function ProjectDetailPage() {
           <section>
             <h2 className="font-display text-2xl font-semibold">Blueprints</h2>
             <p className="mt-1 text-sm text-[var(--sage)]">
-              Upload plans — AI bots automatically run takeoff, estimate, bids, cart packages, and Spruce sync.
+              Upload plans — AI bots run OCR, drawing vision, takeoff, estimate, bids, cart, and Spruce.
+              Open any sheet for measuring tools.
             </p>
 
             <div
@@ -348,8 +350,17 @@ export default function ProjectDetailPage() {
                       <p className="font-medium text-[var(--ink)]">{b.originalName}</p>
                       <p className="text-[var(--sage)]">
                         {b.sheetType || "General"} · {(b.sizeBytes / 1024).toFixed(0)} KB
+                        {"scanStatus" in b && b.scanStatus && b.scanStatus !== "IDLE"
+                          ? ` · ${String(b.scanStatus)}`
+                          : ""}
                       </p>
                     </div>
+                    <Link
+                      href={`/projects/${id}/plans/${b.id}`}
+                      className="shrink-0 text-[var(--copper-deep)] underline-offset-2 hover:underline"
+                    >
+                      Open plan tools
+                    </Link>
                   </li>
                 ))}
               </ul>

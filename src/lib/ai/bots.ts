@@ -61,15 +61,15 @@ export async function runBotPipeline(
 
   await prisma.project.update({ where: { id: projectId }, data: { status: "ANALYZING" } });
 
-  // 1. Plan Reader
+  // 1. Plan Reader + Vision/OCR scan
   emit({
     type: "bot_start",
     bot: "plan-reader",
     botName: botName("plan-reader"),
-    message: "Reading uploaded plan sheets…",
+    message: "Reading uploaded plan sheets with OCR and drawing vision…",
     progress: 5,
   });
-  await sleep(400);
+  await sleep(200);
 
   const blueprints = await prisma.blueprint.findMany({ where: { projectId } });
   if (!blueprints.length) {
@@ -78,20 +78,60 @@ export async function runBotPipeline(
     return;
   }
 
-  const sheetSummary = blueprints.map((b) => b.sheetType || "General");
+  const { scanBlueprint, mergeVisionMaterialsFromBlueprints } = await import("@/lib/plans/scan");
+  let visionReady = 0;
+  let ocrReady = 0;
+  for (let i = 0; i < blueprints.length; i++) {
+    const bp = blueprints[i];
+    emit({
+      type: "bot_progress",
+      bot: "plan-reader",
+      botName: botName("plan-reader"),
+      message: `Scanning ${bp.originalName} (${i + 1}/${blueprints.length}) — rasterize, OCR, vision…`,
+      progress: 6 + Math.round((i / Math.max(blueprints.length, 1)) * 8),
+    });
+    try {
+      const result = await scanBlueprint(
+        bp.id,
+        {
+          projectName: project.name,
+          squareFeet: project.squareFeet || 2200,
+          stories: project.stories || 1,
+          notes: project.notes,
+        },
+        { runOcr: true, runVision: true }
+      );
+      if (result.ocr?.text) ocrReady += 1;
+      if (result.usedVision) visionReady += 1;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "scan failed";
+      emit({
+        type: "bot_progress",
+        bot: "plan-reader",
+        botName: botName("plan-reader"),
+        message: `Could not fully scan ${bp.originalName}: ${msg}`,
+        progress: 6 + Math.round(((i + 1) / Math.max(blueprints.length, 1)) * 8),
+      });
+    }
+  }
+
+  const scanned = await prisma.blueprint.findMany({ where: { projectId } });
+  const sheetSummary = scanned.map((b) => b.sheetType || "General");
   emit({
     type: "bot_progress",
     bot: "plan-reader",
     botName: botName("plan-reader"),
-    message: `Classified ${blueprints.length} sheet(s): ${[...new Set(sheetSummary)].join(", ")}.`,
+    message: `Classified ${scanned.length} sheet(s): ${[...new Set(sheetSummary)].join(", ")}. OCR on ${ocrReady}, vision on ${visionReady}.`,
     progress: 12,
-    data: { blueprintCount: blueprints.length, sheets: sheetSummary },
+    data: { blueprintCount: scanned.length, sheets: sheetSummary, ocrReady, visionReady },
   });
   emit({
     type: "bot_done",
     bot: "plan-reader",
     botName: botName("plan-reader"),
-    message: "Plan set ready for takeoff.",
+    message: visionReady
+      ? "Plan set scanned with drawing vision — ready for takeoff."
+      : "Plan set OCR’d — ready for takeoff (add OPENAI_API_KEY for true vision).",
     progress: 14,
   });
 
@@ -100,17 +140,26 @@ export async function runBotPipeline(
     type: "bot_start",
     bot: "takeoff",
     botName: botName("takeoff"),
-    message: "Running AI material takeoff…",
+    message: visionReady ? "Running vision-grounded material takeoff…" : "Running AI material takeoff…",
     progress: 18,
   });
-  await sleep(300);
+  await sleep(200);
+
+  const visionMaterials = mergeVisionMaterialsFromBlueprints(scanned.map((b) => b.visionJson));
+  const ocrText = scanned
+    .map((b) => b.ocrText)
+    .filter(Boolean)
+    .join("\n\n");
 
   const detected = await analyzeBlueprints({
     projectName: project.name,
     squareFeet: project.squareFeet || 2200,
     stories: project.stories || 1,
-    blueprintNames: blueprints.map((b) => b.originalName),
+    blueprintNames: scanned.map((b) => b.originalName),
     notes: project.notes,
+    ocrText,
+    visionMaterials,
+    preferVision: true,
   });
 
   emit({
@@ -144,11 +193,18 @@ export async function runBotPipeline(
     })),
   });
 
-  if (blueprints[0]) {
+  if (scanned[0]) {
+    let prior: Record<string, unknown> = {};
+    try {
+      prior = scanned[0].analysisJson ? JSON.parse(scanned[0].analysisJson) : {};
+    } catch {
+      prior = {};
+    }
     await prisma.blueprint.update({
-      where: { id: blueprints[0].id },
+      where: { id: scanned[0].id },
       data: {
         analysisJson: JSON.stringify({
+          ...prior,
           materialCount: detected.length,
           engine: detected[0]?.source || "ai",
           bots: true,
@@ -384,7 +440,7 @@ export async function runBotPipeline(
   });
 
   const briefing = [
-    `Plans read: ${blueprints.length} sheets.`,
+    `Plans read: ${scanned.length} sheets · OCR ${ocrReady} · vision ${visionReady}.`,
     `Takeoff: ${materials.length} lines · ${orderedTrades.length} bid packages.`,
     `Estimate: $${totals.grandTotal.toLocaleString()}.`,
     cartCount ? `Cart loaded with ${cartCount} material packages — open Cart to pay with Apple Pay / Google Pay.` : "Review Shop for material packages.",

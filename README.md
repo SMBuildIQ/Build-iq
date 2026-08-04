@@ -34,7 +34,8 @@ npm run smoke          # hit /api/health + auth + projects (server must be up)
 - **Accounts** — register / login with session cookies
 - **Projects** — residential job metadata (sf, stories, address)
 - **Blueprint upload** — PDF/images with sheet-type inference
-- **AI takeoff** — OpenAI when `OPENAI_API_KEY` is set; otherwise a deterministic local estimator
+- **Plan workspace** — OCR scan, GPT-4o drawing vision, scale/length/area/count measuring tools
+- **AI takeoff** — Vision-grounded when scanned + `OPENAI_API_KEY`; OCR dimensions; local/catalog fallback
 - **Cost estimate** — materials, waste, labor, contingency, overhead, profit, tax
 - **Bid packages** — one package per trade
 - **Excel export** — summary, takeoff, per-trade bids, Spruce SKU sheet
@@ -51,15 +52,15 @@ In-app: Privacy `/privacy` · Terms `/terms` · Support `/support` · Account de
 
 After a builder uploads plans, the AI crew runs automatically:
 
-1. **Plan Reader** — classifies sheets  
-2. **Takeoff Bot** — materials & quantities  
+1. **Plan Reader** — rasterize sheets, OCR + drawing vision  
+2. **Takeoff Bot** — vision-grounded materials & quantities  
 3. **Estimate Bot** — full cost rollup  
 4. **Bid Bot** — trade bid packages  
 5. **Package Bot** — loads Shop cart (windows, doors, lumber, etc.)  
 6. **Spruce Bot** — pricing sync + quote  
 7. **Briefing Bot** — next-step summary  
 
-Progress streams live in the app. Builders can also tap **Run AI bots** anytime.
+Open any sheet → **Open plan tools** for scale calibration, length, area, and count measuring.
 
 ## Material package shop
 

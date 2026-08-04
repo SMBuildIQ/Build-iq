@@ -30,6 +30,9 @@ Base: same origin `/api/*`. Auth: HTTP-only cookie `buildiq_session` (JWT).
 | GET/POST | `/api/projects` | project:read / project:write |
 | GET/PATCH/DELETE | `/api/projects/:id` | read / write / delete |
 | POST | `/api/projects/:id/blueprints` | blueprint:upload |
+| GET | `/api/projects/:id/blueprints/:bid/file` | project:read (optional `?preview=1`) |
+| POST | `/api/projects/:id/blueprints/:bid/scan` | estimate:run (OCR + vision) |
+| GET/POST/DELETE | `/api/projects/:id/blueprints/:bid/measurements` | read / estimate:run |
 | POST | `/api/projects/:id/analyze` | estimate:run |
 | GET | `/api/projects/:id/bots` | estimate:run (SSE) |
 | POST | `/api/projects/:id/estimate` | estimate:run |

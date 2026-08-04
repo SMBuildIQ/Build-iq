@@ -27,7 +27,9 @@ Honest inventory after the incomplete-items fix pass.
 | Redis durable rate limits | In-memory only |
 | MFA / biometric / push / offline sync | Planned (Expo phase) |
 | Live Spruce SOAP parsing | Still stubby; mock default |
-| True plan vision OCR | Still metadata/heuristic takeoff |
+| True plan vision OCR | GPT-4o vision + Tesseract OCR when scanning; needs OPENAI_API_KEY for vision |
+| Interactive measuring | Scale / length / area / count on plan workspace |
+| DWG native parsing | Export DWG to PDF/PNG first |
 | 16 construction modules marked PLANNED | Scaffolded only — see `/modules` |
 | Email delivery | Console in dev without `RESEND_API_KEY` |
 | Legal entity mailing address | Completed — Supply Monkey Lumber & Materials Co, Prescott AZ |

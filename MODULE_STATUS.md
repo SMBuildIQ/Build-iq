@@ -9,8 +9,8 @@ Legend: **FULL** = usable in production paths · **PARTIAL** = real code but inc
 | 3 | Clients | NONE | — |
 | 4 | Projects | FULL | Company-scoped CRUD + status |
 | 5 | Estimates and budgets | PARTIAL | Cost rollup exists; no budget versions / approvals |
-| 6 | Plan and document uploads | PARTIAL | Plans/PDFs/images; no folders, versions, signed URLs |
-| 7 | Material takeoffs | PARTIAL | AI/local scale; not true plan digitizing |
+| 6 | Plan and document uploads | PARTIAL | Plans/PDFs/images + plan workspace; no folders/versions/signed URLs |
+| 7 | Material takeoffs | PARTIAL | OCR + GPT-4o vision when keyed; measuring tools; DWG needs PDF export |
 | 8 | Subcontractor bid management | PARTIAL | Internal bid packages; no sub portal or bid invite emails |
 | 9 | Purchase orders | NONE | Shop material orders ≠ POs |
 | 10 | Scheduling | NONE | — |
@@ -27,7 +27,7 @@ Legend: **FULL** = usable in production paths · **PARTIAL** = real code but inc
 | 21 | Punch lists | NONE | — |
 | 22 | Warranty management | NONE | — |
 | 23 | Notifications | NONE | No in-app / push / email system |
-| 24 | AI assistant | PARTIAL | Fixed bot pipeline after upload; not conversational; draft-quality |
+| 24 | AI assistant | PARTIAL | Bot pipeline with OCR/vision scan; not conversational |
 | 25 | Company settings and team permissions | PARTIAL | Invites + Spruce + account; roles mostly labels |
 
 ## Related commerce (not in the 25)
@@ -39,6 +39,8 @@ Legend: **FULL** = usable in production paths · **PARTIAL** = real code but inc
 | ECI Spruce | PARTIAL (mock default; live SOAP stubby) |
 | Excel export | FULL |
 | PDF estimate / subtotals export | FULL |
+| Plan OCR + drawing vision scan | FULL (vision needs OPENAI_API_KEY) |
+| Plan measuring tools (scale/length/area/count) | FULL |
 | Account deletion / data export | FULL (API + UI) |
 | Privacy / Terms / Support pages | PARTIAL (entity placeholders remain) |
 
