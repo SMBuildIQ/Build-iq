@@ -59,8 +59,8 @@ export type HeroTone =
   | "cabinetry"
   | "settings"
   | "login";
-export declare const HERO_PHOTOS: Record<HeroTone, { uri: string; alt: string }>;
-export declare function heroPhoto(tone?: HeroTone): { uri: string; alt: string };
+export declare const HERO_PHOTOS: Record<HeroTone, { file: string; path: string; alt: string }>;
+export declare function heroPhoto(tone?: HeroTone): { file: string; path: string; alt: string };
 `
 );
 

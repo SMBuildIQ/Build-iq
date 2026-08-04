@@ -246,7 +246,7 @@ img {
   inset: 0;
   background:
     linear-gradient(105deg, rgba(22, 20, 18, 0.88) 0%, rgba(22, 20, 18, 0.68) 48%, rgba(34, 30, 27, 0.5) 100%),
-    var(--bq-hero-image, url("https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=65"))
+    var(--bq-hero-image, url("/heroes/jobs-framing.jpg"))
       center / cover no-repeat;
 }
 
@@ -793,7 +793,7 @@ img {
   min-height: 280px;
   background:
     linear-gradient(160deg, rgba(22, 20, 18, 0.82), rgba(22, 20, 18, 0.55)),
-    url("https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=1600&q=65")
+    url("/heroes/login-lumber.jpg")
       center / cover no-repeat;
   border-right: 3px solid var(--bq-accent-primary);
   color: var(--bq-text-inverse);

@@ -1,8 +1,24 @@
 import React, { type ReactNode } from "react";
-import { Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text, View, type StyleProp, type ViewStyle, type ImageSourcePropType } from "react-native";
 import { Image } from "expo-image";
 import { heroPhoto, type HeroTone } from "@buildiq/design-tokens";
 import { useTheme } from "./ThemeContext";
+
+/** Local hero assets — filenames match @buildiq/design-tokens HERO_PHOTOS.file */
+const HERO_ASSETS: Record<HeroTone, ImageSourcePropType> = {
+  jobs: require("../../assets/heroes/jobs-framing.jpg"),
+  jobDetail: require("../../assets/heroes/job-blueprints.jpg"),
+  proposals: require("../../assets/heroes/proposals-home.jpg"),
+  proposalDetail: require("../../assets/heroes/proposal-kitchen.jpg"),
+  shop: require("../../assets/heroes/shop-lumber.jpg"),
+  cart: require("../../assets/heroes/cart-windows.jpg"),
+  track: require("../../assets/heroes/track-warehouse.jpg"),
+  orders: require("../../assets/heroes/orders-warehouse.jpg"),
+  account: require("../../assets/heroes/account-tools.jpg"),
+  cabinetry: require("../../assets/heroes/cabinetry-kitchen.jpg"),
+  settings: require("../../assets/heroes/settings-office.jpg"),
+  login: require("../../assets/heroes/login-lumber.jpg"),
+};
 
 type HeroBandProps = {
   eyebrow: string;
@@ -11,10 +27,7 @@ type HeroBandProps = {
   action?: ReactNode;
   /** Theme photo matched to Supply Monkey site content */
   tone?: HeroTone;
-  /** Full-bleed photo behind scrim. Defaults on. */
   showPhoto?: boolean;
-  /** Override URI when needed */
-  imageUri?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -26,13 +39,11 @@ export function HeroBand({
   action,
   tone = "jobs",
   showPhoto = true,
-  imageUri,
   style,
 }: HeroBandProps) {
   const { theme, gutter } = useTheme();
   const base = theme.mode === "dark" ? theme.colors.inverseLift : "#161412";
   const photo = heroPhoto(tone);
-  const uri = imageUri ?? photo.uri;
 
   return (
     <View
@@ -51,7 +62,7 @@ export function HeroBand({
     >
       {showPhoto ? (
         <Image
-          source={{ uri }}
+          source={HERO_ASSETS[tone]}
           style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
           contentFit="cover"
           transition={theme.motion.enter as number}

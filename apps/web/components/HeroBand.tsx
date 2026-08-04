@@ -8,7 +8,6 @@ export interface HeroBandProps {
   actions?: ReactNode;
   /** Theme photo matched to Supply Monkey site content */
   tone?: HeroTone;
-  imageUri?: string;
 }
 
 export function HeroBand({
@@ -17,12 +16,10 @@ export function HeroBand({
   support,
   actions,
   tone = "jobs",
-  imageUri,
 }: HeroBandProps) {
   const photo = heroPhoto(tone);
-  const uri = imageUri ?? photo.uri;
   const bgStyle = {
-    ["--bq-hero-image" as string]: `url("${uri}")`,
+    ["--bq-hero-image" as string]: `url("${photo.path}")`,
   } as CSSProperties;
 
   return (
