@@ -46,21 +46,21 @@ export function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-6 z-50 mx-auto max-w-md rounded-2xl border border-[var(--line)] bg-[var(--ink)] p-4 text-[var(--paper)] shadow-xl safe-bottom">
+    <div className="fixed inset-x-3 bottom-6 z-50 mx-auto max-w-md border-2 border-[var(--orange)] bg-[var(--dark)] p-4 text-white shadow-xl safe-bottom">
       <div className="flex items-start gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icon-72.png" alt="" className="h-11 w-11 rounded-xl" />
+        <img src="/brand/mark.png" alt="" className="h-11 w-11 object-contain" />
         <div className="min-w-0 flex-1">
-          <p className="font-display text-lg font-semibold">Install BuildIQ</p>
-          <p className="mt-0.5 text-sm text-[var(--mist)]">
+          <p className="font-display text-lg tracking-wide text-[var(--orange)]">Install BuildIQ</p>
+          <p className="mt-0.5 text-sm text-white/75">
             {iosHint
               ? "Tap Share, then “Add to Home Screen” for the full app."
-              : "Add BuildIQ to your home screen for one-tap estimating."}
+              : "Add BuildIQ by Supply Monkey to your home screen."}
           </p>
           <div className="mt-3 flex gap-2">
             {!iosHint && deferred && (
               <button
-                className="rounded-lg bg-[var(--copper)] px-3 py-2 text-sm font-semibold text-white"
+                className="btn-copper !px-3 !py-2 !text-sm"
                 onClick={async () => {
                   await deferred.prompt();
                   setVisible(false);
@@ -70,7 +70,7 @@ export function InstallPrompt() {
               </button>
             )}
             <button
-              className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--mist)]"
+              className="px-3 py-2 text-sm font-medium text-white/70"
               onClick={() => setVisible(false)}
             >
               Not now

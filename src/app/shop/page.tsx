@@ -88,7 +88,7 @@ export default function ShopPage() {
 
       <ul className="mt-5 space-y-3">
         {filtered.map((pkg) => (
-          <li key={pkg.id} className="rounded-2xl border border-[var(--line)] bg-white/55 p-4">
+          <li key={pkg.id} className="surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--copper-deep)]">
@@ -112,7 +112,7 @@ export default function ShopPage() {
               <button
                 onClick={() => addToCart(pkg.id)}
                 disabled={busyId === pkg.id}
-                className="btn-copper !rounded-xl !px-4 !py-2 !text-sm"
+                className="btn-copper !px-4 !py-2 !text-sm"
               >
                 {busyId === pkg.id ? "Adding…" : "Add to cart"}
               </button>

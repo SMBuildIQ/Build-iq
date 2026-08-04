@@ -54,19 +54,21 @@ function SignupForm() {
   return (
     <MarketingShell>
       <main id="main-content" className="mx-auto max-w-md px-4 py-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--copper-deep)]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/mark.png" alt="" className="h-12 w-12 object-contain" />
+        <p className="mt-4 font-hand text-xl text-[var(--orange)]">
           {inviteCode ? "Join your builder team" : "For residential builders"}
         </p>
-        <h1 className="mt-2 font-display text-3xl font-semibold text-[var(--ink)]">
+        <h1 className="mt-2 font-display text-3xl text-[var(--brown)]">
           {inviteCode ? "Accept invite" : "Create your BuildIQ company"}
         </h1>
         <p className="mt-2 text-sm text-[var(--sage)]">
           {inviteCode
             ? "Create your login to join the company workspace."
-            : "Sign up your building company. Invite estimators. Run takeoffs from the app."}
+            : "Sign up your building company with Supply Monkey. Invite estimators. Run takeoffs from the app."}
         </p>
 
-        <form onSubmit={onSubmit} className="mt-7 space-y-4 rounded-2xl border border-[var(--line)] bg-white/60 p-5">
+        <form onSubmit={onSubmit} className="surface mt-7 space-y-4 p-5">
           {inviteCode ? (
             <input type="hidden" name="inviteCode" value={inviteCode} />
           ) : null}
@@ -75,7 +77,7 @@ function SignupForm() {
             <label className="label" htmlFor="name">
               Your name
             </label>
-            <input id="name" name="name" required className="input-field !rounded-xl !py-3" placeholder="Alex Builder" />
+            <input id="name" name="name" required className="input-field !py-3" placeholder="Alex Builder" />
           </div>
 
           {!inviteCode && (
@@ -88,7 +90,7 @@ function SignupForm() {
                   id="companyName"
                   name="companyName"
                   required
-                  className="input-field !rounded-xl !py-3"
+                  className="input-field !py-3"
                   placeholder="Ridge Homes"
                 />
               </div>
@@ -96,20 +98,20 @@ function SignupForm() {
                 <label className="label" htmlFor="phone">
                   Company phone
                 </label>
-                <input id="phone" name="phone" type="tel" className="input-field !rounded-xl !py-3" />
+                <input id="phone" name="phone" type="tel" className="input-field !py-3" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label" htmlFor="city">
                     City
                   </label>
-                  <input id="city" name="city" className="input-field !rounded-xl !py-3" />
+                  <input id="city" name="city" className="input-field !py-3" />
                 </div>
                 <div>
                   <label className="label" htmlFor="state">
                     State
                   </label>
-                  <input id="state" name="state" className="input-field !rounded-xl !py-3" />
+                  <input id="state" name="state" className="input-field !py-3" />
                 </div>
               </div>
             </>
@@ -123,7 +125,7 @@ function SignupForm() {
               <input
               id="companyName"
               name="companyName"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
               defaultValue="Joining via invite"
               readOnly
             />
@@ -135,7 +137,7 @@ function SignupForm() {
             <label className="label" htmlFor="email">
               Work email
             </label>
-            <input id="email" name="email" type="email" required autoComplete="email" className="input-field !rounded-xl !py-3" />
+            <input id="email" name="email" type="email" required autoComplete="email" className="input-field !py-3" />
           </div>
           <div>
             <label className="label" htmlFor="password">
@@ -148,7 +150,7 @@ function SignupForm() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
               placeholder="At least 8 characters"
             />
           </div>
@@ -170,7 +172,7 @@ function SignupForm() {
 
           {error && <p className="text-sm text-red-700">{error}</p>}
 
-          <button type="submit" disabled={loading} className="btn-copper w-full !rounded-xl !py-3.5">
+          <button type="submit" disabled={loading} className="btn-copper w-full !py-3.5">
             {loading ? "Creating…" : inviteCode ? "Join company" : "Create builder account"}
           </button>
         </form>

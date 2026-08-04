@@ -36,16 +36,16 @@ export default function ForgotPasswordPage() {
         <p className="mt-2 text-sm text-[var(--sage)]">
           Enter your work email and we’ll send a reset link if an account exists.
         </p>
-        <form onSubmit={onSubmit} className="mt-8 space-y-4 rounded-2xl border border-[var(--line)] bg-white/60 p-5">
+        <form onSubmit={onSubmit} className="mt-8 space-y-4 surface p-5">
           <div>
             <label className="label" htmlFor="email">
               Email
             </label>
-            <input id="email" name="email" type="email" required autoComplete="email" className="input-field !rounded-xl !py-3" />
+            <input id="email" name="email" type="email" required autoComplete="email" className="input-field !py-3" />
           </div>
           {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
           {message && <p className="text-sm text-emerald-800" role="status">{message}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full !rounded-xl !py-3.5">
+          <button type="submit" disabled={loading} className="btn-primary w-full !py-3.5">
             {loading ? "Sending…" : "Send reset link"}
           </button>
         </form>

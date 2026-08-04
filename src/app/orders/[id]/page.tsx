@@ -99,7 +99,7 @@ export default function OrderDetailPage() {
     return (
       <AppShell user={user || { name: "You" }}>
         <p className="text-red-700">{error}</p>
-        <Link href="/orders" className="btn-secondary mt-4 inline-flex !rounded-xl">
+        <Link href="/orders" className="btn-secondary mt-4 inline-flex">
           Back to orders
         </Link>
       </AppShell>
@@ -153,7 +153,7 @@ export default function OrderDetailPage() {
         <button
           onClick={advance}
           disabled={busy}
-          className="btn-secondary w-full !rounded-xl !py-3"
+          className="btn-secondary w-full !py-3"
         >
           {busy ? "Updating…" : "Advance tracking (ops)"}
         </button>

@@ -76,23 +76,23 @@ export default function OnboardingPage() {
           <label className="label" htmlFor="phone">
             Phone
           </label>
-          <input id="phone" name="phone" type="tel" className="input-field !rounded-xl !py-3" />
+          <input id="phone" name="phone" type="tel" className="input-field !py-3" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label" htmlFor="city">
               City
             </label>
-            <input id="city" name="city" className="input-field !rounded-xl !py-3" />
+            <input id="city" name="city" className="input-field !py-3" />
           </div>
           <div>
             <label className="label" htmlFor="state">
               State
             </label>
-            <input id="state" name="state" className="input-field !rounded-xl !py-3" />
+            <input id="state" name="state" className="input-field !py-3" />
           </div>
         </div>
-        <button type="submit" disabled={loading} className="btn-copper w-full !rounded-xl !py-3.5">
+        <button type="submit" disabled={loading} className="btn-copper w-full !py-3.5">
           {loading ? "Saving…" : "Continue to first job"}
         </button>
         <Link href="/dashboard" className="block text-center text-sm text-[var(--sage)]">

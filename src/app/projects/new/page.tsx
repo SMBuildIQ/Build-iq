@@ -57,14 +57,14 @@ export default function NewProjectPage() {
           <label className="label" htmlFor="name">
             Project name
           </label>
-          <input id="name" name="name" required className="input-field !rounded-xl !py-3" placeholder="Oak Street Residence" />
+          <input id="name" name="name" required className="input-field !py-3" placeholder="Oak Street Residence" />
         </div>
 
         <div>
           <label className="label" htmlFor="address">
             Street address
           </label>
-          <input id="address" name="address" className="input-field !rounded-xl !py-3" />
+          <input id="address" name="address" className="input-field !py-3" />
         </div>
 
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
@@ -72,19 +72,19 @@ export default function NewProjectPage() {
             <label className="label" htmlFor="city">
               City
             </label>
-            <input id="city" name="city" className="input-field !rounded-xl !py-3" />
+            <input id="city" name="city" className="input-field !py-3" />
           </div>
           <div>
             <label className="label" htmlFor="state">
               State
             </label>
-            <input id="state" name="state" className="input-field !rounded-xl !py-3" />
+            <input id="state" name="state" className="input-field !py-3" />
           </div>
           <div>
             <label className="label" htmlFor="zip">
               ZIP
             </label>
-            <input id="zip" name="zip" className="input-field !rounded-xl !py-3" />
+            <input id="zip" name="zip" className="input-field !py-3" />
           </div>
         </div>
 
@@ -93,13 +93,13 @@ export default function NewProjectPage() {
             <label className="label" htmlFor="squareFeet">
               Sq ft
             </label>
-            <input id="squareFeet" name="squareFeet" type="number" min={200} inputMode="numeric" className="input-field !rounded-xl !py-3" placeholder="2400" />
+            <input id="squareFeet" name="squareFeet" type="number" min={200} inputMode="numeric" className="input-field !py-3" placeholder="2400" />
           </div>
           <div>
             <label className="label" htmlFor="stories">
               Stories
             </label>
-            <select id="stories" name="stories" className="input-field !rounded-xl !py-3" defaultValue="1">
+            <select id="stories" name="stories" className="input-field !py-3" defaultValue="1">
               <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
@@ -111,12 +111,12 @@ export default function NewProjectPage() {
           <label className="label" htmlFor="notes">
             Notes
           </label>
-          <textarea id="notes" name="notes" rows={3} className="input-field !rounded-xl" placeholder="Crawlspace foundation, architectural shingles…" />
+          <textarea id="notes" name="notes" rows={3} className="input-field" placeholder="Crawlspace foundation, architectural shingles…" />
         </div>
 
         {error && <p className="text-sm text-red-700">{error}</p>}
 
-        <button type="submit" disabled={loading} className="btn-copper w-full !rounded-xl !py-3.5">
+        <button type="submit" disabled={loading} className="btn-copper w-full !py-3.5">
           {loading ? "Creating…" : "Create project"}
         </button>
       </form>

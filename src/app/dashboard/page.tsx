@@ -28,7 +28,7 @@ export default async function DashboardPage() {
             </p>
             <h1 className="mt-1 font-display text-3xl font-semibold text-[var(--ink)]">Jobs</h1>
           </div>
-        <Link href="/projects/new" className="btn-copper !rounded-xl !px-3.5 !py-2.5 !text-sm">
+        <Link href="/projects/new" className="btn-copper !px-3.5 !py-2.5 !text-sm">
           New
         </Link>
       </div>
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
           <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--sage)]">
             Create a residential project, upload blueprints, and let BuildIQ build the takeoff.
           </p>
-          <Link href="/projects/new" className="btn-primary mt-6 !rounded-xl">
+          <Link href="/projects/new" className="btn-primary mt-6">
             Create first project
           </Link>
         </div>

@@ -45,7 +45,7 @@ export default function OrdersPage() {
       {orders.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-[var(--line)] px-5 py-12 text-center">
           <p className="font-display text-xl font-semibold">No orders yet</p>
-          <Link href="/shop" className="btn-copper mt-5 inline-flex !rounded-xl">
+          <Link href="/shop" className="btn-copper mt-5 inline-flex">
             Shop packages
           </Link>
         </div>
@@ -57,7 +57,7 @@ export default function OrdersPage() {
               <li key={order.id}>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="block rounded-2xl border border-[var(--line)] bg-white/55 p-4 transition active:scale-[0.99]"
+                  className="block surface p-4 transition active:scale-[0.99]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>

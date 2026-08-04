@@ -35,11 +35,15 @@ export default function LoginPage() {
 
   return (
     <MarketingShell>
-      <main id="main-content" className="mx-auto max-w-md px-4 py-10">
-        <h1 className="font-display text-3xl font-semibold text-[var(--ink)]">Welcome back</h1>
-        <p className="mt-2 text-sm text-[var(--sage)]">Sign in to your BuildIQ app.</p>
+      <main id="main-content" className="mx-auto max-w-md px-4 py-12">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/mark.png" alt="" className="mx-auto h-16 w-16 object-contain" />
+        <h1 className="mt-6 text-center font-display text-4xl text-[var(--orange)]">Welcome back</h1>
+        <p className="mt-2 text-center text-sm text-[var(--sage)]">
+          Sign in to BuildIQ by Supply Monkey
+        </p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-4 rounded-2xl border border-[var(--line)] bg-white/60 p-5">
+        <form onSubmit={onSubmit} className="surface mt-8 space-y-4 p-5">
           <div>
             <label className="label" htmlFor="email">
               Email
@@ -50,7 +54,7 @@ export default function LoginPage() {
               type="email"
               required
               autoComplete="email"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
               placeholder="you@builder.com"
             />
           </div>
@@ -64,24 +68,28 @@ export default function LoginPage() {
               type="password"
               required
               autoComplete="current-password"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
             />
           </div>
-          {error && <p className="text-sm text-red-700">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full !rounded-xl !py-3.5">
+          {error && (
+            <p className="text-sm text-red-700" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={loading} className="btn-copper w-full !py-3.5">
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-[var(--sage)]">
-          <Link href="/forgot-password" className="font-semibold text-[var(--copper-deep)]">
+          <Link href="/forgot-password" className="font-semibold text-[var(--orange)]">
             Forgot password?
           </Link>
         </p>
 
         <p className="mt-4 text-center text-sm text-[var(--sage)]">
           No account?{" "}
-          <Link href="/register" className="font-semibold text-[var(--copper-deep)]">
+          <Link href="/register" className="font-semibold text-[var(--orange)]">
             Create one
           </Link>
         </p>

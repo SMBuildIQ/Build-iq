@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
             Please restart BuildIQ. If this keeps happening, contact support@supplymonkeyco.com.
           </p>
           <button
-            className="btn-copper mt-6 !rounded-xl"
+            className="btn-copper mt-6"
             onClick={() => {
               this.setState({ hasError: false });
               window.location.href = "/dashboard";

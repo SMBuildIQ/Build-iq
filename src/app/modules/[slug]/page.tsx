@@ -56,7 +56,7 @@ export default function ModuleDetailPage() {
                   Use Jobs, Shop, Team, and related screens for live workflows. Remaining gaps are tracked in
                   MODULE_STATUS.md.
                 </p>
-                <Link href="/dashboard" className="btn-copper mt-6 inline-flex !rounded-xl">
+                <Link href="/dashboard" className="btn-copper mt-6 inline-flex">
                   Open jobs
                 </Link>
               </>

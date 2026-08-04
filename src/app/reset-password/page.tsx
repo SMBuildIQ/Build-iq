@@ -46,7 +46,7 @@ function ResetForm() {
     <MarketingShell>
       <main id="main-content" className="mx-auto max-w-md px-4 py-10">
         <h1 className="font-display text-3xl font-semibold">Choose a new password</h1>
-        <form onSubmit={onSubmit} className="mt-8 space-y-4 rounded-2xl border border-[var(--line)] bg-white/60 p-5">
+        <form onSubmit={onSubmit} className="mt-8 space-y-4 surface p-5">
           <div>
             <label className="label" htmlFor="password">
               New password
@@ -58,7 +58,7 @@ function ResetForm() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
             />
           </div>
           <div>
@@ -72,11 +72,11 @@ function ResetForm() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
             />
           </div>
           {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full !rounded-xl !py-3.5">
+          <button type="submit" disabled={loading} className="btn-primary w-full !py-3.5">
             {loading ? "Saving…" : "Update password"}
           </button>
         </form>

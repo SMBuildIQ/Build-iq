@@ -17,7 +17,7 @@ export default function SupportPage() {
           We’re here for builders using {productName} on web, iPhone, and Android.
         </p>
 
-        <div className="mt-8 space-y-4 rounded-2xl border border-[var(--line)] bg-white/55 p-5 text-sm">
+        <div className="mt-8 space-y-4 surface p-5 text-sm">
           <p>
             <span className="font-semibold">Operator:</span> {entityName}
           </p>

@@ -111,13 +111,13 @@ export default function TeamPage() {
               <label className="label" htmlFor="email">
                 Email (optional)
               </label>
-              <input id="email" name="email" type="email" className="input-field !rounded-xl !py-3" placeholder="estimator@builder.com" />
+              <input id="email" name="email" type="email" className="input-field !py-3" placeholder="estimator@builder.com" />
             </div>
             <div>
               <label className="label" htmlFor="role">
                 Role
               </label>
-              <select id="role" name="role" className="input-field !rounded-xl !py-3" defaultValue="ESTIMATOR">
+              <select id="role" name="role" className="input-field !py-3" defaultValue="ESTIMATOR">
                 <option value="OWNER">Owner</option>
                 <option value="ADMIN">Admin</option>
                 <option value="PROJECT_MANAGER">Project manager</option>
@@ -138,7 +138,7 @@ export default function TeamPage() {
                 {lastInvitePath}
               </p>
             )}
-            <button type="submit" disabled={busy} className="btn-copper w-full !rounded-xl !py-3">
+            <button type="submit" disabled={busy} className="btn-copper w-full !py-3">
               {busy ? "Creating…" : "Create invite link"}
             </button>
           </form>

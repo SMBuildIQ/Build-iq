@@ -112,7 +112,7 @@ export default function SpruceSettingsPage() {
             <input
               id="apiEndpoint"
               name="apiEndpoint"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
               defaultValue={settings.apiEndpoint || ""}
               placeholder="https://your-spruce-host/api"
               inputMode="url"
@@ -125,7 +125,7 @@ export default function SpruceSettingsPage() {
             <input
               id="soapEndpoint"
               name="soapEndpoint"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
               defaultValue={settings.soapEndpoint || ""}
               placeholder="https://your-spruce-host/soap"
               inputMode="url"
@@ -139,7 +139,7 @@ export default function SpruceSettingsPage() {
             <input
               id="apiKey"
               name="apiKey"
-              className="input-field !rounded-xl !py-3"
+              className="input-field !py-3"
               defaultValue={settings.apiKey || ""}
               placeholder={settings.hasApiKey ? "Leave blank to keep existing key" : "Provided by ECI"}
             />
@@ -153,7 +153,7 @@ export default function SpruceSettingsPage() {
               <input
                 id="branchCode"
                 name="branchCode"
-                className="input-field !rounded-xl !py-3"
+                className="input-field !py-3"
                 defaultValue={settings.branchCode || ""}
               />
             </div>
@@ -164,7 +164,7 @@ export default function SpruceSettingsPage() {
               <input
                 id="accountNumber"
                 name="accountNumber"
-                className="input-field !rounded-xl !py-3"
+                className="input-field !py-3"
                 defaultValue={settings.accountNumber || ""}
               />
             </div>
@@ -184,7 +184,7 @@ export default function SpruceSettingsPage() {
           {error && <p className="text-sm text-red-700">{error}</p>}
           {message && <p className="text-sm text-emerald-800">{message}</p>}
 
-          <button type="submit" disabled={loading} className="btn-copper w-full !rounded-xl !py-3.5">
+          <button type="submit" disabled={loading} className="btn-copper w-full !py-3.5">
             {loading ? "Saving…" : "Save connection"}
           </button>
         </form>

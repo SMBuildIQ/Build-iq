@@ -116,7 +116,7 @@ export default function CartPage() {
       {items.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-[var(--line)] px-5 py-12 text-center">
           <p className="font-display text-xl font-semibold">Cart is empty</p>
-          <Link href="/shop" className="btn-copper mt-5 inline-flex !rounded-xl">
+          <Link href="/shop" className="btn-copper mt-5 inline-flex">
             Browse packages
           </Link>
         </div>
@@ -124,7 +124,7 @@ export default function CartPage() {
         <>
           <ul className="mt-6 space-y-3">
             {items.map((item) => (
-              <li key={item.id} className="rounded-2xl border border-[var(--line)] bg-white/55 p-4">
+              <li key={item.id} className="surface p-4">
                 <div className="flex justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--copper-deep)]">
@@ -161,7 +161,7 @@ export default function CartPage() {
             ))}
           </ul>
 
-          <dl className="mt-6 space-y-2 rounded-2xl border border-[var(--line)] bg-white/55 p-4 text-sm">
+          <dl className="mt-6 space-y-2 surface p-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-[var(--sage)]">Subtotal</dt>
               <dd>{formatCurrencyExact(totals.subtotal)}</dd>
@@ -181,7 +181,7 @@ export default function CartPage() {
           {!checkoutOpen ? (
             <button
               onClick={() => setCheckoutOpen(true)}
-              className="btn-copper mt-5 w-full !rounded-xl !py-3.5"
+              className="btn-copper mt-5 w-full !py-3.5"
             >
               Checkout & pay
             </button>
@@ -189,28 +189,28 @@ export default function CartPage() {
             <form
               ref={formRef}
               onSubmit={checkoutCard}
-              className="mt-5 space-y-4 rounded-2xl border border-[var(--line)] bg-white/60 p-4"
+              className="mt-5 space-y-4 surface p-4"
             >
               <p className="font-display text-lg font-semibold">Delivery</p>
               <input
                 name="shipToName"
                 required
                 placeholder="Site / contact name"
-                className="input-field !rounded-xl !py-3"
+                className="input-field !py-3"
                 defaultValue={user?.companyName || ""}
               />
               <input
                 name="shipToAddress"
                 required
                 placeholder="Jobsite address"
-                className="input-field !rounded-xl !py-3"
+                className="input-field !py-3"
               />
               <div className="grid grid-cols-3 gap-2">
-                <input name="shipToCity" required placeholder="City" className="input-field !rounded-xl !py-3" />
-                <input name="shipToState" required placeholder="ST" className="input-field !rounded-xl !py-3" />
-                <input name="shipToZip" required placeholder="ZIP" className="input-field !rounded-xl !py-3" />
+                <input name="shipToCity" required placeholder="City" className="input-field !py-3" />
+                <input name="shipToState" required placeholder="ST" className="input-field !py-3" />
+                <input name="shipToZip" required placeholder="ZIP" className="input-field !py-3" />
               </div>
-              <textarea name="notes" rows={2} placeholder="Delivery notes" className="input-field !rounded-xl" />
+              <textarea name="notes" rows={2} placeholder="Delivery notes" className="input-field" />
 
               <WalletPayButtons
                 amountCents={Math.round(totals.total * 100)}
@@ -227,7 +227,7 @@ export default function CartPage() {
               </div>
 
               {error && <p className="text-sm text-red-700">{error}</p>}
-              <button type="submit" disabled={busy} className="btn-secondary w-full !rounded-xl !py-3.5">
+              <button type="submit" disabled={busy} className="btn-secondary w-full !py-3.5">
                 {busy ? "Processing…" : `Pay ${formatCurrencyExact(totals.total)} with card`}
               </button>
             </form>

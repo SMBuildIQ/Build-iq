@@ -72,14 +72,14 @@ export default function AccountSettingsPage() {
         Privacy controls required for App Store and Play Store compliance.
       </p>
 
-      <section className="mt-8 rounded-2xl border border-[var(--line)] bg-white/55 p-4">
+      <section className="mt-8 surface p-4">
         <h2 className="font-display text-lg font-semibold">Your profile</h2>
         <p className="mt-2 text-sm text-[var(--ink-soft)]">{user?.name}</p>
         <p className="text-sm text-[var(--sage)]">{user?.email}</p>
         <p className="text-sm text-[var(--sage)]">{user?.companyName}</p>
       </section>
 
-      <section className="mt-4 rounded-2xl border border-[var(--line)] bg-white/55 p-4">
+      <section className="mt-4 surface p-4">
         <h2 className="font-display text-lg font-semibold">Email verification</h2>
         <p className="mt-1 text-sm text-[var(--sage)]">
           Resend a verification link to confirm your email address.
@@ -95,18 +95,18 @@ export default function AccountSettingsPage() {
             else setMessage(data.alreadyVerified ? "Email already verified." : "Verification email sent.");
           }}
           disabled={busy}
-          className="btn-secondary mt-3 !rounded-xl !py-2.5 !text-sm"
+          className="btn-secondary mt-3 !py-2.5 !text-sm"
         >
           Send verification email
         </button>
       </section>
 
-      <section className="mt-4 rounded-2xl border border-[var(--line)] bg-white/55 p-4">
+      <section className="mt-4 surface p-4">
         <h2 className="font-display text-lg font-semibold">Download my data</h2>
         <p className="mt-1 text-sm text-[var(--sage)]">
           Export account, jobs, and order history as JSON (data portability).
         </p>
-        <button onClick={exportData} disabled={busy} className="btn-secondary mt-3 !rounded-xl !py-2.5 !text-sm">
+        <button onClick={exportData} disabled={busy} className="btn-secondary mt-3 !py-2.5 !text-sm">
           {busy ? "Working…" : "Download my data"}
         </button>
       </section>
@@ -126,7 +126,7 @@ export default function AccountSettingsPage() {
           id="confirm"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="input-field !rounded-xl !py-3"
+          className="input-field !py-3"
           autoComplete="off"
         />
         <button

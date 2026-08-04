@@ -42,7 +42,7 @@ export default function ModulesPage() {
                       : `/modules/${m.slug}`
                   : `/modules/${m.slug}`
               }
-              className="block rounded-2xl border border-[var(--line)] bg-white/55 px-4 py-3 hover:border-[var(--copper)]"
+              className="block surface px-4 py-3 hover:border-[var(--copper)]"
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="font-display text-lg font-semibold">{m.name}</span>

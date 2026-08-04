@@ -191,10 +191,10 @@ export function BotRunner({ open, projectId, onClose, onComplete }: Props) {
               Your estimate, bid packages, and material cart are ready.
             </p>
             <div className="grid grid-cols-2 gap-2">
-              <Link href="/cart" className="btn-copper !rounded-xl !py-3 !text-center !text-sm">
+              <Link href="/cart" className="btn-copper !py-3 !text-center !text-sm">
                 Open cart
               </Link>
-              <button onClick={onClose} className="btn-secondary !rounded-xl !py-3 !text-sm">
+              <button onClick={onClose} className="btn-secondary !py-3 !text-sm">
                 Review takeoff
               </button>
             </div>

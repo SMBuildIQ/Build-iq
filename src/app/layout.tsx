@@ -10,10 +10,10 @@ export const metadata: Metadata = {
     template: "%s · BuildIQ",
   },
   description:
-    "Residential construction estimating app for builders — plan upload, AI takeoff bots, bids, material packages, Apple Pay & Google Pay.",
+    "BuildIQ by Supply Monkey Lumber & Materials Co — residential estimating, takeoffs, and material packages for builders in Prescott, AZ.",
   applicationName: "BuildIQ",
-  authors: [{ name: "BuildIQ" }],
-  keywords: ["construction", "estimating", "takeoff", "builders", "Spruce"],
+  authors: [{ name: "Supply Monkey Lumber & Materials Co" }],
+  keywords: ["Supply Monkey", "construction", "estimating", "takeoff", "lumber", "Prescott"],
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#14201b",
+  themeColor: "#1a1b1f",
   width: "device-width",
   initialScale: 1,
   // Do not lock maximumScale — required for accessibility / store guidelines
@@ -54,8 +54,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="apple-touch-icon" href="/icon-180.png" />
+        <link rel="icon" href="/brand/favicon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className="antialiased overscroll-none">
         <SkipToContent />

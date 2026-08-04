@@ -209,7 +209,7 @@ export default function ProjectDetailPage() {
     return (
       <AppShell user={{ name: "You" }}>
         <p className="text-red-700">{error}</p>
-        <Link href="/dashboard" className="btn-secondary mt-4 inline-flex !rounded-xl">
+        <Link href="/dashboard" className="btn-secondary mt-4 inline-flex">
           Back to projects
         </Link>
       </AppShell>
@@ -239,17 +239,17 @@ export default function ProjectDetailPage() {
             <button
               onClick={runBots}
               disabled={!!busy || botsOpen}
-              className="btn-copper !rounded-xl !py-3"
+              className="btn-copper !py-3"
             >
               {botsOpen ? "Bots running…" : "Run AI bots"}
             </button>
-            <button onClick={exportExcel} disabled={!!busy || !project.materials.length} className="btn-secondary !rounded-xl !py-3">
+            <button onClick={exportExcel} disabled={!!busy || !project.materials.length} className="btn-secondary !py-3">
               {busy === "export" ? "Exporting…" : "Export Excel"}
             </button>
             <button
               onClick={() => spruceAction("submit-quote")}
               disabled={!!busy || !project.materials.length}
-              className="btn-primary !rounded-xl !py-3"
+              className="btn-primary !py-3"
             >
               {busy === "submit-quote" ? "Sending…" : "Send to Spruce"}
             </button>

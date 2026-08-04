@@ -1,20 +1,31 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Questrial&family=Staatliches&display=swap");
+@import url("https://use.typekit.net/nkx1jnv.css");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Supply Monkey brand tokens — aligned with supplymonkeyco.com */
 :root {
-  --ink: #14201b;
-  --ink-soft: #2a3b33;
-  --paper: #f3efe6;
-  --paper-deep: #e7e0d2;
-  --copper: #c36b3a;
-  --copper-deep: #9a4f28;
-  --sage: #5f7a6a;
-  --mist: #d5e0d8;
-  --line: rgba(20, 32, 27, 0.12);
-  --glow: rgba(195, 107, 58, 0.18);
+  --orange: #ff8833;
+  --orange-deep: #e67420;
+  --orange-soft: #ff883330;
+  --brown: #5d412d;
+  --brown-light: #7c604c;
+  --brown-ink: #3d2a1d;
+  --banana: #e8a038;
+  --paper: #ffffff;
+  --paper-deep: #f5f5f5;
+  --ink: #5d412d;
+  --ink-soft: #7c604c;
+  --sage: #605e5c;
+  --mist: #f0ebe6;
+  --line: rgba(93, 65, 45, 0.16);
+  --glow: rgba(255, 136, 51, 0.28);
+  --dark: #1a1b1f;
+  /* aliases used across existing components */
+  --copper: var(--orange);
+  --copper-deep: var(--orange-deep);
 }
 
 * {
@@ -25,10 +36,22 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-rise,
+  .animate-rise-delay-1,
+  .animate-rise-delay-2,
+  .animate-drift {
+    animation: none !important;
+  }
+}
+
 body {
   color: var(--ink);
-  background: var(--paper);
-  font-family: "DM Sans", sans-serif;
+  background: var(--paper-deep);
+  font-family: "Questrial", "bc-novatica-cyr", system-ui, sans-serif;
   min-height: 100dvh;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
@@ -73,8 +96,16 @@ h1,
 h2,
 h3,
 .font-display {
-  font-family: "Fraunces", Georgia, serif;
-  letter-spacing: -0.02em;
+  font-family: "Staatliches", Impact, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.font-hand {
+  font-family: "felt-tip-woman", "Questrial", cursive;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 @keyframes rise {
@@ -98,25 +129,6 @@ h3,
   }
 }
 
-@keyframes draw-line {
-  from {
-    stroke-dashoffset: 240;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes pulse-soft {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 0.85;
-  }
-}
-
 .animate-rise {
   animation: rise 0.8s ease-out both;
 }
@@ -135,42 +147,82 @@ h3,
 
 .blueprint-grid {
   background-image:
-    linear-gradient(rgba(20, 32, 27, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20, 32, 27, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(93, 65, 45, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(93, 65, 45, 0.06) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
 .hero-wash {
   background:
-    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(195, 107, 58, 0.22), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 15% 80%, rgba(95, 122, 106, 0.25), transparent 50%),
-    linear-gradient(160deg, #f7f3eb 0%, #ebe4d6 45%, #dfe8e2 100%);
+    linear-gradient(180deg, #1a1b1f 0%, #5d412d 42%, #f5f5f5 42%, #f5f5f5 100%);
+}
+
+.sm-hero {
+  position: relative;
+  min-height: min(78dvh, 640px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #1a1b1f;
+}
+
+.sm-hero__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: drift 22s ease-in-out infinite;
+}
+
+.sm-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(93, 65, 45, 0.72) 0%, rgba(26, 27, 31, 0.55) 45%, rgba(245, 245, 245, 0.96) 100%);
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-md bg-[var(--ink)] px-5 py-3 text-sm font-semibold text-[var(--paper)] transition hover:bg-[var(--ink-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--copper)];
+  @apply inline-flex items-center justify-center gap-2 border-2 border-[var(--brown)] bg-[var(--brown)] px-5 py-3 text-base text-white transition duration-300 hover:bg-transparent hover:text-[var(--brown)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--orange)];
+  font-family: "Staatliches", Impact, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 0;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-transparent px-5 py-3 text-sm font-semibold text-[var(--ink)] transition hover:border-[var(--ink)] hover:bg-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--copper)];
+  @apply inline-flex items-center justify-center gap-2 border-2 border-[var(--brown)] bg-transparent px-5 py-3 text-base text-[var(--brown)] transition duration-300 hover:bg-[var(--brown)] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--orange)];
+  font-family: "Staatliches", Impact, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 0;
 }
 
 .btn-copper {
-  @apply inline-flex items-center justify-center gap-2 rounded-md bg-[var(--copper)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--copper-deep)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ink)];
+  @apply inline-flex items-center justify-center gap-2 border-2 border-[var(--orange)] bg-[var(--orange)] px-5 py-3 text-base text-white transition duration-300 hover:bg-transparent hover:text-[var(--orange)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brown)];
+  font-family: "Staatliches", Impact, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 0;
 }
 
 .input-field {
-  @apply w-full rounded-md border border-[var(--line)] bg-white/70 px-3 py-2.5 text-sm text-[var(--ink)] outline-none transition placeholder:text-[var(--sage)] focus:border-[var(--copper)] focus:ring-2 focus:ring-[var(--glow)];
+  @apply w-full border border-[var(--line)] bg-white px-3 py-2.5 text-sm text-[var(--ink)] outline-none transition placeholder:text-[var(--sage)] focus:border-[var(--orange)] focus:ring-2 focus:ring-[var(--glow)];
+  border-radius: 0;
 }
 
 .label {
-  @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-[var(--sage)];
+  @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--brown-light)];
+  font-family: "Questrial", sans-serif;
 }
 
 .surface {
-  @apply rounded-xl border border-[var(--line)] bg-white/55 backdrop-blur-sm;
+  @apply border border-[var(--line)] bg-white;
+  border-radius: 0;
 }
 
 .status-pill {
-  @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-medium tracking-wide;
+  @apply inline-flex items-center px-2 py-0.5 text-xs font-medium tracking-wide;
+  border-radius: 0;
 }
