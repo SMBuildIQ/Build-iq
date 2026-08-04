@@ -34,7 +34,7 @@ export function BrandMark({
       >
         <Image
           source={logoIqAsset}
-          style={{ width: size * 2.5, height: size, backgroundColor: inverse ? "transparent" : "#161412" }}
+          style={{ width: size * 2.5, height: size }}
           contentFit="contain"
           accessibilityIgnoresInvertColors
         />
