@@ -11,11 +11,26 @@ import { StorageService } from "../storage/storage.service";
 import type { AuthUser } from "../auth/auth.decorators";
 import { ProjectStatus } from "@buildiq/prisma-client";
 import { z } from "zod";
+import { MATERIAL_LIBRARY_CATEGORIES } from "@buildiq/types";
+import { MATERIAL_CATALOG } from "../materials/catalog";
 
 const blueprintUploadSchema = z.object({
   filename: z.string().min(1).max(260),
   contentType: z.string().min(1).max(120),
   size: z.number().int().nonnegative().optional(),
+});
+
+const addMaterialSchema = z.object({
+  category: z.string().min(1).max(80),
+  name: z.string().min(1).max(200),
+  description: z.string().max(2000).optional().nullable(),
+  quantity: z.number().positive(),
+  unit: z.string().min(1).max(40),
+  unitCost: z.number().nonnegative(),
+  trade: z.string().min(1).max(80).optional(),
+  spruceSku: z.string().max(80).optional().nullable(),
+  source: z.enum(["catalog", "order", "takeoff", "manual", "ai"]).optional(),
+  catalogId: z.string().optional(),
 });
 
 @Injectable()
@@ -173,6 +188,72 @@ export class ProjectsService {
       blueprint,
       storage: uploaded,
     };
+  }
+
+  async listMaterials(user: AuthUser, projectId: string) {
+    await this.requireProject(user, projectId);
+    const materials = await this.prisma.materialItem.findMany({
+      where: { projectId },
+      orderBy: [{ category: "asc" }, { name: "asc" }],
+    });
+    return {
+      categories: MATERIAL_LIBRARY_CATEGORIES,
+      materials: materials.map((m) => ({
+        id: m.id,
+        projectId: m.projectId,
+        category: m.category,
+        name: m.name,
+        description: m.description,
+        quantity: m.quantity,
+        unit: m.unit,
+        unitCost: m.unitCost,
+        spruceSku: m.spruceSku,
+        source: m.source,
+        updatedAt: new Date().toISOString(),
+      })),
+    };
+  }
+
+  async addMaterial(user: AuthUser, projectId: string, body: unknown) {
+    const parsed = addMaterialSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException(parsed.error.flatten());
+    }
+    await this.requireProject(user, projectId);
+
+    let payload = parsed.data;
+    if (payload.catalogId) {
+      const catalogItem = MATERIAL_CATALOG.find((c) => c.id === payload.catalogId);
+      if (catalogItem) {
+        payload = {
+          ...payload,
+          category: catalogItem.category,
+          name: payload.name || catalogItem.name,
+          description: payload.description ?? catalogItem.description ?? null,
+          unit: payload.unit || catalogItem.unit,
+          unitCost: payload.unitCost ?? catalogItem.unitCost,
+          spruceSku: payload.spruceSku ?? catalogItem.spruceSku ?? null,
+          source: payload.source ?? "catalog",
+        };
+      }
+    }
+
+    const material = await this.prisma.materialItem.create({
+      data: {
+        projectId,
+        category: payload.category,
+        trade: payload.trade ?? payload.category,
+        name: payload.name,
+        description: payload.description ?? null,
+        quantity: payload.quantity,
+        unit: payload.unit,
+        unitCost: payload.unitCost,
+        spruceSku: payload.spruceSku ?? null,
+        source: payload.source ?? "manual",
+      },
+    });
+
+    return { material };
   }
 
   async orchestrate(user: AuthUser, projectId: string) {

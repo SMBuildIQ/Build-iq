@@ -208,6 +208,66 @@ export async function uploadBlueprint(
   };
 }
 
+export async function listProjectMaterials(
+  projectId: string
+): Promise<{ categories: string[]; materials: import("@buildiq/types").ProjectLibraryItem[] } | null> {
+  return tryApi(() =>
+    apiFetch<{ categories: string[]; materials: import("@buildiq/types").ProjectLibraryItem[] }>(
+      `/projects/${projectId}/materials`
+    )
+  );
+}
+
+export async function addProjectMaterial(
+  projectId: string,
+  input: {
+    category: string;
+    name: string;
+    quantity: number;
+    unit: string;
+    unitCost: number;
+    description?: string | null;
+    spruceSku?: string | null;
+    source?: "catalog" | "order" | "takeoff" | "manual" | "ai";
+    catalogId?: string;
+  }
+): Promise<import("@buildiq/types").ProjectLibraryItem | null> {
+  const res = await tryApi(() =>
+    apiFetch<{ material: {
+      id: string;
+      projectId: string;
+      category: string;
+      name: string;
+      description?: string | null;
+      quantity: number;
+      unit: string;
+      unitCost: number;
+      spruceSku?: string | null;
+      source: string;
+    } }>(`/projects/${projectId}/materials`, {
+      method: "POST",
+      body: input,
+    })
+  );
+  if (!res?.material) return null;
+  return {
+    ...res.material,
+    source: (res.material.source as "catalog" | "order" | "takeoff" | "manual" | "ai") || "manual",
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export async function listMaterialCatalog(): Promise<{
+  categories: string[];
+  items: import("@buildiq/types").MaterialCatalogItem[];
+} | null> {
+  return tryApi(() =>
+    apiFetch<{ categories: string[]; items: import("@buildiq/types").MaterialCatalogItem[] }>(
+      "/materials/catalog"
+    )
+  );
+}
+
 export async function listProposals(): Promise<ProposalSummary[] | null> {
   const res = await tryApi(() =>
     apiFetch<{ proposals: ProposalSummary[] }>("/proposals")

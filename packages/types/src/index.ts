@@ -37,11 +37,58 @@ export type ProposalCategory =
   | "Doors"
   | "Lumber"
   | "Trusses"
+  | "I-Joists"
+  | "Entry Doors"
+  | "Interior Doors"
+  | "Exterior Doors"
   | "Cabinetry"
+  | "Hardware"
   | "Masonry Stone"
-  | "Door Hardware"
   | "Millwork"
   | "Other";
+
+/** Per-project materials library categories (yard + specialty). */
+export const MATERIAL_LIBRARY_CATEGORIES = [
+  "Lumber",
+  "Trusses",
+  "I-Joists",
+  "Windows",
+  "Entry Doors",
+  "Interior Doors",
+  "Exterior Doors",
+  "Cabinetry",
+  "Hardware",
+  "Masonry Stone",
+  "Millwork",
+  "Other",
+] as const;
+
+export type MaterialLibraryCategory = (typeof MATERIAL_LIBRARY_CATEGORIES)[number];
+
+export interface MaterialCatalogItem {
+  id: string;
+  category: MaterialLibraryCategory;
+  name: string;
+  description?: string;
+  unit: string;
+  unitCost: number;
+  spruceSku?: string | null;
+}
+
+/** Line saved into a project's materials library (from orders, takeoff, or catalog). */
+export interface ProjectLibraryItem {
+  id: string;
+  projectId: string;
+  category: MaterialLibraryCategory | string;
+  name: string;
+  description?: string | null;
+  quantity: number;
+  unit: string;
+  unitCost: number;
+  spruceSku?: string | null;
+  source: "catalog" | "order" | "takeoff" | "manual" | "ai";
+  updatedAt: string;
+}
 
 export interface Company {
   id: string;

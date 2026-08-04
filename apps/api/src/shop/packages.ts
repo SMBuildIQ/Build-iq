@@ -101,7 +101,7 @@ export const SHOP_PACKAGES: ShopPackage[] = [
   {
     id: "pkg-hardware",
     slug: "door-hardware-residential",
-    category: "Door Hardware",
+    category: "Hardware",
     name: "Door Hardware Package",
     description: "Locks, hinges, and stops matched to the door schedule.",
     contents: [

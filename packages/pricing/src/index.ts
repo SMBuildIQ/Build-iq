@@ -82,9 +82,15 @@ const CATEGORY_ALIASES: Record<string, ProposalCategory> = {
   cabinetry: "Cabinetry",
   masonry: "Masonry Stone",
   concrete: "Masonry Stone",
-  hardware: "Door Hardware",
+  hardware: "Hardware",
+  "door hardware": "Hardware",
   millwork: "Millwork",
   trim: "Millwork",
+  "i-joist": "I-Joists",
+  ijoist: "I-Joists",
+  "entry door": "Entry Doors",
+  "interior door": "Interior Doors",
+  "exterior door": "Exterior Doors",
 };
 
 export function mapMaterialToProposalCategory(
@@ -97,7 +103,11 @@ export function mapMaterialToProposalCategory(
     const t = trade.trim().toLowerCase();
     if (t === "framing") return "Lumber";
     if (t === "windows & doors") {
-      if (catKey.includes("door")) return catKey.includes("hardware") ? "Door Hardware" : "Doors";
+      if (catKey.includes("hardware")) return "Hardware";
+      if (catKey.includes("entry")) return "Entry Doors";
+      if (catKey.includes("interior")) return "Interior Doors";
+      if (catKey.includes("exterior") || catKey.includes("patio")) return "Exterior Doors";
+      if (catKey.includes("door")) return "Doors";
       return "Windows";
     }
     if (t === "roofing") return "Trusses";

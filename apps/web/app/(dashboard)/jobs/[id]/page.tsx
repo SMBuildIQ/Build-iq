@@ -8,6 +8,7 @@ import { HeroBand } from "@/components/HeroBand";
 import { RunAiButton } from "@/components/RunAiButton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UploadDrawings } from "@/components/UploadDrawings";
+import { ProjectMaterialsLibrary } from "@/components/ProjectMaterialsLibrary";
 import { formatAddress, formatCurrency, formatSf, labelStatus, projectStatusTone } from "@/lib/format";
 import { TOKEN_COOKIE } from "@/lib/cookies";
 import { fetchJobDetail, tokenFromCookieHeader } from "@/lib/data";
@@ -157,6 +158,8 @@ export default async function JobDetailPage({ params }: Props) {
             </div>
           </section>
         </div>
+
+        <ProjectMaterialsLibrary projectId={project.id} />
 
         <section className="bq-section">
           <div className="bq-section-head">

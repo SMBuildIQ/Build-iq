@@ -13,7 +13,17 @@ import { useCart } from "../../src/context/CartContext";
 import { listPackages } from "../../src/api/resources";
 import { MOCK_PACKAGES, formatCurrency } from "../../src/data/mock";
 
-const CATEGORIES = ["All", "Windows", "Doors", "Lumber", "Trusses", "Cabinetry", "Millwork"] as const;
+const CATEGORIES = [
+  "All",
+  "Windows",
+  "Doors",
+  "Lumber",
+  "Trusses",
+  "Cabinetry",
+  "Hardware",
+  "Masonry Stone",
+  "Millwork",
+] as const;
 
 /** M6 — Shop with square FilterChips */
 export default function ShopScreen() {

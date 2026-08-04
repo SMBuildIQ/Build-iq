@@ -61,6 +61,22 @@ export class ProjectsController {
     return this.projects.uploadBlueprint(user, id, body);
   }
 
+  @Get(":id/materials")
+  @RequirePermissions("project:read")
+  listMaterials(@CurrentUser() user: AuthUser, @Param("id") id: string) {
+    return this.projects.listMaterials(user, id);
+  }
+
+  @Post(":id/materials")
+  @RequirePermissions("project:write")
+  addMaterial(
+    @CurrentUser() user: AuthUser,
+    @Param("id") id: string,
+    @Body() body: unknown,
+  ) {
+    return this.projects.addMaterial(user, id, body);
+  }
+
   @Post(":id/orchestrate")
   @RequirePermissions("project:write")
   orchestrate(@CurrentUser() user: AuthUser, @Param("id") id: string) {

@@ -18,6 +18,7 @@ import {
   formatCurrency,
   projectStatusTone,
 } from "../../../../src/data/mock";
+import { MOCK_PROJECT_LIBRARIES } from "../../../../src/data/materialLibrary";
 import { getProject, getProjectEstimate, orchestrateProject } from "../../../../src/api/resources";
 
 /** M3 — Job detail (tablet split ≥768) with API + mock fallback */
@@ -182,6 +183,16 @@ export default function JobDetailScreen() {
             router.push(`/(tabs)/jobs/${job.id}/drawings` as Href)
           }
         />
+        <Button
+          label="Materials library"
+          variant="secondary"
+          compact
+          style={{ minWidth: 150 }}
+          accessibilityLabel="Open materials library"
+          onPress={() =>
+            router.push(`/(tabs)/jobs/${job.id}/library` as Href)
+          }
+        />
         <Button label="Export" variant="secondary" compact style={{ minWidth: 100 }} />
         <Button
           label="Create proposal"
@@ -203,6 +214,27 @@ export default function JobDetailScreen() {
             router.push(`/(tabs)/jobs/${job.id}/drawings` as Href)
           }
           accessibilityLabel="Manage drawings"
+        />
+      </Section>
+
+      <Section title="Materials library">
+        <MetaRow
+          label="Saved lines"
+          value={String(
+            MOCK_PROJECT_LIBRARIES[job.id]?.length ?? job.materialCount ?? 0
+          )}
+        />
+        <Text style={{ fontFamily: "Questrial", fontSize: 14, color: theme.colors.textMuted }}>
+          Per-project orders — lumber, trusses, I-joists, windows, doors, cabinetry, hardware, stone.
+        </Text>
+        <Button
+          label="Manage library"
+          variant="ghost"
+          compact
+          onPress={() =>
+            router.push(`/(tabs)/jobs/${job.id}/library` as Href)
+          }
+          accessibilityLabel="Manage materials library"
         />
       </Section>
 

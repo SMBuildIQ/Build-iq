@@ -375,4 +375,14 @@ export const mockCabinetryOpps: MockCabinetryOpp[] = [
   },
 ];
 
-export const shopCategories = ["All", "Lumber", "Windows", "Cabinetry", "Millwork", "Doors"] as const;
+export const shopCategories = [
+  "All",
+  "Lumber",
+  "Windows",
+  "Doors",
+  "Trusses",
+  "Cabinetry",
+  "Hardware",
+  "Masonry Stone",
+  "Millwork",
+] as const;
