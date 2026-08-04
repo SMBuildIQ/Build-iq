@@ -7,7 +7,20 @@ import {
   setSessionCookie,
   uniqueCompanySlug,
 } from "@/lib/auth";
+import { issueAuthToken } from "@/lib/auth-tokens";
+import { appBaseUrl, sendEmail } from "@/lib/email";
+import { writeAuditLog } from "@/lib/audit";
 import { z } from "zod";
+
+async function sendVerification(userId: string, email: string) {
+  const { raw } = await issueAuthToken(userId, "EMAIL_VERIFY", 24 * 60);
+  const link = `${appBaseUrl()}/verify-email?token=${raw}`;
+  await sendEmail({
+    to: email,
+    subject: "Verify your BuildIQ email",
+    text: `Welcome to BuildIQ. Verify your email:\n\n${link}\n\nThis link expires in 24 hours.`,
+  });
+}
 
 const schema = z
   .object({
@@ -81,7 +94,13 @@ export async function POST(req: NextRequest) {
         tokenVersion: user.tokenVersion,
       };
       await setSessionCookie(await createSessionToken(session));
-      return NextResponse.json({ user: session, joinedExisting: true });
+      await sendVerification(user.id, user.email);
+      await writeAuditLog({
+        companyId: invite.companyId,
+        actorUserId: user.id,
+        action: "auth.register_invite",
+      });
+      return NextResponse.json({ user: session, joinedExisting: true, verificationEmailSent: true });
     }
 
     const companyName = body.companyName!.trim();
@@ -129,6 +148,12 @@ export async function POST(req: NextRequest) {
       tokenVersion: owner.tokenVersion,
     };
     await setSessionCookie(await createSessionToken(session));
+    await sendVerification(owner.id, owner.email);
+    await writeAuditLog({
+      companyId: company.id,
+      actorUserId: owner.id,
+      action: "auth.register_company",
+    });
 
     return NextResponse.json({
       user: session,
@@ -139,6 +164,7 @@ export async function POST(req: NextRequest) {
         onboarded: company.onboarded,
       },
       needsOnboarding: true,
+      verificationEmailSent: true,
     });
   } catch (error) {
     return jsonError(error);

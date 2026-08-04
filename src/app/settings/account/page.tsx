@@ -80,6 +80,28 @@ export default function AccountSettingsPage() {
       </section>
 
       <section className="mt-4 rounded-2xl border border-[var(--line)] bg-white/55 p-4">
+        <h2 className="font-display text-lg font-semibold">Email verification</h2>
+        <p className="mt-1 text-sm text-[var(--sage)]">
+          Resend a verification link to confirm your email address.
+        </p>
+        <button
+          onClick={async () => {
+            setBusy(true);
+            setError("");
+            const res = await fetch("/api/auth/verify-email", { method: "POST" });
+            const data = await res.json();
+            setBusy(false);
+            if (!res.ok) setError(data.error || "Could not send verification");
+            else setMessage(data.alreadyVerified ? "Email already verified." : "Verification email sent.");
+          }}
+          disabled={busy}
+          className="btn-secondary mt-3 !rounded-xl !py-2.5 !text-sm"
+        >
+          Send verification email
+        </button>
+      </section>
+
+      <section className="mt-4 rounded-2xl border border-[var(--line)] bg-white/55 p-4">
         <h2 className="font-display text-lg font-semibold">Download my data</h2>
         <p className="mt-1 text-sm text-[var(--sage)]">
           Export account, jobs, and order history as JSON (data portability).

@@ -24,6 +24,19 @@ function getStripe() {
   return new Stripe(key);
 }
 
+/** Mock wallets only when explicitly allowed (never silent in production). */
+export function mockPaymentsAllowed() {
+  if (process.env.ALLOW_MOCK_PAYMENTS === "true") return true;
+  if (process.env.NODE_ENV === "production") return false;
+  return !paymentConfigured();
+}
+
+function rejectMockInProduction(): never {
+  throw new Error(
+    "Payments are not configured. Set STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, or ALLOW_MOCK_PAYMENTS=true for non-live testing."
+  );
+}
+
 /** Create a PaymentIntent for Apple Pay / Google Pay / card confirmation on the client */
 export async function createWalletPaymentIntent(input: {
   amountCents: number;
@@ -33,6 +46,7 @@ export async function createWalletPaymentIntent(input: {
 }): Promise<PaymentResult> {
   const stripe = getStripe();
   if (!stripe) {
+    if (!mockPaymentsAllowed()) rejectMockInProduction();
     return {
       mode: "mock",
       paymentIntentId: `pi_mock_${input.orderNumber.replace(/[^a-zA-Z0-9]/g, "")}`,
@@ -44,7 +58,6 @@ export async function createWalletPaymentIntent(input: {
   const intent = await stripe.paymentIntents.create({
     amount: input.amountCents,
     currency: input.currency || "usd",
-    // Enables Apple Pay + Google Pay via Payment Request API when domain is verified
     automatic_payment_methods: { enabled: true },
     metadata: {
       orderNumber: input.orderNumber,
@@ -74,8 +87,11 @@ export async function processPayment(input: {
   const stripe = getStripe();
   const walletType = input.walletType || "card";
 
-  // Mock Apple Pay / Google Pay / card when Stripe is not configured
   if (!stripe || walletType.startsWith("mock_")) {
+    if (!mockPaymentsAllowed()) rejectMockInProduction();
+    if (process.env.NODE_ENV === "production" && walletType.startsWith("mock_") && process.env.ALLOW_MOCK_PAYMENTS !== "true") {
+      rejectMockInProduction();
+    }
     return {
       mode: "mock",
       paymentIntentId:
@@ -86,7 +102,6 @@ export async function processPayment(input: {
     };
   }
 
-  // Confirm an existing PaymentIntent (from wallet Payment Request flow)
   if (input.paymentIntentId) {
     let intent = await stripe.paymentIntents.retrieve(input.paymentIntentId);
 
@@ -116,7 +131,6 @@ export async function processPayment(input: {
     };
   }
 
-  // Create + optionally confirm in one step
   const intent = await stripe.paymentIntents.create({
     amount: input.amountCents,
     currency: input.currency || "usd",

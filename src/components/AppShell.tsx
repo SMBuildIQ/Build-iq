@@ -57,6 +57,9 @@ export function AppShell({
           </Link>
           {user ? (
             <div className="flex items-center gap-1">
+              <Link href="/modules" className="rounded-lg px-2 py-2 text-xs font-semibold text-[var(--sage)] hover:text-[var(--ink)]">
+                Modules
+              </Link>
               <Link href="/team" className="rounded-lg px-2 py-2 text-xs font-semibold text-[var(--sage)] hover:text-[var(--ink)]">
                 Team
               </Link>

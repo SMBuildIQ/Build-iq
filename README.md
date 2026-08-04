@@ -2,6 +2,25 @@
 
 Residential construction estimating platform: blueprint upload, AI material takeoff, cost estimates, subcontractor bid packages, Excel export, and ECI Spruce sync.
 
+## Platform audit (read first)
+
+| Doc | Purpose |
+|---|---|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Current vs recommended architecture |
+| [MODULE_STATUS.md](./MODULE_STATUS.md) | Full / partial / planned module map |
+| [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md) | Mocks, placeholders, security gaps |
+| [IMPLEMENTATION_CHECKLIST.md](./IMPLEMENTATION_CHECKLIST.md) | Phased plan with task status |
+| [SETUP.md](./SETUP.md) | Run locally |
+| [PERMISSIONS_MATRIX.md](./PERMISSIONS_MATRIX.md) | RBAC matrix |
+| [SECURITY.md](./SECURITY.md) | Security controls + threat model |
+| [PRIVACY_DATA_MAP.md](./PRIVACY_DATA_MAP.md) | Data inventory for store disclosures |
+| [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | API contract summary |
+| [store/STORE_COMPLIANCE.md](./store/STORE_COMPLIANCE.md) | App Store / Play compliance notes |
+
+**Backup branch (frozen):** `cursor/backup-pre-platform-rebuild-dc6e` — original project preserved.
+
+In-app module roadmap: **/modules** (planned modules show honest empty states — no fake CRUD).
+
 ## Features
 
 - **Accounts** — register / login with session cookies

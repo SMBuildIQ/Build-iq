@@ -86,6 +86,8 @@ async function hydrateSession(payload: JwtPayload): Promise<SessionUser | null> 
       email: true,
       name: true,
       tokenVersion: true,
+      deletedAt: true,
+      emailVerifiedAt: true,
       memberships: {
         where: { companyId: payload.companyId },
         include: { company: true },
@@ -94,7 +96,7 @@ async function hydrateSession(payload: JwtPayload): Promise<SessionUser | null> 
     },
   });
 
-  if (!user) return null;
+  if (!user || user.deletedAt) return null;
   const tokenVersion = typeof payload.tv === "number" ? payload.tv : 0;
   if (user.tokenVersion !== tokenVersion) return null;
 
@@ -158,6 +160,10 @@ export class ForbiddenError extends Error {
 export function jsonError(error: unknown, fallback = "Something went wrong") {
   if (error instanceof AuthError || error instanceof ForbiddenError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+  if (error && typeof error === "object" && "status" in error && typeof (error as { status: unknown }).status === "number") {
+    const e = error as { status: number; message?: string };
+    return NextResponse.json({ error: e.message || fallback }, { status: e.status });
   }
   if (error && typeof error === "object" && "name" in error && (error as { name: string }).name === "ZodError") {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

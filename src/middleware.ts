@@ -31,12 +31,21 @@ export function middleware(req: NextRequest) {
   const ip = clientIp(req);
 
   const authSensitive =
-    pathname.startsWith("/api/auth/login") || pathname.startsWith("/api/auth/register");
+    pathname.startsWith("/api/auth/login") ||
+    pathname.startsWith("/api/auth/register") ||
+    pathname.startsWith("/api/auth/forgot-password") ||
+    pathname.startsWith("/api/auth/reset-password");
   const accountDelete = pathname.startsWith("/api/account/delete");
   const checkout = pathname.startsWith("/api/checkout");
 
   if (authSensitive || accountDelete || checkout) {
-    const limit = authSensitive ? 20 : accountDelete ? 5 : 30;
+    const limit = pathname.includes("forgot-password")
+      ? 5
+      : authSensitive
+        ? 20
+        : accountDelete
+          ? 5
+          : 30;
     const result = rateLimit(`${pathname}:${ip}`, limit, 60_000);
     if (!result.ok) {
       return NextResponse.json(

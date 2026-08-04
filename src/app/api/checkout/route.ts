@@ -3,9 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { jsonError } from "@/lib/auth";
 import { requirePermission } from "@/lib/require-permission";
 import { cartTotals, getOrCreateCart } from "@/lib/commerce/cart";
-import { processPayment, paymentConfigured } from "@/lib/commerce/payments";
+import {
+  processPayment,
+  paymentConfigured,
+  mockPaymentsAllowed,
+} from "@/lib/commerce/payments";
 import { walletLabel } from "@/lib/commerce/wallet-label";
 import { TRACKING_SEQUENCE, generateOrderNumber } from "@/lib/commerce/tracking";
+import { writeAuditLog } from "@/lib/audit";
 import { z } from "zod";
 
 const schema = z.object({
@@ -20,7 +25,7 @@ const schema = z.object({
   paymentIntentId: z.string().optional(),
   walletType: z
     .enum(["apple_pay", "google_pay", "card", "mock_apple_pay", "mock_google_pay", "mock_card"])
-    .default("mock_card"),
+    .optional(),
   orderNumber: z.string().optional(),
 });
 
@@ -38,13 +43,24 @@ export async function POST(req: NextRequest) {
     const orderNumber = body.orderNumber || generateOrderNumber();
     const amountCents = Math.round(totals.total * 100);
 
+    const walletType =
+      body.walletType ||
+      (paymentConfigured() ? "card" : mockPaymentsAllowed() ? "mock_card" : "card");
+
+    if (String(walletType).startsWith("mock_") && !mockPaymentsAllowed()) {
+      return NextResponse.json(
+        { error: "Mock payments are disabled. Configure Stripe keys for live checkout." },
+        { status: 400 }
+      );
+    }
+
     const payment = await processPayment({
       amountCents,
       orderNumber,
       customerEmail: user.email,
       paymentMethodId: body.paymentMethodId,
       paymentIntentId: body.paymentIntentId,
-      walletType: body.walletType,
+      walletType,
     });
 
     if (payment.status !== "succeeded" && payment.mode === "live") {
@@ -58,7 +74,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const methodLabel = walletLabel(body.walletType);
+    const methodLabel = walletLabel(walletType);
 
     const order = await prisma.order.create({
       data: {
@@ -72,7 +88,7 @@ export async function POST(req: NextRequest) {
         tax: totals.tax,
         total: totals.total,
         paymentStatus: "paid",
-        paymentMethod: body.walletType,
+        paymentMethod: walletType,
         paymentIntentId: payment.paymentIntentId,
         paidAt: new Date(),
         shipToName: body.shipToName,
@@ -117,11 +133,19 @@ export async function POST(req: NextRequest) {
     });
 
     await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+    await writeAuditLog({
+      companyId: user.companyId,
+      actorUserId: user.id,
+      action: "order.placed",
+      entityType: "Order",
+      entityId: order.id,
+      detail: `${order.orderNumber} ${payment.mode}`,
+    });
 
     return NextResponse.json({
       order,
       paymentMode: payment.mode,
-      walletType: body.walletType,
+      walletType,
       stripeConfigured: paymentConfigured(),
     });
   } catch (error) {

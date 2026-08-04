@@ -35,10 +35,13 @@ model User {
   tokenVersion Int      @default(0)
   /// ISO timestamp when Terms + Privacy were accepted at signup.
   termsAcceptedAt DateTime?
+  emailVerifiedAt DateTime?
+  deletedAt    DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   memberships Membership[]
+  authTokens  AuthToken[]
 }
 
 model Membership {
@@ -297,5 +300,54 @@ model TrackingEvent {
 
   orderId String
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model AuthToken {
+  id        String   @id @default(cuid())
+  type      String // EMAIL_VERIFY | PASSWORD_RESET
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+model LoginAttempt {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  failures       Int       @default(0)
+  windowStartsAt DateTime  @default(now())
+  lockedUntil    DateTime?
+  updatedAt      DateTime  @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  companyId   String?
+  actorUserId String?
+  action      String
+  entityType  String?
+  entityId    String?
+  detail      String?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([companyId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+/// Planned construction modules — schema placeholders for future implementation.
+/// Do not expose fake CRUD; APIs return planned status until built.
+model ModuleRegistry {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  status      String   @default("PLANNED") // PLANNED | PARTIAL | FULL
+  description String?
+  updatedAt   DateTime @updatedAt
 }
 

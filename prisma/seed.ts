@@ -53,12 +53,21 @@ async function main() {
         email: "demo@buildiq.app",
         name: "Demo Estimator",
         passwordHash,
+        termsAcceptedAt: new Date(),
+        emailVerifiedAt: new Date(),
         memberships: {
           create: { companyId: company.id, role: "OWNER" },
         },
       },
     });
   } else {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        termsAcceptedAt: user.termsAcceptedAt || new Date(),
+        emailVerifiedAt: user.emailVerifiedAt || new Date(),
+      },
+    });
     const membership = await prisma.membership.findFirst({
       where: { userId: user.id, companyId: company.id },
     });
@@ -67,6 +76,24 @@ async function main() {
         data: { userId: user.id, companyId: company.id, role: "OWNER" },
       });
     }
+  }
+
+  const { PLATFORM_MODULES } = await import("../src/lib/modules/registry");
+  for (const mod of PLATFORM_MODULES) {
+    await prisma.moduleRegistry.upsert({
+      where: { slug: mod.slug },
+      create: {
+        slug: mod.slug,
+        name: mod.name,
+        status: mod.status,
+        description: mod.description,
+      },
+      update: {
+        name: mod.name,
+        status: mod.status,
+        description: mod.description,
+      },
+    });
   }
 
   const existing = await prisma.project.findFirst({

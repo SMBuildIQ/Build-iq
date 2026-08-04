@@ -4,6 +4,7 @@ import { requirePermission } from "@/lib/require-permission";
 import { cartTotals, getOrCreateCart } from "@/lib/commerce/cart";
 import {
   createWalletPaymentIntent,
+  mockPaymentsAllowed,
   paymentConfigured,
   publishableKey,
 } from "@/lib/commerce/payments";
@@ -52,6 +53,7 @@ export async function GET() {
     return NextResponse.json({
       stripeConfigured: paymentConfigured(),
       publishableKey: publishableKey(),
+      mockPaymentsAllowed: mockPaymentsAllowed(),
       wallets: ["apple_pay", "google_pay"],
     });
   } catch (error) {

@@ -30,6 +30,7 @@ export function WalletPayButtons({
   onBusy,
 }: Props) {
   const [stripeConfigured, setStripeConfigured] = useState(false);
+  const [mockAllowed, setMockAllowed] = useState(false);
   const [publishableKey, setPublishableKey] = useState("");
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [googleAvailable, setGoogleAvailable] = useState(false);
@@ -78,6 +79,7 @@ export function WalletPayButtons({
       const cfg = await fetch("/api/checkout/wallet").then((r) => r.json());
       if (cancelled) return;
       setStripeConfigured(Boolean(cfg.stripeConfigured));
+      setMockAllowed(Boolean(cfg.mockPaymentsAllowed));
       setPublishableKey(cfg.publishableKey || "");
 
       // Detect platform for mock button emphasis
@@ -193,6 +195,10 @@ export function WalletPayButtons({
 
   async function mockWalletPay(walletType: "mock_apple_pay" | "mock_google_pay") {
     if (disabled) return;
+    if (!mockAllowed) {
+      onError("Live Stripe keys are required for wallet payments in this environment.");
+      return;
+    }
     await completeCheckout({ walletType });
   }
 
@@ -247,7 +253,9 @@ export function WalletPayButtons({
       <p className="text-[11px] leading-relaxed text-[var(--sage)]">
         {stripeConfigured
           ? "Apple Pay works in Safari / iPhone once your domain is verified in Stripe. Google Pay works in Chrome / Android."
-          : "Demo mode: Apple Pay and Google Pay confirm instantly. Add STRIPE_SECRET_KEY + NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY for live wallets."}
+          : mockAllowed
+            ? "Demo mode: wallet buttons confirm instantly. Add STRIPE_SECRET_KEY + NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY for live wallets."
+            : "Payments require Stripe configuration. Mock checkout is disabled."}
       </p>
       {!publishableKey && null}
     </div>
