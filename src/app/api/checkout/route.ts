@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { jsonError, requireUser } from "@/lib/auth";
 import { cartTotals, getOrCreateCart } from "@/lib/commerce/cart";
 import { processPayment, paymentConfigured } from "@/lib/commerce/payments";
+import { walletLabel } from "@/lib/commerce/wallet-label";
 import { TRACKING_SEQUENCE, generateOrderNumber } from "@/lib/commerce/tracking";
 import { z } from "zod";
 
@@ -15,6 +16,11 @@ const schema = z.object({
   notes: z.string().optional(),
   projectId: z.string().optional().nullable(),
   paymentMethodId: z.string().optional(),
+  paymentIntentId: z.string().optional(),
+  walletType: z
+    .enum(["apple_pay", "google_pay", "card", "mock_apple_pay", "mock_google_pay", "mock_card"])
+    .default("mock_card"),
+  orderNumber: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -28,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const totals = cartTotals(cart.items);
-    const orderNumber = generateOrderNumber();
+    const orderNumber = body.orderNumber || generateOrderNumber();
     const amountCents = Math.round(totals.total * 100);
 
     const payment = await processPayment({
@@ -36,6 +42,8 @@ export async function POST(req: NextRequest) {
       orderNumber,
       customerEmail: user.email,
       paymentMethodId: body.paymentMethodId,
+      paymentIntentId: body.paymentIntentId,
+      walletType: body.walletType,
     });
 
     if (payment.status !== "succeeded" && payment.mode === "live") {
@@ -49,6 +57,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const methodLabel = walletLabel(body.walletType);
+
     const order = await prisma.order.create({
       data: {
         orderNumber,
@@ -61,7 +71,7 @@ export async function POST(req: NextRequest) {
         tax: totals.tax,
         total: totals.total,
         paymentStatus: "paid",
-        paymentMethod: payment.mode === "mock" ? "mock_card" : "stripe",
+        paymentMethod: body.walletType,
         paymentIntentId: payment.paymentIntentId,
         paidAt: new Date(),
         shipToName: body.shipToName,
@@ -93,8 +103,8 @@ export async function POST(req: NextRequest) {
               label: TRACKING_SEQUENCE[1].label,
               detail:
                 payment.mode === "mock"
-                  ? "Mock payment succeeded (set STRIPE_SECRET_KEY for live charges)."
-                  : TRACKING_SEQUENCE[1].detail,
+                  ? `${methodLabel} demo payment succeeded. Add Stripe keys for live Apple Pay / Google Pay.`
+                  : `Paid with ${methodLabel}.`,
             },
           ],
         },
@@ -110,6 +120,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       order,
       paymentMode: payment.mode,
+      walletType: body.walletType,
       stripeConfigured: paymentConfigured(),
     });
   } catch (error) {

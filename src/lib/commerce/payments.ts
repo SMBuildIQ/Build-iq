@@ -1,10 +1,21 @@
 import Stripe from "stripe";
 
+export function paymentConfigured() {
+  return Boolean(process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+}
+
+export function publishableKey() {
+  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
+}
+
+export type WalletType = "apple_pay" | "google_pay" | "card" | "mock_apple_pay" | "mock_google_pay" | "mock_card";
+
 export type PaymentResult = {
   mode: "live" | "mock";
   paymentIntentId: string;
   clientSecret?: string | null;
-  status: "succeeded" | "requires_payment_method" | "processing";
+  status: "succeeded" | "requires_payment_method" | "processing" | "requires_action";
+  walletType?: string | null;
 };
 
 function getStripe() {
@@ -13,32 +24,111 @@ function getStripe() {
   return new Stripe(key);
 }
 
-/** Charge an order — uses Stripe when STRIPE_SECRET_KEY is set, otherwise mock success */
-export async function processPayment(input: {
+/** Create a PaymentIntent for Apple Pay / Google Pay / card confirmation on the client */
+export async function createWalletPaymentIntent(input: {
   amountCents: number;
   currency?: string;
   orderNumber: string;
   customerEmail?: string;
-  paymentMethodId?: string;
 }): Promise<PaymentResult> {
   const stripe = getStripe();
-
   if (!stripe) {
     return {
       mode: "mock",
       paymentIntentId: `pi_mock_${input.orderNumber.replace(/[^a-zA-Z0-9]/g, "")}`,
-      status: "succeeded",
+      clientSecret: `mock_secret_${input.orderNumber}`,
+      status: "requires_payment_method",
     };
   }
 
   const intent = await stripe.paymentIntents.create({
     amount: input.amountCents,
     currency: input.currency || "usd",
+    // Enables Apple Pay + Google Pay via Payment Request API when domain is verified
     automatic_payment_methods: { enabled: true },
-    metadata: { orderNumber: input.orderNumber },
+    metadata: {
+      orderNumber: input.orderNumber,
+      app: "buildiq",
+    },
+    receipt_email: input.customerEmail,
+  });
+
+  return {
+    mode: "live",
+    paymentIntentId: intent.id,
+    clientSecret: intent.client_secret,
+    status: "requires_payment_method",
+  };
+}
+
+/** Confirm / finalize payment after wallet authorization */
+export async function processPayment(input: {
+  amountCents: number;
+  currency?: string;
+  orderNumber: string;
+  customerEmail?: string;
+  paymentMethodId?: string;
+  paymentIntentId?: string;
+  walletType?: WalletType;
+}): Promise<PaymentResult> {
+  const stripe = getStripe();
+  const walletType = input.walletType || "card";
+
+  // Mock Apple Pay / Google Pay / card when Stripe is not configured
+  if (!stripe || walletType.startsWith("mock_")) {
+    return {
+      mode: "mock",
+      paymentIntentId:
+        input.paymentIntentId ||
+        `pi_mock_${walletType}_${input.orderNumber.replace(/[^a-zA-Z0-9]/g, "")}`,
+      status: "succeeded",
+      walletType,
+    };
+  }
+
+  // Confirm an existing PaymentIntent (from wallet Payment Request flow)
+  if (input.paymentIntentId) {
+    let intent = await stripe.paymentIntents.retrieve(input.paymentIntentId);
+
+    if (intent.status === "requires_payment_method" && input.paymentMethodId) {
+      intent = await stripe.paymentIntents.confirm(input.paymentIntentId, {
+        payment_method: input.paymentMethodId,
+        return_url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000/cart",
+      });
+    }
+
+    if (intent.status === "succeeded") {
+      return {
+        mode: "live",
+        paymentIntentId: intent.id,
+        clientSecret: intent.client_secret,
+        status: "succeeded",
+        walletType,
+      };
+    }
+
+    return {
+      mode: "live",
+      paymentIntentId: intent.id,
+      clientSecret: intent.client_secret,
+      status: intent.status === "requires_action" ? "requires_action" : "requires_payment_method",
+      walletType,
+    };
+  }
+
+  // Create + optionally confirm in one step
+  const intent = await stripe.paymentIntents.create({
+    amount: input.amountCents,
+    currency: input.currency || "usd",
+    automatic_payment_methods: { enabled: true },
+    metadata: { orderNumber: input.orderNumber, walletType },
     receipt_email: input.customerEmail,
     ...(input.paymentMethodId
-      ? { payment_method: input.paymentMethodId, confirm: true, return_url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000" }
+      ? {
+          payment_method: input.paymentMethodId,
+          confirm: true,
+          return_url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000/cart",
+        }
       : {}),
   });
 
@@ -47,9 +137,6 @@ export async function processPayment(input: {
     paymentIntentId: intent.id,
     clientSecret: intent.client_secret,
     status: intent.status === "succeeded" ? "succeeded" : "requires_payment_method",
+    walletType,
   };
-}
-
-export function paymentConfigured() {
-  return Boolean(process.env.STRIPE_SECRET_KEY);
 }

@@ -19,9 +19,11 @@ Builders can order takeoff packages from **Shop**:
 
 Windows · Doors · Lumber · Trusses · Cabinetry · Masonry Stone · Door Hardware · Millwork
 
-Flow: add to **Cart** → checkout/pay (Stripe when `STRIPE_SECRET_KEY` is set, otherwise mock) → **Track** sequence:
+Flow: add to **Cart** → checkout with **Apple Pay**, **Google Pay**, or card (Stripe when keys are set; otherwise demo wallets) → **Track** sequence:
 
 Order received → Payment confirmed → Takeoff review → Procurement → Fabrication/staging → Shipped → Delivered
+
+For live Apple Pay, verify your domain in the [Stripe Apple Pay settings](https://dashboard.stripe.com/settings/payments/apple_pay). Google Pay works automatically with Stripe in supported Chrome / Android browsers.
 
 ## For your builders
 

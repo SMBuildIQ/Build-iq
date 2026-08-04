@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { formatCurrencyExact } from "@/lib/format";
+import { walletLabel } from "@/lib/commerce/wallet-label";
 
 type SequenceStep = { step: string; label: string; detail: string };
 
@@ -114,7 +115,7 @@ export default function OrderDetailPage() {
       <h1 className="mt-1 font-display text-3xl font-semibold">Tracking</h1>
       <p className="mt-1 text-sm text-[var(--sage)]">
         {formatCurrencyExact(order.total)} · {order.paymentStatus}
-        {order.paymentMethod ? ` · ${order.paymentMethod}` : ""}
+        {order.paymentMethod ? ` · ${walletLabel(order.paymentMethod)}` : ""}
       </p>
 
       <ol className="mt-8 space-y-0">
