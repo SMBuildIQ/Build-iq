@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { join } from "node:path";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RedisModule } from "./redis/redis.module";
 import { StorageModule } from "./storage/storage.module";
@@ -14,7 +15,14 @@ import { CabinetryModule } from "./cabinetry/cabinetry.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [
+        join(__dirname, "..", ".env"),
+        join(process.cwd(), "apps", "api", ".env"),
+        ".env",
+      ],
+    }),
     PrismaModule,
     RedisModule,
     StorageModule,
