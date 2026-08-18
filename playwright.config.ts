@@ -25,6 +25,7 @@ export default defineConfig({
       DATABASE_URL: "file:./e2e.db",
       AUTH_SECRET: "e2e-test-secret-at-least-32-characters-long",
       AI_PROVIDER: "mock",
+      NEXT_PUBLIC_APP_URL: "http://localhost:3211",
     },
   },
 });
