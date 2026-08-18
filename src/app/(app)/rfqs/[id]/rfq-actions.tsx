@@ -152,7 +152,7 @@ export function ManualQuoteForm({
     <form onSubmit={onSubmit} className="mt-2 flex flex-col gap-2 rounded-md border border-gray-200 p-3">
       <label className="cursor-pointer self-start rounded-md border border-gray-300 px-2 py-1 text-xs font-medium">
         {extracting ? "Extracting…" : "Upload quote document (AI-assisted)"}
-        <input type="file" className="hidden" onChange={onUploadAndExtract} disabled={extracting} accept=".csv,.pdf,.png,.jpg,.jpeg" />
+        <input type="file" className="hidden" onChange={onUploadAndExtract} disabled={extracting} accept=".csv,.pdf,.png,.jpg,.jpeg,.xlsx" />
       </label>
       {extractNote && <p className="text-xs text-gray-500">{extractNote}</p>}
 

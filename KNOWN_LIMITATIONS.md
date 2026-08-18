@@ -9,16 +9,19 @@ the app or docs — this is the canonical list.
   to the server console instead of silently pretending to send. The supplier portal link always works regardless.
 - **PO document** — rendered as a print-friendly HTML page (`window.print()` → "Save as PDF" in any browser)
   rather than a generated PDF binary. No `pdfkit`/binary generation pipeline is wired up yet.
-- **Quote document extraction** — real for CSV (deterministic parsing, no AI call) and PDF/image (a genuine
-  Anthropic vision integration in `src/lib/ai/quoteDocumentExtraction.ts`), both wired through
+- **Quote document extraction** — real for CSV and Excel .xlsx (both deterministic parsing via a shared
+  row-grid extractor, no AI call — .xlsx parsing uses `exceljs`) and PDF/image (a genuine Anthropic vision
+  integration in `src/lib/ai/quoteDocumentExtraction.ts`), all wired through
   `POST /rfq-suppliers/:id/quotes/extract` → prefilled review form → `POST /rfq-suppliers/:id/quotes` (which
   writes `QuoteExtractionField` rows with confidence and source-document traceability once the buyer has
-  reviewed and submitted). Two real gaps: **Excel (.xlsx) is not parsed** — only CSV, PDF, and images — and the
-  **PDF/image vision path has not been exercised against the live Anthropic API in this session** (no
-  `ANTHROPIC_API_KEY` available here); it's covered by unit tests using a fake vision-capable `AIProvider`, and
-  under the default mock provider it honestly reports extraction as unavailable rather than fabricating values.
-  Email-attachment ingestion isn't a distinct code path — an emailed PDF/CSV attachment is handled the same as
-  any other upload once saved to disk.
+  reviewed and submitted). Two real gaps: **legacy binary .xls (pre-2007 format) is not parsed** — it's a
+  different, non-OOXML binary layout the .xlsx parser can't read, so it's honestly reported as unsupported
+  rather than misparsed or routed to vision (which doesn't handle spreadsheets either) — and the **PDF/image
+  vision path has not been exercised against the live Anthropic API in this session** (no `ANTHROPIC_API_KEY`
+  available here); it's covered by unit tests using a fake vision-capable `AIProvider`, and under the default
+  mock provider it honestly reports extraction as unavailable rather than fabricating values. Email-attachment
+  ingestion isn't a distinct code path — an emailed PDF/CSV/xlsx attachment is handled the same as any other
+  upload once saved to disk.
 - **Invoice entry** — recorded manually by a buyer (`InvoiceForm`), not extracted from an uploaded invoice
   document. The three-way matching logic itself (`src/lib/invoiceMatching.ts`) is real and tested — see
   MODULE_STATUS.md — only the ingestion path is manual.

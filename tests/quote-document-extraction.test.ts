@@ -4,9 +4,17 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../src/lib/db";
 import { hashPassword } from "../src/lib/auth/password";
 import { createOrganizationWithOwner } from "../src/lib/org/bootstrap";
-import { parseCsvQuote, extractQuoteFromDocument } from "../src/lib/ai/quoteDocumentExtraction";
+import ExcelJS from "exceljs";
+import { parseCsvQuote, parseXlsxQuote, extractQuoteFromDocument } from "../src/lib/ai/quoteDocumentExtraction";
 import { __setAIProviderForTests } from "../src/lib/ai/provider";
 import type { AIProvider, AICompletionResult } from "../src/lib/ai/types";
+
+async function buildXlsxQuote(rows: (string | number)[][]): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Quote");
+  for (const row of rows) sheet.addRow(row);
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
 
 async function makeOrgId(): Promise<string> {
   const suffix = randomUUID().slice(0, 8);
@@ -35,6 +43,59 @@ test("parseCsvQuote returns empty (not fabricated) fields for malformed input", 
   assert.deepEqual(parseCsvQuote("").lineItems, []);
   assert.deepEqual(parseCsvQuote("just,a,header\n").lineItems, []);
   assert.deepEqual(parseCsvQuote("wrong,columns,here\n1,2,3\n").lineItems, []);
+});
+
+test("parseXlsxQuote extracts line items deterministically from a real workbook", async () => {
+  const bytes = await buildXlsxQuote([
+    ["sku", "description", "quantity", "unit_price", "freight", "lead_time_days", "payment_terms"],
+    ["WID-1", "Widget", 10, 9.5, 25, 5, "Net 30"],
+    ["GAD-2", "Gadget", 4, 20, "", "", ""],
+  ]);
+  const fields = await parseXlsxQuote(bytes);
+  assert.equal(fields.lineItems.length, 2);
+  assert.equal(fields.lineItems[0].sku, "WID-1");
+  assert.equal(fields.lineItems[0].unitPrice, 9.5);
+  assert.equal(fields.lineItems[0].confidence, 1);
+  assert.equal(fields.freight, 25);
+  assert.equal(fields.leadTimeDays, 5);
+  assert.equal(fields.paymentTerms, "Net 30");
+});
+
+test("parseXlsxQuote returns empty (not fabricated) fields for malformed or non-workbook input", async () => {
+  assert.deepEqual((await parseXlsxQuote(Buffer.from("not a real xlsx"))).lineItems, []);
+  assert.deepEqual((await parseXlsxQuote(await buildXlsxQuote([["just", "a", "header"]]))).lineItems, []);
+  assert.deepEqual((await parseXlsxQuote(await buildXlsxQuote([["wrong", "columns", "here"], [1, 2, 3]]))).lineItems, []);
+});
+
+test("extractQuoteFromDocument parses .xlsx without needing an AI provider at all", async () => {
+  const orgId = await makeOrgId();
+  const bytes = await buildXlsxQuote([
+    ["description", "quantity", "unit_price"],
+    ["Widget", 10, 9.5],
+  ]);
+  const result = await extractQuoteFromDocument({
+    organizationId: orgId,
+    documentId: randomUUID(),
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    base64: bytes.toString("base64"),
+  });
+  assert.equal(result.available, true);
+  assert.equal(result.aiActivityLogId, null); // no AI call was made
+  assert.equal(result.fields!.lineItems.length, 1);
+});
+
+test("extractQuoteFromDocument honestly reports legacy .xls as unsupported rather than misparsing it", async () => {
+  const orgId = await makeOrgId();
+  const result = await extractQuoteFromDocument({
+    organizationId: orgId,
+    documentId: randomUUID(),
+    mimeType: "application/vnd.ms-excel",
+    base64: Buffer.from("not a real xls").toString("base64"),
+  });
+  assert.equal(result.available, false);
+  assert.match(result.reason ?? "", /\.xls/);
+  assert.equal(result.fields, null);
+  assert.equal(result.aiActivityLogId, null); // never routed to vision
 });
 
 test("extractQuoteFromDocument parses CSV without needing an AI provider at all", async () => {
