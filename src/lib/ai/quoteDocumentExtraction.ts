@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+import { parseCsvRows, parseXlsxRows } from "@/lib/documents/tabularParse";
 import { getAIProvider } from "./provider";
 import { logAIActivity } from "./log";
 
@@ -45,19 +45,13 @@ const EMPTY_FIELDS: ExtractedQuoteFields = {
 };
 
 /**
- * CSV is genuinely structured data, not a language-understanding problem —
- * this is a real, deterministic parser, not an AI heuristic, and every value
- * it produces is exact (confidence 1.0) because there's no interpretation
- * involved. Expected columns (header row, order-independent, case-insensitive):
+ * Shared column semantics for both CSV and Excel — parseCsvRows/parseXlsxRows
+ * (src/lib/documents/tabularParse.ts) turn either format into a grid of
+ * string cells, and once it's a grid the header-matching/row-parsing logic is
+ * identical. Expected columns (header row, order-independent, case-insensitive):
  * sku (optional), description, quantity, unit_price / unitprice, freight
  * (optional, on any row — last one wins), lead_time_days (optional),
  * payment_terms (optional).
- */
-/**
- * Shared column semantics for both CSV and Excel: each format is just a
- * different way of getting to a grid of string cells, and once it's a grid
- * the header-matching/row-parsing logic is identical. Same expected columns
- * as documented on parseCsvQuote/parseXlsxQuote below.
  */
 function extractFieldsFromRows(rows: string[][]): ExtractedQuoteFields {
   const dataRows = rows.filter((r) => r.some((c) => c.trim().length > 0));
@@ -106,57 +100,18 @@ function extractFieldsFromRows(rows: string[][]): ExtractedQuoteFields {
  * CSV is genuinely structured data, not a language-understanding problem —
  * this is a real, deterministic parser, not an AI heuristic, and every value
  * it produces is exact (confidence 1.0) because there's no interpretation
- * involved. Expected columns (header row, order-independent, case-insensitive):
- * sku (optional), description, quantity, unit_price / unitprice, freight
- * (optional, on any row — last one wins), lead_time_days (optional),
- * payment_terms (optional).
+ * involved.
  */
 export function parseCsvQuote(text: string): ExtractedQuoteFields {
-  const rows = text
-    .split(/\r?\n/)
-    .filter((l) => l.trim().length > 0)
-    .map((line) => line.split(",").map((c) => c.trim()));
-  return extractFieldsFromRows(rows);
-}
-
-function excelCellText(value: ExcelJS.CellValue): string {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "object") {
-    if ("text" in value && typeof value.text === "string") return value.text; // hyperlink
-    if ("result" in value) return excelCellText((value as { result: ExcelJS.CellValue }).result); // formula
-    if ("richText" in value && Array.isArray(value.richText)) {
-      return value.richText.map((r) => r.text).join("");
-    }
-    if (value instanceof Date) return value.toISOString();
-  }
-  return String(value).trim();
+  return extractFieldsFromRows(parseCsvRows(text));
 }
 
 /**
  * Same deterministic, no-AI parsing as CSV — an .xlsx quote is structured
- * data, not a document a vision model should have to read. Uses the first
- * worksheet only and the same expected header columns as parseCsvQuote.
+ * data, not a document a vision model should have to read.
  */
 export async function parseXlsxQuote(bytes: Buffer): Promise<ExtractedQuoteFields> {
-  const workbook = new ExcelJS.Workbook();
-  try {
-    await workbook.xlsx.load(bytes as unknown as ExcelJS.Buffer);
-  } catch {
-    return EMPTY_FIELDS;
-  }
-  const worksheet = workbook.worksheets[0];
-  if (!worksheet) return EMPTY_FIELDS;
-
-  const rows: string[][] = [];
-  worksheet.eachRow((row) => {
-    const cells: string[] = [];
-    row.eachCell({ includeEmpty: true }, (cell) => {
-      cells.push(excelCellText(cell.value));
-    });
-    rows.push(cells);
-  });
-
-  return extractFieldsFromRows(rows);
+  return extractFieldsFromRows(await parseXlsxRows(bytes));
 }
 
 const PROMPT_VERSION = "quote-document-extraction-v1";

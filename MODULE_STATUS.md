@@ -43,8 +43,11 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 **Invoice three-way matching** — FULL for the matching logic itself: `runThreeWayMatch()` compares PO vs. receipt
 vs. invoice and detects price differences, quantity differences, unauthorized freight, unexpected tax, items not
 received, duplicate invoices, and unexplained additional fees — including the brief's exact worked example
-(freight billed despite a freight-included quote). PARTIAL overall: invoice entry is manual (no supplier invoice
-upload/extraction pipeline), and there's no dedicated invoices list UI beyond the per-PO view.
+(freight billed despite a freight-included quote). Invoice entry now also supports upload + AI-assisted extraction
+(`src/lib/ai/invoiceDocumentExtraction.ts`, mirroring the quote extraction pipeline) for CSV, .xlsx, and PDF/image
+(vision-capable providers only) — the buyer still reviews and submits the prefilled form, with extracted values
+recorded to `InvoiceExtractionField` for traceability, same human-verification pattern as quotes. PARTIAL overall:
+no dedicated invoices list UI beyond the per-PO view.
 
 **Purchasing-intelligence price benchmarking (brief §25)** — FULL for what's built: `recomputePriceBenchmarks()`
 (`src/lib/priceBenchmark.ts`) rebuilds an org's `PriceBenchmark` rows from real, committed `PurchaseOrderLineItem`

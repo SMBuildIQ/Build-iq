@@ -22,9 +22,14 @@ the app or docs — this is the canonical list.
   mock provider it honestly reports extraction as unavailable rather than fabricating values. Email-attachment
   ingestion isn't a distinct code path — an emailed PDF/CSV/xlsx attachment is handled the same as any other
   upload once saved to disk.
-- **Invoice entry** — recorded manually by a buyer (`InvoiceForm`), not extracted from an uploaded invoice
-  document. The three-way matching logic itself (`src/lib/invoiceMatching.ts`) is real and tested — see
-  MODULE_STATUS.md — only the ingestion path is manual.
+- **Invoice entry** — a buyer can now upload a supplier invoice (CSV, .xlsx, PDF/image) and have it extracted via
+  `src/lib/ai/invoiceDocumentExtraction.ts` (CSV/.xlsx deterministic, no AI call; PDF/image via a vision-capable
+  provider), prefilling `InvoiceForm` for review — same "extraction previews, the buyer's submit is what
+  persists and is the human-verification step" pattern as quotes, recorded to `InvoiceExtractionField`. Manual
+  entry (no document at all) still works exactly as before. Same two real gaps as quote extraction: legacy .xls
+  is not parsed, and the PDF/image vision path is untested against the live Anthropic API in this session (no
+  `ANTHROPIC_API_KEY` here). The three-way matching logic itself (`src/lib/invoiceMatching.ts`) is real and
+  tested — see MODULE_STATUS.md.
 - **Document storage** — local disk (`uploads/<organizationId>/...`), not durable across instances or redeploys.
   Swapping to an S3-compatible bucket only touches `src/lib/documents/storage.ts`; `storageKey` never encodes a
   local-filesystem assumption beyond that module.

@@ -12,8 +12,21 @@ const schema = z.object({
   freight: z.number().min(0).optional().nullable(),
   tax: z.number().min(0).optional().nullable(),
   lineItems: z
-    .array(z.object({ purchaseOrderLineItemId: z.string(), quantity: z.number().min(0), unitPrice: z.number().min(0) }))
+    .array(
+      z.object({
+        purchaseOrderLineItemId: z.string(),
+        quantity: z.number().min(0),
+        unitPrice: z.number().min(0),
+        // Present only when this line item's price was pre-filled from AI
+        // document extraction — recorded as an InvoiceExtractionField so the
+        // value stays traceable to its source document and confidence,
+        // regardless of whether the buyer changed it before submitting.
+        extractedUnitPrice: z.number().min(0).optional(),
+        extractedConfidence: z.number().min(0).max(1).optional(),
+      })
+    )
     .min(1),
+  extractionDocumentId: z.string().optional(),
 });
 
 export const GET = withAuth<{ id: string }>(async (_req, ctx, { id }) => {
@@ -46,6 +59,12 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
   if (input.lineItems.some((li) => !validIds.has(li.purchaseOrderLineItemId))) {
     throw new ValidationError("Line items must belong to this purchase order");
   }
+  if (input.extractionDocumentId) {
+    const doc = await prisma.document.findFirst({
+      where: { id: input.extractionDocumentId, organizationId: ctx.organizationId, entityType: "purchase_order", entityId: id },
+    });
+    if (!doc) throw new ValidationError("extractionDocumentId not found for this purchase order");
+  }
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -68,7 +87,31 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
         }),
       },
     },
+    include: { lineItems: true },
   });
+
+  if (input.extractionDocumentId) {
+    const extractedItems = input.lineItems.filter((li) => li.extractedUnitPrice !== undefined);
+    if (extractedItems.length > 0) {
+      await prisma.invoiceExtractionField.createMany({
+        data: extractedItems.map((li) => {
+          const invoiceLineItem = invoice.lineItems.find((l) => l.purchaseOrderLineItemId === li.purchaseOrderLineItemId)!;
+          return {
+            invoiceId: invoice.id,
+            documentId: input.extractionDocumentId!,
+            fieldPath: `lineItems[${invoiceLineItem.id}].unitPrice`,
+            extractedValue: String(li.extractedUnitPrice),
+            confidence: li.extractedConfidence ?? 0.5,
+            // The buyer reviewing and submitting this form *is* the human
+            // verification step this extraction requires for low-confidence
+            // values (same rule as quote extraction, brief §13).
+            verifiedByUserId: ctx.userId,
+            verifiedAt: new Date(),
+          };
+        }),
+      });
+    }
+  }
 
   await runThreeWayMatch(invoice.id);
 
@@ -94,7 +137,7 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
     action: "invoice.record",
     entityType: "Invoice",
     entityId: invoice.id,
-    after: { amount: input.amount, status: result.status, exceptionCount: result.matchExceptions.length },
+    after: { amount: input.amount, status: result.status, exceptionCount: result.matchExceptions.length, extractionDocumentId: input.extractionDocumentId },
   });
 
   return NextResponse.json({ invoice: result }, { status: 201 });

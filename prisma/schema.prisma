@@ -780,8 +780,28 @@ model Invoice {
   lineItems     InvoiceLineItem[]
   matchExceptions InvoiceMatchException[]
   documents     Document[] @relation("InvoiceDocuments")
+  extractedFields InvoiceExtractionField[]
 
   @@index([organizationId, status])
+}
+
+// Mirrors QuoteExtractionField (brief §13's human-verification requirement
+// applied to invoice document extraction, added alongside it).
+model InvoiceExtractionField {
+  id              String   @id @default(uuid())
+  invoiceId       String
+  documentId      String?
+  fieldPath       String   // e.g. "lineItems[<id>].unitPrice"
+  extractedValue  String
+  confidence      Float
+  verifiedByUserId String?
+  verifiedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  invoice  Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id])
+
+  @@index([invoiceId])
 }
 
 model InvoiceLineItem {
@@ -965,6 +985,7 @@ model Document {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   quoteExtractions QuoteExtractionField[]
+  invoiceExtractions InvoiceExtractionField[]
   supplier         Supplier?      @relation("SupplierDocuments", fields: [supplierRelId], references: [id])
   supplierRelId    String?
   quote            Quote?         @relation("QuoteDocuments", fields: [quoteRelId], references: [id])
