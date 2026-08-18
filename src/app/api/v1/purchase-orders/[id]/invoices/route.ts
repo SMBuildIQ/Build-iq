@@ -5,6 +5,7 @@ import { withAuth, NotFoundError, ValidationError } from "@/lib/api/handler";
 import { requirePermission } from "@/lib/permissions/check";
 import { runThreeWayMatch } from "@/lib/invoiceMatching";
 import { writeAuditLog } from "@/lib/audit";
+import { computeRealizedSavings } from "@/lib/savings";
 
 const schema = z.object({
   supplierInvoiceNumber: z.string().optional().nullable(),
@@ -123,7 +124,7 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
       where: { purchaseRequestId: po.purchaseRequestId },
       data: {
         finalInvoiceAmount: input.amount,
-        realizedSavings: savings.initialQuoteTotal - input.amount,
+        realizedSavings: computeRealizedSavings(savings.initialQuoteTotal, input.amount),
       },
     });
   }

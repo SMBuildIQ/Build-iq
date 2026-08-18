@@ -5,6 +5,7 @@ import { withAuth, NotFoundError, ValidationError } from "@/lib/api/handler";
 import { requirePermission } from "@/lib/permissions/check";
 import { evaluatePurchasePolicy, createApprovalRequest } from "@/lib/policy/engine";
 import { writeAuditLog } from "@/lib/audit";
+import { computeInitialSavingsFields } from "@/lib/savings";
 
 const schema = z.object({ quoteId: z.string() });
 
@@ -30,10 +31,14 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
   const allQuotes = await prisma.quote.findMany({
     where: { rfqSupplier: { rfq: { purchaseRequestId: id } }, totalLandedCost: { not: null } },
   });
-  const initialQuoteTotal = Math.min(...allQuotes.map((q) => q.totalLandedCost!));
 
   const acceptedNegotiation = quote.negotiations.find((n) => n.status === "accepted");
-  const finalAmount = acceptedNegotiation?.resultPrice ?? quote.totalLandedCost;
+  const savingsFields = computeInitialSavingsFields({
+    qualifiedQuoteTotals: allQuotes.map((q) => q.totalLandedCost!),
+    selectedQuoteTotal: quote.totalLandedCost,
+    acceptedNegotiationResultPrice: acceptedNegotiation?.resultPrice ?? null,
+  });
+  const finalAmount = savingsFields.finalApprovedPrice;
 
   const evaluation = await evaluatePurchasePolicy({
     organizationId: ctx.organizationId,
@@ -46,22 +51,8 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
     await tx.quote.update({ where: { id: quote.id }, data: { status: "selected" } });
     await tx.savingsRecord.upsert({
       where: { purchaseRequestId: id },
-      create: {
-        organizationId: ctx.organizationId,
-        purchaseRequestId: id,
-        initialQuoteTotal,
-        lowestQualifiedQuote: initialQuoteTotal,
-        negotiatedQuoteTotal: acceptedNegotiation ? finalAmount : null,
-        finalApprovedPrice: finalAmount,
-        negotiatedSavings: acceptedNegotiation ? initialQuoteTotal - finalAmount : null,
-      },
-      update: {
-        initialQuoteTotal,
-        lowestQualifiedQuote: initialQuoteTotal,
-        negotiatedQuoteTotal: acceptedNegotiation ? finalAmount : null,
-        finalApprovedPrice: finalAmount,
-        negotiatedSavings: acceptedNegotiation ? initialQuoteTotal - finalAmount : null,
-      },
+      create: { organizationId: ctx.organizationId, purchaseRequestId: id, ...savingsFields },
+      update: savingsFields,
     });
     await tx.purchaseRequest.update({
       where: { id },

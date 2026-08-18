@@ -28,7 +28,7 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 19 | Purchase order generation | FULL | Generated from an approved request + selected quote |
 | 20 | Order tracking | FULL | Full status lifecycle with timeline |
 | 21 | Basic receiving | FULL | Quantity received/damaged/missing per line item |
-| 22 | Savings tracking | FULL | `SavingsRecord` populated at quote selection and again at invoicing; negotiated/benchmark/realized kept distinct |
+| 22 | Savings tracking | FULL | `SavingsRecord` populated at quote selection and again at invoicing; negotiated/benchmark/realized kept distinct. The math was extracted into `src/lib/savings.ts` (`computeInitialSavingsFields`, `computeRealizedSavings`) so it's independently testable — `tests/savings.test.ts` (6 tests) covers it directly, including the case where a negotiated price still shows negative savings against the market floor it didn't beat |
 | 23 | Dashboard/analytics | PARTIAL | Real counts, verified-savings sum, and a "purchasing insights" panel that surfaces unresponsive suppliers, invoice discrepancies, stale approvals, overdue RFQs, and now above-historical-pricing purchases, all from real queries (`src/lib/insights.ts`) — empty until there's data to support it |
 | 24 | Notifications | FULL | In-app bell (poll-based), role- and user-targeted, fired on approval-required/quote-received/invoice-discrepancy |
 | 25 | Audit logs | FULL | Every mutation writes AuditLog; viewer at `/settings/audit-log` |
