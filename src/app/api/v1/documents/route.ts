@@ -14,6 +14,7 @@ import { writeAuditLog } from "@/lib/audit";
 const ENTITY_VIEW_PERMISSION: Record<DocumentEntityType, Parameters<typeof requirePermission>[1]> = {
   purchase_request: "purchase_request:view",
   rfq: "rfq:view",
+  rfq_supplier: "rfq:create",
   quote: "quote:review",
   purchase_order: "purchase_order:view",
   receipt: "purchase_order:view",

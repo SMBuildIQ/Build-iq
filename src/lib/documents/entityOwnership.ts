@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 export const DOCUMENT_ENTITY_TYPES = [
   "purchase_request",
   "rfq",
+  "rfq_supplier",
   "quote",
   "purchase_order",
   "receipt",
@@ -30,6 +31,8 @@ export async function verifyEntityOwnership(
       return !!(await prisma.purchaseRequest.findFirst({ where: { id: entityId, organizationId } }));
     case "rfq":
       return !!(await prisma.rFQ.findFirst({ where: { id: entityId, organizationId } }));
+    case "rfq_supplier":
+      return !!(await prisma.rFQSupplier.findFirst({ where: { id: entityId, rfq: { organizationId } } }));
     case "quote":
       return !!(await prisma.quote.findFirst({ where: { id: entityId, rfqSupplier: { rfq: { organizationId } } } }));
     case "purchase_order":

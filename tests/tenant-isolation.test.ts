@@ -69,6 +69,27 @@ test("a supplier created in org A is not reachable via org B's tenant-scoped que
   assert.equal(crossTenant, null);
 });
 
+test("verifyEntityOwnership rejects an rfq_supplier id (quote document upload target) from a different org", async () => {
+  const { randomBytes } = await import("node:crypto");
+  const { verifyEntityOwnership } = await import("../src/lib/documents/entityOwnership");
+  const orgA = await makeOrg("rfqsup-tenant-a");
+  const orgB = await makeOrg("rfqsup-tenant-b");
+
+  const supplier = await prisma.supplier.create({ data: { organizationId: orgA.organization.id, name: "Org A Supplier" } });
+  const pr = await prisma.purchaseRequest.create({
+    data: { organizationId: orgA.organization.id, requestNumber: `PR-${randomUUID().slice(0, 8)}`, requesterId: orgA.user.id, title: "t", status: "rfq_active" },
+  });
+  const rfq = await prisma.rFQ.create({
+    data: { organizationId: orgA.organization.id, purchaseRequestId: pr.id, rfqNumber: `RFQ-${randomUUID().slice(0, 8)}`, status: "sent" },
+  });
+  const rfqSupplier = await prisma.rFQSupplier.create({
+    data: { rfqId: rfq.id, supplierId: supplier.id, secureToken: randomBytes(12).toString("hex") },
+  });
+
+  assert.equal(await verifyEntityOwnership(orgA.organization.id, "rfq_supplier", rfqSupplier.id), true);
+  assert.equal(await verifyEntityOwnership(orgB.organization.id, "rfq_supplier", rfqSupplier.id), false);
+});
+
 test("verifyEntityOwnership rejects a purchase request id that belongs to a different org", async () => {
   const { verifyEntityOwnership } = await import("../src/lib/documents/entityOwnership");
   const orgA = await makeOrg("doc-tenant-a");

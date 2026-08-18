@@ -18,8 +18,8 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 9 | RFQ creation | FULL | Generated from a purchase request's line items, editable instructions |
 | 10 | RFQ email distribution | PARTIAL | Real send via Resend when configured; logs instead of sending otherwise. Portal link always works |
 | 11 | Supplier response portal | FULL | Token-authenticated, no account required, structured pricing/freight/terms entry |
-| 12 | Quote PDF/Excel upload | NONE | Manual entry form instead — see KNOWN_LIMITATIONS.md |
-| 13 | AI quote extraction | NONE | `QuoteExtractionField` modeled, not populated — manual entry is the current path |
+| 12 | Quote PDF/Excel/CSV upload | PARTIAL | Upload + extraction wired for CSV (real, deterministic parser) and PDF/image (real Anthropic vision path); Excel (.xlsx) is not parsed yet — see KNOWN_LIMITATIONS.md |
+| 13 | AI quote extraction | PARTIAL | `src/lib/ai/quoteDocumentExtraction.ts`: CSV parses without any AI call; PDF/image extraction is a real Claude vision integration, honestly reports "unavailable" under the mock provider (untested live in this session — no ANTHROPIC_API_KEY here, see KNOWN_LIMITATIONS.md) rather than fabricating data. `QuoteExtractionField` is populated with confidence + source-document traceability, written only once a human reviews/submits the prefilled form (brief §13's verification requirement) |
 | 14 | Quote normalization | FULL | Total landed cost computed from product total + freight (portal and manual entry both) |
 | 15 | Side-by-side comparison | FULL | `/purchases/[id]/compare` |
 | 16 | AI purchasing recommendation | FULL | Explainable rationale, mock heuristic + Anthropic-backed, logged to AIActivityLog |

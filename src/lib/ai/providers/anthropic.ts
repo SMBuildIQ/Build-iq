@@ -5,9 +5,12 @@ import type { AICompletionRequest, AICompletionResult, AIProvider } from "../typ
 const USD_PER_1M_INPUT_TOKENS = 3;
 const USD_PER_1M_OUTPUT_TOKENS = 15;
 
+const SUPPORTED_DOCUMENT_MIME_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
+
 export class AnthropicProvider implements AIProvider {
   readonly name = "anthropic";
   readonly model: string;
+  readonly supportsDocuments = true;
   private apiKey: string;
 
   constructor(apiKey: string, model: string) {
@@ -16,6 +19,22 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async complete(req: AICompletionRequest): Promise<AICompletionResult> {
+    let content: string | Array<Record<string, unknown>> = req.prompt;
+
+    if (req.document) {
+      if (!SUPPORTED_DOCUMENT_MIME_TYPES.has(req.document.mimeType)) {
+        throw new Error(`Unsupported document type for vision extraction: ${req.document.mimeType}`);
+      }
+      const blockType = req.document.mimeType === "application/pdf" ? "document" : "image";
+      content = [
+        {
+          type: blockType,
+          source: { type: "base64", media_type: req.document.mimeType, data: req.document.base64 },
+        },
+        { type: "text", text: req.prompt },
+      ];
+    }
+
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -27,7 +46,7 @@ export class AnthropicProvider implements AIProvider {
         model: this.model,
         max_tokens: req.maxTokens ?? 1024,
         system: req.system,
-        messages: [{ role: "user", content: req.prompt }],
+        messages: [{ role: "user", content }],
       }),
     });
 

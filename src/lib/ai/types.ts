@@ -6,6 +6,10 @@ export interface AICompletionRequest {
   system: string;
   prompt: string;
   maxTokens?: number;
+  /** Attach a document (PDF or image) for providers that support vision input.
+   * Providers without vision support should throw rather than silently
+   * ignoring it — see MockProvider. */
+  document?: { base64: string; mimeType: string };
 }
 
 export interface AICompletionResult {
@@ -18,5 +22,7 @@ export interface AICompletionResult {
 export interface AIProvider {
   readonly name: string;
   readonly model: string;
+  /** Whether this provider can process an AICompletionRequest.document (PDF/image vision). */
+  readonly supportsDocuments: boolean;
   complete(req: AICompletionRequest): Promise<AICompletionResult>;
 }

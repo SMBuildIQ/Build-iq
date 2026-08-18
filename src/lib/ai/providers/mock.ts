@@ -15,8 +15,15 @@ import type { AICompletionRequest, AICompletionResult, AIProvider } from "../typ
 export class MockProvider implements AIProvider {
   readonly name = "mock";
   readonly model = "mock-heuristic-v1";
+  readonly supportsDocuments = false;
 
   async complete(req: AICompletionRequest): Promise<AICompletionResult> {
+    if (req.document) {
+      throw new Error(
+        "MockProvider cannot process document/vision input — it has no real language understanding. " +
+          "Callers must check provider.supportsDocuments before attaching a document, not assume it will work."
+      );
+    }
     return {
       text: req.prompt,
       tokensIn: Math.ceil(req.prompt.length / 4),

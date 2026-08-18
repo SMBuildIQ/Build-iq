@@ -41,17 +41,78 @@ export function ManualQuoteForm({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [prices, setPrices] = useState<Record<string, string>>({});
+  const [confidence, setConfidence] = useState<Record<string, number>>({});
   const [freight, setFreight] = useState("");
   const [leadTimeDays, setLeadTimeDays] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("Net 30");
   const [submitting, setSubmitting] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [extractNote, setExtractNote] = useState<string | null>(null);
+  const [extractionDocumentId, setExtractionDocumentId] = useState<string | null>(null);
 
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="text-xs font-medium text-gray-500 underline">
         Enter quote manually (from PDF/Excel/email)
       </button>
+    );
+  }
+
+  async function onUploadAndExtract(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setExtracting(true);
+    setExtractNote(null);
+    setError(null);
+
+    const form = new FormData();
+    form.set("entityType", "rfq_supplier");
+    form.set("entityId", rfqSupplierId);
+    form.set("file", file);
+    const uploadRes = await fetch("/api/v1/documents", { method: "POST", body: form });
+    if (!uploadRes.ok) {
+      setExtracting(false);
+      const body = await uploadRes.json().catch(() => ({}));
+      setError(body.error ?? "Could not upload file");
+      return;
+    }
+    const { document } = await uploadRes.json();
+
+    const extractRes = await fetch(`/api/v1/rfq-suppliers/${rfqSupplierId}/quotes/extract`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ documentId: document.id }),
+    });
+    setExtracting(false);
+    if (!extractRes.ok) {
+      const body = await extractRes.json().catch(() => ({}));
+      setError(body.error ?? "Could not extract quote");
+      return;
+    }
+    const result = await extractRes.json();
+    if (!result.available) {
+      setExtractNote(result.reason ?? "Extraction unavailable — enter the quote manually below.");
+      return;
+    }
+
+    setExtractionDocumentId(result.documentId);
+    const newPrices: Record<string, string> = {};
+    const newConfidence: Record<string, number> = {};
+    for (const li of result.fields.lineItems) {
+      if (li.rfqLineItemId) {
+        newPrices[li.rfqLineItemId] = String(li.unitPrice);
+        newConfidence[li.rfqLineItemId] = li.confidence;
+      }
+    }
+    setPrices((prev) => ({ ...prev, ...newPrices }));
+    setConfidence(newConfidence);
+    if (result.fields.freight !== null) setFreight(String(result.fields.freight));
+    if (result.fields.leadTimeDays !== null) setLeadTimeDays(String(result.fields.leadTimeDays));
+    if (result.fields.paymentTerms) setPaymentTerms(result.fields.paymentTerms);
+    setExtractNote(
+      `Extracted ${result.fields.lineItems.length} line item(s) — review every value before saving, especially anything marked low confidence.`
     );
   }
 
@@ -63,11 +124,18 @@ export function ManualQuoteForm({
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        lineItems: lineItems.map((li) => ({ rfqLineItemId: li.id, unitPrice: Number(prices[li.id] ?? 0) })),
+        lineItems: lineItems.map((li) => ({
+          rfqLineItemId: li.id,
+          unitPrice: Number(prices[li.id] ?? 0),
+          ...(extractionDocumentId && confidence[li.id] !== undefined
+            ? { extractedUnitPrice: Number(prices[li.id] ?? 0), extractedConfidence: confidence[li.id] }
+            : {}),
+        })),
         freight: freight ? Number(freight) : undefined,
         leadTimeDays: leadTimeDays ? Number(leadTimeDays) : undefined,
         paymentTerms,
-        sourceType: "manual",
+        sourceType: extractionDocumentId ? "pdf" : "manual",
+        extractionDocumentId: extractionDocumentId ?? undefined,
       }),
     });
     setSubmitting(false);
@@ -82,9 +150,20 @@ export function ManualQuoteForm({
 
   return (
     <form onSubmit={onSubmit} className="mt-2 flex flex-col gap-2 rounded-md border border-gray-200 p-3">
+      <label className="cursor-pointer self-start rounded-md border border-gray-300 px-2 py-1 text-xs font-medium">
+        {extracting ? "Extracting…" : "Upload quote document (AI-assisted)"}
+        <input type="file" className="hidden" onChange={onUploadAndExtract} disabled={extracting} accept=".csv,.pdf,.png,.jpg,.jpeg" />
+      </label>
+      {extractNote && <p className="text-xs text-gray-500">{extractNote}</p>}
+
       {lineItems.map((li) => (
         <label key={li.id} className="flex items-center justify-between gap-2 text-xs">
           <span className="flex-1">{li.description}</span>
+          {confidence[li.id] !== undefined && (
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${confidence[li.id] < 0.6 ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-500"}`}>
+              {Math.round(confidence[li.id] * 100)}%
+            </span>
+          )}
           <input
             type="number"
             step="0.01"
