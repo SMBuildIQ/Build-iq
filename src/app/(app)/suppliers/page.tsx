@@ -37,6 +37,9 @@ export default async function SuppliersPage() {
                 <th className="px-4 py-2">City</th>
                 <th className="px-4 py-2">Contact</th>
                 <th className="px-4 py-2">Status</th>
+                <th className="px-4 py-2">Score</th>
+                <th className="px-4 py-2">On-time</th>
+                <th className="px-4 py-2">Response rate</th>
               </tr>
             </thead>
             <tbody>
@@ -48,6 +51,9 @@ export default async function SuppliersPage() {
                   <td className="px-4 py-2">
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs">{s.status}</span>
                   </td>
+                  <td className="px-4 py-2">{s.performanceScore ?? "Unrated"}</td>
+                  <td className="px-4 py-2">{s.onTimeDeliveryRate !== null ? `${Math.round(s.onTimeDeliveryRate * 100)}%` : "—"}</td>
+                  <td className="px-4 py-2">{s.responseRate !== null ? `${Math.round(s.responseRate * 100)}%` : "—"}</td>
                 </tr>
               ))}
             </tbody>

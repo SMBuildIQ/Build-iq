@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { notifyUser } from "@/lib/notifications";
+import { recomputeSupplierPerformance } from "@/lib/supplierPerformance";
 
 const schema = z.object({
   action: z.enum(["submit", "decline"]),
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     await prisma.rFQMessage.create({
       data: { rfqSupplierId: rfqSupplier.id, direction: "inbound", authorType: "supplier", body: "Declined to quote." },
     });
+    await recomputeSupplierPerformance(rfqSupplier.supplierId);
     return NextResponse.json({ ok: true });
   }
 
@@ -104,6 +106,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     entityType: "PurchaseRequest",
     entityId: rfqSupplier.rfq.purchaseRequestId,
   });
+  await recomputeSupplierPerformance(rfqSupplier.supplierId);
 
   return NextResponse.json({ ok: true, quoteId: quote.id });
 }

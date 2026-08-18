@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { withAuth, NotFoundError, ValidationError } from "@/lib/api/handler";
 import { requirePermission } from "@/lib/permissions/check";
 import { writeAuditLog } from "@/lib/audit";
+import { recomputeSupplierPerformance } from "@/lib/supplierPerformance";
 
 const schema = z.object({
   lineItems: z.array(z.object({ rfqLineItemId: z.string(), unitPrice: z.number().min(0) })).min(1),
@@ -76,6 +77,7 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
     entityId: quote.id,
     after: { sourceType: input.sourceType, productTotal, totalLandedCost },
   });
+  await recomputeSupplierPerformance(rfqSupplier.supplierId);
 
   return NextResponse.json({ quote }, { status: 201 });
 });

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { withAuth, NotFoundError, ValidationError } from "@/lib/api/handler";
 import { requirePermission } from "@/lib/permissions/check";
 import { writeAuditLog } from "@/lib/audit";
+import { recomputeSupplierPerformance } from "@/lib/supplierPerformance";
 
 // brief §21: order tracking timeline.
 const TRANSITIONS: Record<string, string[]> = {
@@ -41,6 +42,7 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
 
   if (body.data.status === "delivered") {
     await prisma.purchaseRequest.updateMany({ where: { id: po.purchaseRequestId, status: "ordered" }, data: { status: "delivered" } });
+    await recomputeSupplierPerformance(po.supplierId);
   } else if (body.data.status === "shipped") {
     await prisma.purchaseRequest.updateMany({ where: { id: po.purchaseRequestId, status: { in: ["po_issued"] } }, data: { status: "shipped" } });
   } else if (["supplier_confirmed", "processing", "production", "ready_to_ship"].includes(body.data.status)) {

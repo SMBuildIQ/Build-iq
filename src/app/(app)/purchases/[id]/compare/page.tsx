@@ -40,6 +40,7 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
                 <th className="px-4 py-2">Lead time</th>
                 <th className="px-4 py-2">Terms</th>
                 <th className="px-4 py-2">Warranty</th>
+                <th className="px-4 py-2">Supplier score</th>
                 <th className="px-4 py-2">Actions</th>
               </tr>
             </thead>
@@ -53,6 +54,7 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
                   <td className="px-4 py-2">{q.leadTimeDays ? `${q.leadTimeDays} days` : "—"}</td>
                   <td className="px-4 py-2">{q.paymentTerms ?? "—"}</td>
                   <td className="px-4 py-2">{q.warranty ?? "—"}</td>
+                  <td className="px-4 py-2">{q.supplier.performanceScore ?? "Unrated"}</td>
                   <td className="px-4 py-2">
                     {q.status === "selected" ? (
                       <span className="text-xs font-medium text-green-700">Selected</span>

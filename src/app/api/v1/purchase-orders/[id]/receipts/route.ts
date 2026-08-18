@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { withAuth, NotFoundError, ValidationError } from "@/lib/api/handler";
 import { requirePermission } from "@/lib/permissions/check";
 import { writeAuditLog } from "@/lib/audit";
+import { recomputeSupplierPerformance } from "@/lib/supplierPerformance";
 
 const schema = z.object({
   deliveryDate: z.string().datetime().optional().nullable(),
@@ -73,6 +74,7 @@ export const POST = withAuth<{ id: string }>(async (req, ctx, { id }) => {
     entityId: receipt.id,
     after: { purchaseOrderId: po.id, fullyReceived },
   });
+  await recomputeSupplierPerformance(po.supplierId);
 
   return NextResponse.json({ receipt }, { status: 201 });
 });
