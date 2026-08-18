@@ -45,12 +45,13 @@ the app or docs — this is the canonical list.
   implementation). Same honesty tradeoff as RFQ send — without `RESEND_API_KEY` configured it logs instead of
   pretending to send, and a supplier with no contact on file gets an honest log line rather than a fabricated
   delivery; the audit log records a `delivered: true/false` flag reflecting which happened.
-- **Negotiation lifecycle stops at "sent"** — the `Negotiation.status` values `countered`/`accepted`/`declined`
-  exist in the schema and the savings math (`src/lib/savings.ts`) correctly branches on an accepted negotiation's
-  `resultPrice` when one exists, but there is no route or UI to actually record a supplier's counter-offer or
-  record a negotiation as accepted — a buyer has no way today to close the loop on a sent negotiation ask. Found
-  while adding savings-tracking tests: that code path is real and tested at the unit level, but has no reachable
-  path through the running app.
+- **Negotiation response recording** — now real: `POST /api/v1/negotiations/:id/respond` lets a buyer record what
+  a supplier actually said back (accepted/countered/declined), only valid on a `sent` negotiation, and requires a
+  `resultPrice` for accepted/countered so a decision can't be recorded without content. The compare page now
+  fetches and renders the latest negotiation round instead of relying on ephemeral client-side state that reset
+  on every page reload — a real gap this feature closed as a side effect. "Countered" offers a "Draft another
+  round" action (drafts a fresh round via the same AI drafting path). Not built: nothing lets a buyer accept a
+  counter without drafting a brand-new round first — countering twice in a row without redrafting isn't possible.
 - **Notifications** — in-app only, delivered by client-side polling (`NotificationBell`, every 30s) rather than a
   push channel; no email/SMS delivery.
 - **Price benchmarking (brief §25)** — real: `recomputePriceBenchmarks()` averages actual `PurchaseOrderLineItem`

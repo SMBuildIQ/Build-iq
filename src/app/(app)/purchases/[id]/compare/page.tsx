@@ -15,7 +15,15 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
   const [quotes, benchmarks] = await Promise.all([
     prisma.quote.findMany({
       where: { rfqSupplier: { rfq: { purchaseRequestId: id } } },
-      include: { supplier: true, lineItems: { include: { rfqLineItem: { include: { sourceLineItem: true } } } } },
+      include: {
+        supplier: true,
+        lineItems: { include: { rfqLineItem: { include: { sourceLineItem: true } } } },
+        // Most recent round only — the compare page shows current state, not
+        // full negotiation history. Without this the page had no way to show
+        // a negotiation actually happened at all once the browser reloaded;
+        // NegotiateButton's "sent"/"draft" state was purely local React state.
+        negotiations: { orderBy: { createdAt: "desc" }, take: 1, include: { messages: { orderBy: { createdAt: "asc" } } } },
+      },
       orderBy: { totalLandedCost: "asc" },
     }),
     prisma.priceBenchmark.findMany({ where: { organizationId: ctx.organizationId }, orderBy: { periodEnd: "desc" } }),
@@ -90,7 +98,20 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
                     ) : (
                       <div className="flex flex-col gap-2">
                         <SelectQuoteButton purchaseRequestId={pr.id} quoteId={q.id} />
-                        <NegotiateButton quoteId={q.id} />
+                        <NegotiateButton
+                          quoteId={q.id}
+                          latestNegotiation={
+                            q.negotiations[0]
+                              ? {
+                                  id: q.negotiations[0].id,
+                                  status: q.negotiations[0].status,
+                                  resultPrice: q.negotiations[0].resultPrice,
+                                  resultTerms: q.negotiations[0].resultTerms,
+                                  messages: q.negotiations[0].messages.map((m) => ({ id: m.id, direction: m.direction, authorType: m.authorType, body: m.body })),
+                                }
+                              : null
+                          }
+                        />
                       </div>
                     )}
                   </td>

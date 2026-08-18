@@ -69,12 +69,28 @@ export function SelectQuoteButton({ purchaseRequestId, quoteId }: { purchaseRequ
   );
 }
 
-export function NegotiateButton({ quoteId }: { quoteId: string }) {
+interface NegotiationMessage {
+  id: string;
+  direction: string;
+  authorType: string;
+  body: string;
+}
+
+interface NegotiationState {
+  id: string;
+  status: string; // proposed | sent | countered | accepted | declined | closed
+  resultPrice: number | null;
+  resultTerms: string | null;
+  messages: NegotiationMessage[];
+}
+
+export function NegotiateButton({ quoteId, latestNegotiation }: { quoteId: string; latestNegotiation: NegotiationState | null }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState<{ id: string; message: string } | null>(null);
-  const [sent, setSent] = useState(false);
+  const [negotiation, setNegotiation] = useState<NegotiationState | null>(latestNegotiation);
+  const [respondPrice, setRespondPrice] = useState("");
+  const [respondTerms, setRespondTerms] = useState("");
 
   async function onDraft() {
     setLoading(true);
@@ -87,36 +103,127 @@ export function NegotiateButton({ quoteId }: { quoteId: string }) {
       return;
     }
     const data = await res.json();
-    setDraft({ id: data.negotiation.id, message: data.negotiation.messages[0]?.body ?? "" });
+    setNegotiation({ id: data.negotiation.id, status: data.negotiation.status, resultPrice: null, resultTerms: null, messages: data.negotiation.messages });
   }
 
   async function onSend() {
-    if (!draft) return;
+    if (!negotiation) return;
     setLoading(true);
-    const res = await fetch(`/api/v1/negotiations/${draft.id}/send`, { method: "POST" });
+    setError(null);
+    const res = await fetch(`/api/v1/negotiations/${negotiation.id}/send`, { method: "POST" });
     setLoading(false);
-    if (res.ok) {
-      setSent(true);
-      router.refresh();
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(body.error ?? "Could not send negotiation");
+      return;
     }
+    const data = await res.json();
+    setNegotiation({ ...negotiation, status: data.negotiation.status });
+    router.refresh();
   }
 
-  if (sent) return <p className="text-xs text-green-700">Negotiation sent.</p>;
+  async function onRespond(decision: "accepted" | "declined" | "countered") {
+    if (!negotiation) return;
+    if (decision !== "declined" && !respondPrice) {
+      setError(`A price is required to record this as ${decision}`);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    const res = await fetch(`/api/v1/negotiations/${negotiation.id}/respond`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        decision,
+        resultPrice: decision !== "declined" ? Number(respondPrice) : undefined,
+        resultTerms: respondTerms || undefined,
+      }),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(body.error ?? "Could not record the response");
+      return;
+    }
+    const data = await res.json();
+    setNegotiation({ id: data.negotiation.id, status: data.negotiation.status, resultPrice: data.negotiation.resultPrice, resultTerms: data.negotiation.resultTerms, messages: data.negotiation.messages });
+    router.refresh();
+  }
 
-  return (
-    <div className="mt-2">
-      {!draft ? (
+  if (!negotiation) {
+    return (
+      <div className="mt-2">
         <button onClick={onDraft} disabled={loading} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium disabled:opacity-50">
           {loading ? "Drafting…" : "Draft negotiation"}
         </button>
-      ) : (
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-2 text-xs">
-          <p className="mb-2 text-gray-700">{draft.message}</p>
-          <button onClick={onSend} disabled={loading} className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50">
-            {loading ? "Sending…" : "Send negotiation"}
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      </div>
+    );
+  }
+
+  const outboundMessage = negotiation.messages.find((m) => m.direction === "outbound")?.body;
+
+  return (
+    <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-2 text-xs">
+      {outboundMessage && <p className="mb-2 text-gray-700">{outboundMessage}</p>}
+
+      {negotiation.status === "proposed" && (
+        <button onClick={onSend} disabled={loading} className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50">
+          {loading ? "Sending…" : "Send negotiation"}
+        </button>
+      )}
+
+      {negotiation.status === "sent" && (
+        <div className="flex flex-col gap-2">
+          <p className="text-gray-500">Sent — record what the supplier said back:</p>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Price $"
+              value={respondPrice}
+              onChange={(e) => setRespondPrice(e.target.value)}
+              className="w-24 rounded border border-gray-300 px-2 py-1"
+            />
+            <input
+              placeholder="Terms (optional)"
+              value={respondTerms}
+              onChange={(e) => setRespondTerms(e.target.value)}
+              className="flex-1 rounded border border-gray-300 px-2 py-1"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => onRespond("accepted")} disabled={loading} className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50">
+              Accepted
+            </button>
+            <button onClick={() => onRespond("countered")} disabled={loading} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium disabled:opacity-50">
+              Countered
+            </button>
+            <button onClick={() => onRespond("declined")} disabled={loading} className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 disabled:opacity-50">
+              Declined
+            </button>
+          </div>
+        </div>
+      )}
+
+      {negotiation.status === "accepted" && (
+        <p className="text-green-700">
+          Accepted at ${negotiation.resultPrice?.toLocaleString()}
+          {negotiation.resultTerms ? `, ${negotiation.resultTerms}` : ""}.
+        </p>
+      )}
+      {negotiation.status === "declined" && <p className="text-red-700">Supplier declined.</p>}
+      {negotiation.status === "countered" && (
+        <div>
+          <p className="mb-2 text-amber-700">
+            Countered at ${negotiation.resultPrice?.toLocaleString()}
+            {negotiation.resultTerms ? `, ${negotiation.resultTerms}` : ""}.
+          </p>
+          <button onClick={onDraft} disabled={loading} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium disabled:opacity-50">
+            {loading ? "Drafting…" : "Draft another round"}
           </button>
         </div>
       )}
+
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
