@@ -25,6 +25,16 @@ npm run launch:check   # typecheck + test + production build
 
 Tests use the same `DATABASE_URL` as `.env` — run `npx prisma db push` first if you haven't.
 
+### End-to-end tests
+
+Real browser tests (Playwright/Chromium) driving critical workflows — brief §39. First time only:
+`npx playwright install --with-deps chromium`. Then:
+
+```bash
+npm run pretest:e2e   # pushes the schema to a dedicated e2e.db
+npm run test:e2e      # starts its own dev server on :3211 and runs the suite
+```
+
 ## Using a real AI provider
 
 By default `AI_PROVIDER=mock` — every AI-backed flow runs on a deterministic, offline heuristic (see

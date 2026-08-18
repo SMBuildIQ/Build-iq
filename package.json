@@ -21,6 +21,8 @@
     "postinstall": "prisma generate",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
+    "pretest:e2e": "DATABASE_URL=file:./e2e.db prisma db push --skip-generate --accept-data-loss",
+    "test:e2e": "playwright test",
     "launch:check": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {
@@ -38,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.56.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",

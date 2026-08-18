@@ -31,3 +31,22 @@ jobs:
         continue-on-error: true
       - name: Production build
         run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      AUTH_SECRET: e2e-test-secret-at-least-32-characters-long
+      AI_PROVIDER: mock
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests (brief §39 — critical workflows)
+        run: npm run pretest:e2e && npm run test:e2e

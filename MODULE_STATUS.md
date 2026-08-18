@@ -35,7 +35,7 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 26 | Document library | FULL | Upload/download/list, tenant- and entity-ownership-checked; local disk storage (not object storage — see KNOWN_LIMITATIONS.md) |
 | 27 | Background job system | FULL | Persisted Job table, retries/backoff/dead-letter, worker process + inline dev fallback |
 | 28 | API documentation | FULL | Real OpenAPI 3.0 spec (`src/lib/openapi.ts`) served at `/api/v1/openapi.json` (paste into Swagger Editor/Postman) with a rendered index at `/api-docs`, both public; hand-maintained API_DOCUMENTATION.md kept as a narrative companion |
-| 29 | Automated testing | PARTIAL | Tenant isolation, permissions, policy engine, AI extraction, invoice matching, notifications — unit/integration; no e2e browser tests yet |
+| 29 | Automated testing | FULL | Unit/integration coverage (tenant isolation, permissions, policy engine, AI extraction, invoice matching, notifications, quote document extraction) plus real Playwright/Chromium end-to-end tests (`tests/e2e/`) driving the Flow 1 create-purchase-request journey and a UI-level cross-tenant access check through an actual browser, wired into CI as a separate job |
 | 30 | Production deployment | NONE | Dockerfile/docker-compose exist; no environment has actually been provisioned from this session |
 
 ## Also built (beyond the MVP list, brief §23)
