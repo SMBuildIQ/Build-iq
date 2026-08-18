@@ -22,6 +22,9 @@ export default async function PurchaseDetailPage({ params }: { params: Promise<{
       approvalRequests: { include: { steps: true } },
       rfqs: true,
       purchaseOrders: true,
+      department: true,
+      costCenter: true,
+      deliveryLocation: true,
     },
   });
   if (!pr) notFound();
@@ -69,6 +72,9 @@ export default async function PurchaseDetailPage({ params }: { params: Promise<{
           value={pr.requiredDeliveryDate ? new Date(pr.requiredDeliveryDate).toLocaleDateString() : "—"}
         />
         <Detail label="Payment terms" value={pr.paymentTermsRequirement ?? "—"} />
+        <Detail label="Department" value={pr.department?.name ?? "—"} />
+        <Detail label="Cost center" value={pr.costCenter ? `${pr.costCenter.code} — ${pr.costCenter.name}` : "—"} />
+        <Detail label="Ship to" value={pr.deliveryLocation?.name ?? "—"} />
       </div>
 
       <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white">

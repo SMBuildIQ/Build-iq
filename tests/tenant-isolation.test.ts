@@ -115,6 +115,23 @@ test("an invite created in org A is not reachable via org B's tenant-scoped quer
   assert.equal(byCode?.organizationId, orgA.organization.id);
 });
 
+test("department/cost center/location ids from another org are rejected by the same query shape purchase-request creation uses", async () => {
+  const orgA = await makeOrg("ref-tenant-a");
+  const orgB = await makeOrg("ref-tenant-b");
+
+  const department = await prisma.department.create({ data: { organizationId: orgA.organization.id, name: "Engineering" } });
+  const costCenter = await prisma.costCenter.create({ data: { organizationId: orgA.organization.id, code: "ENG-100", name: "Engineering" } });
+  const location = await prisma.location.create({
+    data: { organizationId: orgA.organization.id, name: "HQ", addressLine1: "1 Main St", city: "Detroit", country: "US" },
+  });
+
+  assert.equal(await prisma.department.findFirst({ where: { id: department.id, organizationId: orgB.organization.id } }), null);
+  assert.equal(await prisma.costCenter.findFirst({ where: { id: costCenter.id, organizationId: orgB.organization.id } }), null);
+  assert.equal(await prisma.location.findFirst({ where: { id: location.id, organizationId: orgB.organization.id } }), null);
+
+  assert.ok(await prisma.department.findFirst({ where: { id: department.id, organizationId: orgA.organization.id } }));
+});
+
 test("membership + role lookups are scoped per organization, not global to the user", async () => {
   const suffix = randomUUID().slice(0, 8);
   const user = await prisma.user.create({

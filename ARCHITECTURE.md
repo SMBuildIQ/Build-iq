@@ -111,3 +111,11 @@ Dev: SQLite, `npm run dev` + `npm run worker`. Production target: PostgreSQL, `n
 the API/web process plus a separately-scaled worker process — see `Dockerfile` and `docker-compose.yml`. Object
 storage (S3-compatible) for `Document.storageKey` and a managed Postgres instance are the two infrastructure
 pieces this repo does not yet provision — see `KNOWN_LIMITATIONS.md`.
+
+**Gotcha — relative SQLite paths under `output: standalone`:** Next's standalone build copies the generated Prisma
+client to a new location (`.next/standalone/node_modules/.prisma/client`), and Prisma resolves a *relative*
+`file:` datasource URL against wherever that copy ends up at runtime — not the process's actual working directory.
+A relative `DATABASE_URL` that works perfectly under `next dev` or `next start` will silently point at a
+nonexistent database under the standalone server (`node .next/standalone/server.js`, which is what `Dockerfile`
+actually runs). `postgresql://` URLs are unaffected (they're never relative). If you ever run the SQLite fallback
+path outside dev, use an absolute `file:` path — see the Dockerfile/docker-compose.yml comments.

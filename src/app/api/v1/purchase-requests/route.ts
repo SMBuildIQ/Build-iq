@@ -33,6 +33,25 @@ export const POST = withAuth(async (req, ctx) => {
   }
   const input = parsed.data;
 
+  // These ids come straight from the client — without this check a request
+  // could reference another tenant's Department/CostCenter/Location row (the
+  // foreign key alone doesn't care which org owns it), which would then leak
+  // that org's data into this purchase request's own display.
+  const [department, costCenter, deliveryLocation] = await Promise.all([
+    input.departmentId
+      ? prisma.department.findFirst({ where: { id: input.departmentId, organizationId: ctx.organizationId } })
+      : null,
+    input.costCenterId
+      ? prisma.costCenter.findFirst({ where: { id: input.costCenterId, organizationId: ctx.organizationId } })
+      : null,
+    input.deliveryLocationId
+      ? prisma.location.findFirst({ where: { id: input.deliveryLocationId, organizationId: ctx.organizationId } })
+      : null,
+  ]);
+  if (input.departmentId && !department) throw new ValidationError("Department not found");
+  if (input.costCenterId && !costCenter) throw new ValidationError("Cost center not found");
+  if (input.deliveryLocationId && !deliveryLocation) throw new ValidationError("Delivery location not found");
+
   const requestNumber = await nextPurchaseRequestNumber(ctx.organizationId);
 
   const purchaseRequest = await prisma.purchaseRequest.create({

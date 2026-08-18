@@ -4,29 +4,34 @@ import { getAuthContext } from "@/lib/auth/context";
 import { prisma } from "@/lib/db";
 import { hasPermission } from "@/lib/permissions/check";
 import { InviteForm, RevokeInviteButton } from "./team-section";
+import { DepartmentsSection, CostCentersSection, LocationsSection } from "./org-setup-section";
 
 export default async function SettingsPage() {
   const ctx = await getAuthContext();
   if (!ctx) redirect("/login");
 
-  const [organization, roles, policyRules, negotiationAuthority, memberships, pendingInvites] = await Promise.all([
-    prisma.organization.findUniqueOrThrow({ where: { id: ctx.organizationId } }),
-    prisma.role.findMany({
-      where: { organizationId: ctx.organizationId },
-      include: { permissions: true, memberships: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.policyRule.findMany({ where: { organizationId: ctx.organizationId, active: true }, orderBy: { priority: "asc" } }),
-    prisma.negotiationAuthority.findFirst({ where: { organizationId: ctx.organizationId } }),
-    prisma.membership.findMany({
-      where: { organizationId: ctx.organizationId, status: "active" },
-      include: { user: true, roles: { include: { role: true } } },
-      orderBy: { createdAt: "asc" },
-    }),
-    hasPermission(ctx, "org:manage_users")
-      ? prisma.invite.findMany({ where: { organizationId: ctx.organizationId, status: "pending" }, orderBy: { createdAt: "desc" } })
-      : Promise.resolve([]),
-  ]);
+  const [organization, roles, policyRules, negotiationAuthority, memberships, pendingInvites, departments, costCenters, locations] =
+    await Promise.all([
+      prisma.organization.findUniqueOrThrow({ where: { id: ctx.organizationId } }),
+      prisma.role.findMany({
+        where: { organizationId: ctx.organizationId },
+        include: { permissions: true, memberships: true },
+        orderBy: { name: "asc" },
+      }),
+      prisma.policyRule.findMany({ where: { organizationId: ctx.organizationId, active: true }, orderBy: { priority: "asc" } }),
+      prisma.negotiationAuthority.findFirst({ where: { organizationId: ctx.organizationId } }),
+      prisma.membership.findMany({
+        where: { organizationId: ctx.organizationId, status: "active" },
+        include: { user: true, roles: { include: { role: true } } },
+        orderBy: { createdAt: "asc" },
+      }),
+      hasPermission(ctx, "org:manage_users")
+        ? prisma.invite.findMany({ where: { organizationId: ctx.organizationId, status: "pending" }, orderBy: { createdAt: "desc" } })
+        : Promise.resolve([]),
+      prisma.department.findMany({ where: { organizationId: ctx.organizationId }, orderBy: { name: "asc" } }),
+      prisma.costCenter.findMany({ where: { organizationId: ctx.organizationId }, orderBy: { code: "asc" } }),
+      prisma.location.findMany({ where: { organizationId: ctx.organizationId }, orderBy: { name: "asc" } }),
+    ]);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -44,6 +49,18 @@ export default async function SettingsPage() {
             <span className="text-gray-500">Currency:</span> {organization.currency}
           </div>
         </div>
+      </Section>
+
+      <Section title="Locations">
+        <LocationsSection locations={locations} />
+      </Section>
+
+      <Section title="Departments">
+        <DepartmentsSection departments={departments} />
+      </Section>
+
+      <Section title="Cost centers">
+        <CostCentersSection costCenters={costCenters} />
       </Section>
 
       <Section title="Team">

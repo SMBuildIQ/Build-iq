@@ -17,9 +17,17 @@ FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-# Production target is PostgreSQL — set DATABASE_URL at runtime (see ARCHITECTURE.md).
-# AUTH_SECRET must also be provided at runtime (32+ chars). Do not bake secrets into the image.
+# Production target is PostgreSQL (any postgresql:// DATABASE_URL is absolute
+# and unaffected by the note below) — see ARCHITECTURE.md. For the SQLite
+# fallback path used by docker-compose.yml, DATABASE_URL MUST be an absolute
+# file: path, e.g. file:/app/data/prod.db — Next's standalone output copies
+# the generated Prisma client to a new location at build time, and Prisma
+# resolves a *relative* sqlite datasource path against wherever that copy
+# ends up (not this container's WORKDIR), so a relative path silently points
+# at the wrong file. AUTH_SECRET must also be provided at runtime (32+ chars).
+# Do not bake secrets into the image.
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /app/data \
   && groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
 
@@ -30,6 +38,12 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+# scripts/worker.ts runs under tsx (not the Next.js build), importing straight
+# from src/ with @/ path aliases — it needs the TypeScript source and
+# tsconfig.json present at runtime, neither of which the standalone Next.js
+# output includes on its own.
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 RUN chown -R nextjs:nodejs /app
 USER nextjs

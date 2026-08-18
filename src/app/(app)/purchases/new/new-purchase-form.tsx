@@ -11,17 +11,37 @@ const FIELD_LABELS: Record<string, string> = {
   deliveryLocation: "Delivery location",
 };
 
-export function NewPurchaseForm() {
+interface Option {
+  id: string;
+  label: string;
+}
+
+export function NewPurchaseForm({
+  departments = [],
+  costCenters = [],
+  locations = [],
+}: {
+  departments?: { id: string; name: string }[];
+  costCenters?: { id: string; code: string; name: string }[];
+  locations?: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const [description, setDescription] = useState("");
   const [parsing, setParsing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState("");
+  const [costCenterId, setCostCenterId] = useState("");
+  const [deliveryLocationId, setDeliveryLocationId] = useState("");
   const [extraction, setExtraction] = useState<{
     fields: ExtractedPurchaseFields;
     missingCriticalFields: string[];
     confidence: number;
   } | null>(null);
+
+  const departmentOptions: Option[] = departments.map((d) => ({ id: d.id, label: d.name }));
+  const costCenterOptions: Option[] = costCenters.map((c) => ({ id: c.id, label: `${c.code} — ${c.name}` }));
+  const locationOptions: Option[] = locations.map((l) => ({ id: l.id, label: l.name }));
 
   async function onParse(e: React.FormEvent) {
     e.preventDefault();
@@ -66,6 +86,9 @@ export function NewPurchaseForm() {
         restrictedSupplierIds: [],
         additionalInstructions: f.additionalInstructions ?? undefined,
         originalDescription: description,
+        departmentId: departmentId || undefined,
+        costCenterId: costCenterId || undefined,
+        deliveryLocationId: deliveryLocationId || undefined,
         lineItems: [
           {
             description: f.productDescription || description.slice(0, 200),
@@ -183,6 +206,18 @@ export function NewPurchaseForm() {
         </Field>
       </div>
 
+      <div className="grid grid-cols-3 gap-4">
+        <Field label="Department">
+          <Select value={departmentId} onChange={setDepartmentId} options={departmentOptions} placeholder="None" />
+        </Field>
+        <Field label="Cost center">
+          <Select value={costCenterId} onChange={setCostCenterId} options={costCenterOptions} placeholder="None" />
+        </Field>
+        <Field label="Ship-to location">
+          <Select value={deliveryLocationId} onChange={setDeliveryLocationId} options={locationOptions} placeholder="None" />
+        </Field>
+      </div>
+
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="flex gap-3">
@@ -210,5 +245,28 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-xs font-medium text-gray-500">{label}</span>
       {children}
     </label>
+  );
+}
+
+function Select({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: Option[];
+  placeholder: string;
+}) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+      <option value="">{placeholder}</option>
+      {options.map((o) => (
+        <option key={o.id} value={o.id}>
+          {o.label}
+        </option>
+      ))}
+    </select>
   );
 }
