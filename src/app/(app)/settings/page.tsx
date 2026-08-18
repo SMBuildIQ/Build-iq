@@ -3,12 +3,13 @@ import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { prisma } from "@/lib/db";
 import { hasPermission } from "@/lib/permissions/check";
+import { InviteForm, RevokeInviteButton } from "./team-section";
 
 export default async function SettingsPage() {
   const ctx = await getAuthContext();
   if (!ctx) redirect("/login");
 
-  const [organization, roles, policyRules, negotiationAuthority] = await Promise.all([
+  const [organization, roles, policyRules, negotiationAuthority, memberships, pendingInvites] = await Promise.all([
     prisma.organization.findUniqueOrThrow({ where: { id: ctx.organizationId } }),
     prisma.role.findMany({
       where: { organizationId: ctx.organizationId },
@@ -17,6 +18,14 @@ export default async function SettingsPage() {
     }),
     prisma.policyRule.findMany({ where: { organizationId: ctx.organizationId, active: true }, orderBy: { priority: "asc" } }),
     prisma.negotiationAuthority.findFirst({ where: { organizationId: ctx.organizationId } }),
+    prisma.membership.findMany({
+      where: { organizationId: ctx.organizationId, status: "active" },
+      include: { user: true, roles: { include: { role: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
+    hasPermission(ctx, "org:manage_users")
+      ? prisma.invite.findMany({ where: { organizationId: ctx.organizationId, status: "pending" }, orderBy: { createdAt: "desc" } })
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -35,6 +44,38 @@ export default async function SettingsPage() {
             <span className="text-gray-500">Currency:</span> {organization.currency}
           </div>
         </div>
+      </Section>
+
+      <Section title="Team">
+        <div className="mb-3 flex flex-col gap-2">
+          {memberships.map((m) => (
+            <div key={m.id} className="flex items-center justify-between rounded-md border border-gray-100 px-3 py-2 text-sm">
+              <div>
+                <div className="font-medium">{m.user.name}</div>
+                <div className="text-xs text-gray-400">{m.user.email}</div>
+              </div>
+              <span className="text-xs text-gray-500">{m.roles.map((r) => r.role.name).join(", ")}</span>
+            </div>
+          ))}
+        </div>
+
+        {hasPermission(ctx, "org:manage_users") && (
+          <>
+            {pendingInvites.length > 0 && (
+              <div className="mb-3 flex flex-col gap-1">
+                {pendingInvites.map((inv) => (
+                  <div key={inv.id} className="flex items-center justify-between rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    <span>
+                      {inv.email} — invited as {inv.roleKey}
+                    </span>
+                    <RevokeInviteButton inviteId={inv.id} />
+                  </div>
+                ))}
+              </div>
+            )}
+            <InviteForm roles={roles.map((r) => ({ key: r.key, name: r.name }))} />
+          </>
+        )}
       </Section>
 
       <Section title="Roles">

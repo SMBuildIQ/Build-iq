@@ -88,6 +88,33 @@ test("verifyEntityOwnership rejects a purchase request id that belongs to a diff
   assert.equal(await verifyEntityOwnership(orgB.organization.id, "purchase_request", pr.id), false);
 });
 
+test("an invite created in org A is not reachable via org B's tenant-scoped query", async () => {
+  const { randomBytes } = await import("node:crypto");
+  const orgA = await makeOrg("invite-tenant-a");
+  const orgB = await makeOrg("invite-tenant-b");
+
+  const invite = await prisma.invite.create({
+    data: {
+      organizationId: orgA.organization.id,
+      email: "invitee@example.com",
+      code: randomBytes(24).toString("hex"),
+      roleKey: "buyer",
+      expiresAt: new Date(Date.now() + 86_400_000),
+    },
+  });
+
+  const crossTenant = await prisma.invite.findFirst({
+    where: { id: invite.id, organizationId: orgB.organization.id },
+  });
+  assert.equal(crossTenant, null);
+
+  // The invite's code is looked up globally by the public accept endpoint
+  // (no session yet) — but which organization it grants access to is fixed
+  // at creation time and can't be redirected by the accepting request.
+  const byCode = await prisma.invite.findUnique({ where: { code: invite.code } });
+  assert.equal(byCode?.organizationId, orgA.organization.id);
+});
+
 test("membership + role lookups are scoped per organization, not global to the user", async () => {
   const suffix = randomUUID().slice(0, 8);
   const user = await prisma.user.create({

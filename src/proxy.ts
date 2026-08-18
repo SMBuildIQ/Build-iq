@@ -16,7 +16,9 @@ export async function proxy(req: NextRequest) {
     pathname === "/" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/portal") ||
-    pathname.startsWith("/api/v1/portal")
+    pathname.startsWith("/api/v1/portal") ||
+    pathname.startsWith("/invite") ||
+    pathname.startsWith("/api/v1/invites/accept")
   ) {
     return NextResponse.next();
   }

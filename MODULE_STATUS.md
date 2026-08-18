@@ -10,7 +10,7 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 1 | Multi-tenant org architecture | FULL | Org/Location/Membership/Role/Permission, tested cross-tenant isolation |
 | 2 | Authentication | FULL | Session cookie JWT, bcrypt, login lockout; no MFA enforcement yet |
 | 3 | RBAC/permissions | FULL | Permission-key checks, org-scoped roles, seeded default role set |
-| 4 | Org/branch/user administration | PARTIAL | Settings page is read-only; no edit UI for locations/departments/cost centers yet |
+| 4 | Org/branch/user administration | PARTIAL | Team invite/accept flow is real (`/invite/[code]`, supports joining a second org); no edit UI for locations/departments/cost centers yet |
 | 5 | AI purchasing assistant | FULL | NL description → structured request, missing-field detection, full AIActivityLog trail |
 | 6 | Purchase request creation | FULL | Structured line items, status history, tenant-scoped API + UI |
 | 7 | Structured line items | FULL | Category/manufacturer/model/SKU/target price/substitutions |

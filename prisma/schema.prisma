@@ -175,6 +175,7 @@ model Invite {
   code           String   @unique
   roleKey        String
   status         String   @default("pending") // pending | accepted | revoked
+  invitedByUserId String?
   createdAt      DateTime @default(now())
   expiresAt      DateTime
 
