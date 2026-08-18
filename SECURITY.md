@@ -1,44 +1,59 @@
 # Security
 
-## Controls in place
+## Tenant isolation
 
-- HTTPS required in production (HSTS header)
-- bcrypt password hashing (cost 12)
-- HTTP-only session cookies + JWT with DB hydration and `tokenVersion` revoke
-- Logout bumps token version
-- Login lockout after repeated failures (DB-backed)
-- Rate limits on auth, checkout, account delete
-- Zod validation on API inputs
-- Upload allow-list + magic-byte sniff + size cap
-- Company tenant scoping + RBAC (`requirePermission`)
-- Fail-closed payments in production without Stripe (unless `ALLOW_MOCK_PAYMENTS=true`)
-- Audit log table for significant auth/order actions
-- Security headers (CSP, frame denial, nosniff, referrer)
-- Boot-time `AUTH_SECRET` enforcement via `instrumentation.ts`
+Every tenant-scoped table carries `organizationId`. Every route handler resolves the caller's organization from
+the session (`getAuthContext()`), never from client input, and every query filters by it. Single-record loads use
+`findFirst({ where: { id, organizationId } })` so a cross-tenant id 404s rather than confirming existence.
+Automated tests: `tests/tenant-isolation.test.ts`.
 
-## Threat model (summary)
+## Authentication
 
-| Asset | Threat | Mitigation |
-|---|---|---|
-| Auth | Credential stuffing | Rate limit + lockout + bcrypt |
-| Sessions | Stolen JWT | tokenVersion, short-ish 30d, logout revoke |
-| Tenants | Cross-company access | companyId on queries + membership check |
-| Files | Malicious upload | MIME/ext/magic + UUID names; signed URLs planned |
-| Payments | Fake success | Production refuses mock without explicit allow |
-| AI | Prompt injection | Treat outputs as drafts; limit user text in prompts |
+- Passwords: bcrypt, cost factor 12.
+- Sessions: HS256 JWT in an `httpOnly`, `sameSite=lax`, `secure` (in production) cookie; 30-day expiry;
+  `User.tokenVersion` allows revoking all sessions for a user (bump the version, every outstanding JWT fails the
+  version check in `getAuthContext()`).
+- Login lockout: 5 failed attempts / 15 minutes per email, tracked in `LoginAttempt`.
+- MFA: `User.mfaEnabled`/`mfaSecret` columns exist; no enrollment flow or verification is implemented yet.
 
-## Incident process (draft)
+## Authorization (RBAC)
 
-1. Revoke sessions (bump tokenVersion / rotate AUTH_SECRET)
-2. Rotate Stripe / OpenAI / Spruce credentials
-3. Preserve audit logs
-4. Notify affected companies per privacy policy
-5. Patch and deploy
+Permission keys, never role names, gate every action (`src/lib/permissions`). Role→permission grants are database
+rows scoped per organization. `requirePermission()` throws a typed `ForbiddenError` that the shared route wrapper
+(`src/lib/api/handler.ts`) turns into a 403 — there is no route that checks permissions ad hoc.
 
-## Remaining gaps (tracked)
+## Controlled AI autonomy
 
-- Redis-backed rate limits for multi-instance
-- Object storage + malware scanning
-- MFA / biometric (mobile)
-- CSRF tokens beyond SameSite=lax
-- Soft-delete workflows for all entities
+- Every AI call is logged (`AIActivityLog`): provider, model, prompt version, input, output, confidence, token
+  usage, cost.
+- The AI layer never creates an `ApprovalRequest`, marks a request approved, or issues a `PurchaseOrder` — those
+  transitions only happen through routes that call the deterministic policy engine
+  (`src/lib/policy/engine.ts`) first.
+- `NegotiationAuthority.autoNegotiateEnabled` defaults to `false` for every new organization. Even when an org
+  enables it, there is no code path today that reads `allowFinalize` as permission to complete a purchase —
+  negotiation is drafted by AI and only ever sent by an authenticated human
+  (`/api/v1/negotiations/:id/send`).
+- Human corrections to AI output are preserved (`AICorrection`), never overwritten in place.
+
+## Supplier portal
+
+The one intentionally unauthenticated surface. `RFQSupplier.secureToken` is 24 random bytes (192 bits), looked up
+by a unique index — not enumerable, not derived from any other field. Portal routes are explicitly carved out of
+the session check in `src/proxy.ts` rather than accidentally left open.
+
+## Transport & headers
+
+Security headers (CSP, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS
+in production) are set globally in `next.config.ts`. HTTPS termination is expected at the deployment layer (not
+provisioned by this repo — see KNOWN_LIMITATIONS.md).
+
+## Secrets
+
+`AUTH_SECRET`, `ANTHROPIC_API_KEY`, and `RESEND_API_KEY` are read from environment variables only; `.env` is
+git-ignored, `.env.example` documents required shape without real values.
+
+## Gaps (tracked, not hidden)
+
+No automated dependency/secret scanning wired into CI yet, no rate limiting beyond login lockout, no object-storage
+virus scanning (there is no upload endpoint yet to scan), and no penetration test has been performed. See
+KNOWN_LIMITATIONS.md for the full list.

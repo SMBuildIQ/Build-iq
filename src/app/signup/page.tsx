@@ -1,197 +1,64 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useState } from "react";
-import { MarketingShell } from "@/components/AppShell";
 
-function SignupForm() {
+export default function SignupPage() {
   const router = useRouter();
-  const params = useSearchParams();
-  const inviteCode = params.get("invite") || "";
-  const [error, setError] = useState("");
+  const [organizationName, setOrganizationName] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    const form = new FormData(e.currentTarget);
-    if (form.get("acceptTerms") !== "on") {
-      setLoading(false);
-      setError("Please accept the Terms and Privacy Policy to continue.");
-      return;
-    }
-    const res = await fetch("/api/auth/register", {
+    setError(null);
+    const res = await fetch("/api/v1/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.get("name"),
-        companyName: form.get("companyName"),
-        phone: form.get("phone") || undefined,
-        city: form.get("city") || undefined,
-        state: form.get("state") || undefined,
-        email: form.get("email"),
-        password: form.get("password"),
-        inviteCode: form.get("inviteCode") || undefined,
-        acceptTerms: true,
-      }),
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ organizationName, name, email, password }),
     });
-    const data = await res.json();
     setLoading(false);
     if (!res.ok) {
-      setError(data.error || "Signup failed");
+      const body = await res.json().catch(() => ({}));
+      setError(body.error ?? "Registration failed");
       return;
     }
-    if (data.joinedExisting) {
-      router.push("/dashboard");
-    } else {
-      router.push("/onboarding");
-    }
+    router.push("/dashboard");
     router.refresh();
   }
 
   return (
-    <MarketingShell>
-      <main id="main-content" className="mx-auto max-w-md px-4 py-8">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/logo-iq.png" alt="" className="h-12 w-auto object-contain" />
-        <p className="mt-4 font-hand text-xl text-[var(--orange)]">
-          {inviteCode ? "Join your builder team" : "For residential builders"}
-        </p>
-        <h1 className="mt-2 font-display text-3xl text-[var(--brown)]">
-          {inviteCode ? "Accept invite" : "Create your BuildIQ company"}
-        </h1>
-        <p className="mt-2 text-sm text-[var(--sage)]">
-          {inviteCode
-            ? "Create your login to join the company workspace."
-            : "Sign up your building company with Supply Monkey. Invite estimators. Run takeoffs from the app."}
-        </p>
-
-        <form onSubmit={onSubmit} className="surface mt-7 space-y-4 p-5">
-          {inviteCode ? (
-            <input type="hidden" name="inviteCode" value={inviteCode} />
-          ) : null}
-
-          <div>
-            <label className="label" htmlFor="name">
-              Your name
-            </label>
-            <input id="name" name="name" required className="input-field !py-3" placeholder="Alex Builder" />
-          </div>
-
-          {!inviteCode && (
-            <>
-              <div>
-                <label className="label" htmlFor="companyName">
-                  Company name
-                </label>
-                <input
-                  id="companyName"
-                  name="companyName"
-                  required
-                  className="input-field !py-3"
-                  placeholder="Ridge Homes"
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="phone">
-                  Company phone
-                </label>
-                <input id="phone" name="phone" type="tel" className="input-field !py-3" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label" htmlFor="city">
-                    City
-                  </label>
-                  <input id="city" name="city" className="input-field !py-3" />
-                </div>
-                <div>
-                  <label className="label" htmlFor="state">
-                    State
-                  </label>
-                  <input id="state" name="state" className="input-field !py-3" />
-                </div>
-              </div>
-            </>
-          )}
-
-          {inviteCode && (
-            <div>
-              <label className="label" htmlFor="companyName">
-                Company (from invite)
-              </label>
-              <input
-              id="companyName"
-              name="companyName"
-              className="input-field !py-3"
-              defaultValue="Joining via invite"
-              readOnly
-            />
-              <p className="mt-1 text-xs text-[var(--sage)]">Invite code: {inviteCode}</p>
-            </div>
-          )}
-
-          <div>
-            <label className="label" htmlFor="email">
-              Work email
-            </label>
-            <input id="email" name="email" type="email" required autoComplete="email" className="input-field !py-3" />
-          </div>
-          <div>
-            <label className="label" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              className="input-field !py-3"
-              placeholder="At least 8 characters"
-            />
-          </div>
-
-          <label className="flex items-start gap-2 text-xs leading-relaxed text-[var(--sage)]">
-            <input type="checkbox" name="acceptTerms" className="mt-0.5 h-4 w-4" required />
-            <span>
-              I agree to the{" "}
-              <Link href="/terms" className="font-semibold text-[var(--copper-deep)] underline-offset-2 hover:underline">
-                Terms of Service (Draft)
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="font-semibold text-[var(--copper-deep)] underline-offset-2 hover:underline">
-                Privacy Policy (Draft)
-              </Link>
-              . These documents are drafts pending attorney review. BuildIQ is operated by Supply Monkey Lumber &amp; Materials Co.
-            </span>
-          </label>
-
-          {error && <p className="text-sm text-red-700">{error}</p>}
-
-          <button type="submit" disabled={loading} className="btn-copper w-full !py-3.5">
-            {loading ? "Creating…" : inviteCode ? "Join company" : "Create builder account"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-[var(--sage)]">
-          Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-[var(--copper-deep)]">
-            Sign in
-          </Link>
-        </p>
-      </main>
-    </MarketingShell>
-  );
-}
-
-export default function SignupPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-[var(--sage)]">Loading…</div>}>
-      <SignupForm />
-    </Suspense>
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
+      <h1 className="mb-1 text-2xl font-semibold">Create your workspace</h1>
+      <p className="mb-6 text-sm text-gray-500">You&apos;ll be the Company Owner with full permissions.</p>
+      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+        <input required placeholder="Company name" value={organizationName}
+          onChange={(e) => setOrganizationName(e.target.value)}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        <input required placeholder="Your name" value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        <input type="email" required placeholder="Email" value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        <input type="password" required minLength={10} placeholder="Password (10+ characters)" value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button type="submit" disabled={loading}
+          className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+          {loading ? "Creating…" : "Create workspace"}
+        </button>
+      </form>
+      <p className="mt-4 text-sm text-gray-500">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-gray-900 underline">Sign in</Link>
+      </p>
+    </main>
   );
 }

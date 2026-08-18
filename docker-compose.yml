@@ -1,5 +1,5 @@
 services:
-  buildiq:
+  web:
     build: .
     ports:
       - "3000:3000"
@@ -7,15 +7,29 @@ services:
       DATABASE_URL: file:./data/prod.db
       # Required: export AUTH_SECRET with 32+ random characters before `docker compose up`
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET to a 32+ character secret}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
       NODE_ENV: production
     volumes:
       - buildiq-data:/app/data
-      - buildiq-uploads:/app/uploads
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: ["npm", "run", "worker"]
+    environment:
+      DATABASE_URL: file:./data/prod.db
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET to a 32+ character secret}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      NODE_ENV: production
+    volumes:
+      - buildiq-data:/app/data
     restart: unless-stopped
 
 volumes:
   buildiq-data:
-  buildiq-uploads:

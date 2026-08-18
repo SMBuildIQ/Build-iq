@@ -9,18 +9,18 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=(self)",
+    value: "camera=(), microphone=(), geolocation=(), payment=()",
   },
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://use.typekit.net https://p.typekit.net",
-      "font-src 'self' https://fonts.gstatic.com https://use.typekit.net https://p.typekit.net data:",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://api.stripe.com https://api.openai.com https://*.stripe.com https://use.typekit.net",
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+      "connect-src 'self' https://api.anthropic.com https://api.openai.com",
+      "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -34,17 +34,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
-  serverExternalPackages: [
-    "exceljs",
-    "@prisma/client",
-    "prisma",
-    "stripe",
-    "pdfkit",
-    "tesseract.js",
-    "pdfjs-dist",
-    "@napi-rs/canvas",
-    "sharp",
-  ],
+  serverExternalPackages: ["@prisma/client", "prisma"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

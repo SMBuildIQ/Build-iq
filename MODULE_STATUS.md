@@ -1,50 +1,47 @@
-# Module status — construction platform
+# Module status
 
-Legend: **FULL** = usable in production paths · **PARTIAL** = real code but incomplete · **PLANNED** = architecture slot only · **NONE** = not started
+Legend: **FULL** = real, tested, usable end to end · **PARTIAL** = real code, meaningful gaps · **PLANNED** =
+schema modeled, no UI/API yet · **NONE** = not started.
+
+Numbering follows the brief's MVP list (§37) where it maps directly.
 
 | # | Module | Status | Notes |
 |---|---|---|---|
-| 1 | Dashboard | PARTIAL | Job list only; no KPIs, schedule, or alerts |
-| 2 | Leads and CRM | NONE | — |
-| 3 | Clients | NONE | — |
-| 4 | Projects | FULL | Company-scoped CRUD + status; per-project materials library by specialty category |
-| 5 | Estimates and budgets | PARTIAL | Cost rollup exists; no budget versions / approvals |
-| 6 | Plan and document uploads | PARTIAL | Plans/PDFs/images + plan workspace; mobile/web drawings upload; no folders/versions/signed URLs |
-| 7 | Material takeoffs | PARTIAL | OCR + GPT-4o vision when keyed; measuring tools; DWG needs PDF export; project materials library (lumber → stone) |
-| 8 | Subcontractor bid management | PARTIAL | Internal bid packages; no sub portal or bid invite emails |
-| 9 | Purchase orders | NONE | Shop material orders ≠ POs |
-| 10 | Scheduling | NONE | — |
-| 11 | Daily logs | NONE | — |
-| 12 | Photos and videos | NONE | Plan images only; no jobsite camera gallery |
-| 13 | RFIs | NONE | — |
-| 14 | Submittals | NONE | — |
-| 15 | Change orders | NONE | — |
-| 16 | Selections and approvals | NONE | — |
-| 17 | Invoices and progress billing | NONE | Checkout receipts only |
-| 18 | Budget-versus-actual reporting | NONE | — |
-| 19 | Client portal | NONE | — |
-| 20 | Vendor and subcontractor portal | NONE | — |
-| 21 | Punch lists | NONE | — |
-| 22 | Warranty management | NONE | — |
-| 23 | Notifications | NONE | No in-app / push / email system |
-| 24 | AI assistant | PARTIAL | Bot pipeline after upload; conversational assistant planned |
-| 25 | AI Agent Orchestration | FULL | Registry, workflows, AgentRun/AgentStep, SSE, `/agents` UI |
-| 26 | AI Cabinetry Proposals | PARTIAL | Phase 1: customers, product lines, opportunities; customer PDFs via Proposals module |
-| 27 | Customer proposals | FULL | Multi-category proposals + PDF + send + public accept |
-| 28 | Company settings and team permissions | PARTIAL | Invites + Spruce + account; roles mostly labels |
+| 1 | Multi-tenant org architecture | FULL | Org/Location/Membership/Role/Permission, tested cross-tenant isolation |
+| 2 | Authentication | FULL | Session cookie JWT, bcrypt, login lockout; no MFA enforcement yet |
+| 3 | RBAC/permissions | FULL | Permission-key checks, org-scoped roles, seeded default role set |
+| 4 | Org/branch/user administration | PARTIAL | Settings page is read-only; no edit UI for locations/departments/cost centers yet |
+| 5 | AI purchasing assistant | FULL | NL description → structured request, missing-field detection, full AIActivityLog trail |
+| 6 | Purchase request creation | FULL | Structured line items, status history, tenant-scoped API + UI |
+| 7 | Structured line items | FULL | Category/manufacturer/model/SKU/target price/substitutions |
+| 8 | Vendor database | PARTIAL | Create/list suppliers + contacts; no historical-quote/performance-score computation yet |
+| 9 | RFQ creation | FULL | Generated from a purchase request's line items, editable instructions |
+| 10 | RFQ email distribution | PARTIAL | Real send via Resend when configured; logs instead of sending otherwise. Portal link always works |
+| 11 | Supplier response portal | FULL | Token-authenticated, no account required, structured pricing/freight/terms entry |
+| 12 | Quote PDF/Excel upload | NONE | Manual entry form instead — see KNOWN_LIMITATIONS.md |
+| 13 | AI quote extraction | NONE | `QuoteExtractionField` modeled, not populated — manual entry is the current path |
+| 14 | Quote normalization | FULL | Total landed cost computed from product total + freight (portal and manual entry both) |
+| 15 | Side-by-side comparison | FULL | `/purchases/[id]/compare` |
+| 16 | AI purchasing recommendation | FULL | Explainable rationale, mock heuristic + Anthropic-backed, logged to AIActivityLog |
+| 17 | Human-assisted negotiation | FULL | AI drafts, human sends — no autonomous path exists in code |
+| 18 | Approval engine | FULL | Deterministic PolicyRule evaluation, sequenced ApprovalSteps, role-gated decisions |
+| 19 | Purchase order generation | FULL | Generated from an approved request + selected quote |
+| 20 | Order tracking | FULL | Full status lifecycle with timeline |
+| 21 | Basic receiving | FULL | Quantity received/damaged/missing per line item |
+| 22 | Savings tracking | PARTIAL | `SavingsRecord` populated at quote selection; realized savings needs invoicing (not built) to complete |
+| 23 | Dashboard/analytics | PARTIAL | Real counts and verified-savings sum; AI "purchasing insights" panel is honest-empty until there's history to analyze |
+| 24 | Notifications | PLANNED | Schema ready, no dispatch/UI |
+| 25 | Audit logs | PARTIAL | Every mutation writes AuditLog; no viewer UI yet |
+| 26 | Document library | PLANNED | Schema ready, no upload endpoint or UI |
+| 27 | Background job system | FULL | Persisted Job table, retries/backoff/dead-letter, worker process + inline dev fallback |
+| 28 | API documentation | PARTIAL | See API_DOCUMENTATION.md; no generated OpenAPI/Swagger file yet |
+| 29 | Automated testing | PARTIAL | Tenant isolation, permissions, policy engine, AI extraction unit/integration tests; no e2e browser tests yet |
+| 30 | Production deployment | NONE | Dockerfile/docker-compose exist; no environment has actually been provisioned from this session |
 
-## Related commerce (not in the 25)
+## Not in the MVP list but modeled
 
-| Area | Status |
-|---|---|
-| Material package shop / cart | PARTIAL (mock payments by default) |
-| Order tracking | PARTIAL (simulated advance button) |
-| ECI Spruce | PARTIAL (mock default; live SOAP stubby) |
-| Excel export | FULL |
-| PDF estimate / subtotals export | FULL |
-| Plan OCR + drawing vision scan | FULL (vision needs OPENAI_API_KEY) |
-| Plan measuring tools (scale/length/area/count) | FULL |
-| Account deletion / data export | FULL (API + UI) |
-| Privacy / Terms / Support pages | PARTIAL (entity placeholders remain) |
+Invoice / three-way matching (`Invoice`, `InvoiceLineItem`, `InvoiceMatchException`) and purchasing intelligence
+benchmarking (`PriceBenchmark`) are fully modeled per brief §23/§25 but have no processing job or UI yet.
 
-**Rule:** New modules are scaffolded with empty states and “Planned” labels — never fake “Save” buttons that do nothing.
+**Rule:** a module with no working UI shows an explicit "Planned" state (`src/components/PlannedModule.tsx`) that
+names the backing schema — never a form that appears to save but doesn't.

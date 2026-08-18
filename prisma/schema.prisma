@@ -1,3 +1,11 @@
+// BuildIQ purchasing platform — multi-tenant schema.
+//
+// Every tenant-scoped model carries an explicit organizationId column and index.
+// There is no database-level row-security in the SQLite dev provider, so tenant
+// isolation is enforced at the application layer (src/lib/tenant.ts) and verified
+// by tests/tenant-isolation.test.ts. Migrating provider to "postgresql" preserves
+// this schema as-is; see ARCHITECTURE.md for the Postgres + RLS production plan.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,653 +15,972 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Company {
-  id         String   @id @default(cuid())
-  name       String
-  slug       String   @unique
-  phone      String?
-  city       String?
-  state      String?
-  onboarded  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+// ── Tenancy & identity ──────────────────────────────────────────────────────
 
-  members        Membership[]
-  projects       Project[]
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  currency  String   @default("USD")
+  timeZone  String   @default("America/New_York")
+  poNumberPrefix String @default("PO")
+  poNumberSeq    Int    @default(1000)
+  rfqNumberPrefix String @default("RFQ")
+  rfqNumberSeq    Int    @default(1000)
+  prNumberPrefix String @default("PR")
+  prNumberSeq    Int    @default(1000)
+  billingAddress  String?
+  taxId           String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  locations      Location[]
+  memberships    Membership[]
   invites        Invite[]
-  spruceSettings SpruceSettings?
-  cart           Cart?
-  orders         Order[]
-  customers      Customer[]
-  cabinetryProductLines CabinetryProductLine[]
-  cabinetryOpportunities CabinetryOpportunity[]
-  proposals      Proposal[]
+  roles          Role[]
+  departments    Department[]
+  costCenters    CostCenter[]
+  suppliers      Supplier[]
+  purchaseRequests PurchaseRequest[]
+  rfqs           RFQ[]
+  purchaseOrders PurchaseOrder[]
+  invoices       Invoice[]
+  policyRules    PolicyRule[]
+  negotiationAuthorities NegotiationAuthority[]
+  documents      Document[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+  aiActivityLogs AIActivityLog[]
+  savingsRecords SavingsRecord[]
+  priceBenchmarks PriceBenchmark[]
+  jobs           Job[]
+
+  @@index([slug])
+}
+
+model Location {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String?
+  postalCode     String?
+  country        String  @default("US")
+  isShipping     Boolean @default(true)
+  isBilling      Boolean @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberships  Membership[]
+  purchaseRequests PurchaseRequest[]
+
+  @@index([organizationId])
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  /// Bumped to invalidate outstanding JWTs (logout-all / password change / delete).
-  tokenVersion Int      @default(0)
-  /// ISO timestamp when Terms + Privacy were accepted at signup.
-  termsAcceptedAt DateTime?
-  emailVerifiedAt DateTime?
-  deletedAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String   @id @default(uuid())
+  email             String   @unique
+  passwordHash      String
+  name              String
+  tokenVersion      Int      @default(0)
+  emailVerifiedAt   DateTime?
+  mfaEnabled        Boolean  @default(false)
+  mfaSecret         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
 
-  memberships Membership[]
-  authTokens  AuthToken[]
+  memberships       Membership[]
+  loginAttempts     LoginAttempt[]
+  aiCorrections     AICorrection[]
+  notifications     Notification[]
+  approvalDecisions ApprovalStep[]  @relation("ApprovalDecidedBy")
+
+  @@index([email])
 }
 
 model Membership {
-  id        String   @id @default(cuid())
-  role      String   @default("OWNER")
-  createdAt DateTime @default(now())
+  id             String   @id @default(uuid())
+  userId         String
+  organizationId String
+  locationId     String?
+  status         String   @default("active") // active | invited | suspended
+  createdAt      DateTime @default(now())
 
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location     Location?    @relation(fields: [locationId], references: [id])
+  roles        MembershipRole[]
 
-  @@unique([userId, companyId])
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+// Roles are per-organization so permissions can be customized (brief §2: "Permissions
+// should ultimately be configurable by organization"). Seed data creates the standard
+// role set for every new org; orgs may add custom roles later without a schema change.
+model Role {
+  id             String   @id @default(uuid())
+  organizationId String
+  key            String   // e.g. "purchasing_manager" — stable, used in policy rules
+  name           String
+  isSystem       Boolean  @default(true) // seeded default role vs org-created custom role
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions  RolePermission[]
+  memberships  MembershipRole[]
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
+}
+
+// Catalog of permission keys, e.g. "purchase_request:create", "purchase_order:approve".
+// Not tenant-scoped — this is the fixed system capability list. What varies per org is
+// which Roles grant which Permissions (RolePermission).
+model Permission {
+  key         String @id
+  description String
+  category    String // e.g. "purchasing", "suppliers", "approvals", "admin"
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId         String
+  permissionKey  String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionKey], references: [key], onDelete: Cascade)
+
+  @@id([roleId, permissionKey])
+}
+
+model MembershipRole {
+  membershipId String
+  roleId       String
+
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([membershipId, roleId])
 }
 
 model Invite {
-  id         String    @id @default(cuid())
-  code       String    @unique
-  email      String?
-  role       String    @default("ESTIMATOR")
-  expiresAt  DateTime
-  acceptedAt DateTime?
-  createdAt  DateTime  @default(now())
+  id             String   @id @default(uuid())
+  organizationId String
+  email          String
+  code           String   @unique
+  roleKey        String
+  status         String   @default("pending") // pending | accepted | revoked
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
 
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }
 
-model Project {
-  id         String   @id @default(cuid())
-  name       String
-  address    String?
-  city       String?
-  state      String?
-  zip        String?
-  squareFeet Int?
-  stories    Int      @default(1)
-  status     String   @default("DRAFT")
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  companyId   String
-  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdById String?
-  customerId  String?
-  customer    Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-
-  blueprints  Blueprint[]
-  materials   MaterialItem[]
-  estimate    Estimate?
-  bidPackages BidPackage[]
-  spruceSyncs SpruceSyncLog[]
-  cabinetryOpportunities CabinetryOpportunity[]
-  proposals   Proposal[]
-}
-
-model Blueprint {
-  id           String   @id @default(cuid())
-  filename     String
-  originalName String
-  mimeType     String
-  sizeBytes    Int
-  sheetType    String?
-  pageCount    Int      @default(1)
-  analysisJson String?
-  /// Raster preview used for vision/OCR (server-generated PNG filename under uploads/)
-  previewFilename String?
-  widthPx         Int?
-  heightPx        Int?
-  /// Calibrated scale: plan pixels per real-world unit (usually feet)
-  pixelsPerUnit   Float?
-  scaleUnit       String  @default("ft")
-  scaleLabel      String?
-  /// IDLE | SCANNING | READY | ERROR | PARTIAL
-  scanStatus      String  @default("IDLE")
-  scanError       String?
-  scannedAt       DateTime?
-  ocrText         String?
-  ocrJson         String?
-  visionJson      String?
-  createdAt    DateTime @default(now())
-
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  measurements PlanMeasurement[]
-}
-
-model PlanMeasurement {
-  id          String   @id @default(cuid())
-  /// CALIBRATION | LENGTH | AREA | COUNT | POLYLINE
-  type        String
-  label       String?
-  /// JSON array of {x,y} in plan pixel space
-  pointsJson  String
-  /// Computed value in scale units (ft, sf) or count
-  value       Float?
-  unit        String?
-  metaJson    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  blueprintId String
-  blueprint   Blueprint @relation(fields: [blueprintId], references: [id], onDelete: Cascade)
-}
-
-model MaterialItem {
-  id          String  @id @default(cuid())
-  category    String
-  trade       String
-  name        String
-  description String?
-  quantity    Float
-  unit        String
-  unitCost    Float
-  laborHours  Float   @default(0)
-  laborRate   Float   @default(0)
-  wasteFactor Float   @default(0.1)
-  spruceSku   String?
-  source      String  @default("ai")
-  confidence  Float?
-
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  bidPackageId String?
-  bidPackage   BidPackage? @relation(fields: [bidPackageId], references: [id], onDelete: SetNull)
-}
-
-model Estimate {
-  id              String   @id @default(cuid())
-  materialCost    Float
-  laborCost       Float
-  wasteCost       Float
-  contingencyPct  Float    @default(0.1)
-  contingencyCost Float
-  overheadPct     Float    @default(0.08)
-  overheadCost    Float
-  profitPct       Float    @default(0.12)
-  profitAmount    Float
-  taxPct          Float    @default(0.065)
-  taxAmount       Float
-  grandTotal      Float
-  version         Int      @default(1)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  projectId String  @unique
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-}
-
-model BidPackage {
-  id          String    @id @default(cuid())
-  trade       String
-  title       String
-  description String?
-  dueDate     DateTime?
-  status      String    @default("DRAFT")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  materials MaterialItem[]
-}
-
-model SpruceSettings {
-  id            String   @id @default(cuid())
-  apiEndpoint   String?
-  soapEndpoint  String?
-  apiKey        String?
-  branchCode    String?
-  accountNumber String?
-  enabled       Boolean  @default(false)
-  mockMode      Boolean  @default(true)
-  updatedAt     DateTime @updatedAt
-
-  companyId String  @unique
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-}
-
-model SpruceSyncLog {
-  id        String   @id @default(cuid())
-  action    String
-  status    String
-  detail    String?
-  payload   String?
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  userId    String?
+  email     String
+  success   Boolean
+  ipAddress String?
   createdAt DateTime @default(now())
 
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([email, createdAt])
 }
 
-// Catalog of residential material takeoff packages
-model MaterialPackage {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  category    String
-  name        String
-  description String
-  contents    String
-  unit        String   @default("package")
-  unitPrice   Float
-  leadDays    Int      @default(7)
-  spruceSku   String?
-  imageHint   String?
-  active      Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
+// ── Org configuration ───────────────────────────────────────────────────────
 
-  cartItems  CartItem[]
-  orderItems OrderItem[]
+model Department {
+  id             String @id @default(uuid())
+  organizationId String
+  name           String
+  createdAt      DateTime @default(now())
+
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseRequests  PurchaseRequest[]
+
+  @@index([organizationId])
 }
 
-model Cart {
-  id        String   @id @default(cuid())
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
+model CostCenter {
+  id             String @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  createdAt      DateTime @default(now())
 
-  companyId String  @unique
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseRequests PurchaseRequest[]
 
-  items CartItem[]
+  @@unique([organizationId, code])
+  @@index([organizationId])
 }
 
-model CartItem {
-  id        String   @id @default(cuid())
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// Deterministic purchasing policy / rules engine (brief §18). Kept entirely separate
+// from the AI layer: AI may recommend an action, but only PolicyRule evaluation
+// (src/lib/policy) decides what is actually allowed and what approvals are required.
+model PolicyRule {
+  id                 String   @id @default(uuid())
+  organizationId     String
+  type               String   // "approval_threshold" | "bid_count_minimum" | "ai_negotiation_authority" | "restricted_supplier_category" | "international_supplier_approval" | "substitution_requires_approval"
+  minAmount          Float?
+  maxAmount          Float?
+  requiredApproverRoleKey String?
+  requiredBidCount   Int?
+  active             Boolean  @default(true)
+  priority           Int      @default(0)
+  config             String?  // JSON blob for rule-specific extra config
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  cartId    String
-  cart      Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  packageId String
-  package   MaterialPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  projectId String?
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@unique([cartId, packageId, projectId])
+  @@index([organizationId, type])
 }
 
-model Order {
-  id              String   @id @default(cuid())
-  orderNumber     String   @unique
-  status          String   @default("PLACED")
-  trackingStep    String   @default("ORDER_RECEIVED")
-  subtotal        Float
-  tax             Float
-  total           Float
-  currency        String   @default("usd")
-  paymentStatus   String   @default("pending")
-  paymentMethod   String?
-  paymentIntentId String?
-  paidAt          DateTime?
-  shipToName      String?
-  shipToAddress   String?
-  shipToCity      String?
-  shipToState     String?
-  shipToZip       String?
+// Org-defined limits on autonomous AI negotiation (brief §17/§18). The negotiation
+// engine reads this; the LLM never decides authority on its own.
+model NegotiationAuthority {
+  id                     String  @id @default(uuid())
+  organizationId         String
+  autoNegotiateEnabled   Boolean @default(false)
+  maxPurchaseValue       Float?
+  targetSavingsPct       Float?
+  minPaymentTermsDays    Int?
+  allowSubstitutions     Boolean @default(false)
+  allowFinalize          Boolean @default(false) // must always be false in MVP; reserved for future delegated autonomy
+  maxNegotiationRounds   Int     @default(3)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+// ── Suppliers ────────────────────────────────────────────────────────────────
+
+model Supplier {
+  id              String   @id @default(uuid())
+  organizationId  String
+  name            String
+  status          String   @default("active") // active | approved | restricted | inactive
+  website         String?
+  addressLine1    String?
+  city            String?
+  state           String?
+  postalCode      String?
+  country         String?
+  regionsServed   String?  // JSON array
+  categories      String?  // JSON array of category strings
+  certifications  String?  // JSON array
+  paymentTerms    String?  // e.g. "Net 30"
+  taxId           String?
   notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  companyId   String
-  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  placedById  String?
-  projectId   String?
+  // Rolling performance metrics — recomputed by a background job as history accrues.
+  // These back the future proprietary supplier-performance score (brief §8).
+  responseRate        Float?
+  avgResponseHours    Float?
+  onTimeDeliveryRate  Float?
+  qualityIssueCount   Int    @default(0)
+  performanceScore    Float?
 
-  items    OrderItem[]
-  tracking TrackingEvent[]
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts     SupplierContact[]
+  documents    Document[]        @relation("SupplierDocuments")
+  rfqSuppliers RFQSupplier[]
+  quotes       Quote[]
+  purchaseOrders PurchaseOrder[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
 }
 
-model OrderItem {
-  id         String @id @default(cuid())
+model SupplierContact {
+  id         String  @id @default(uuid())
+  supplierId String
   name       String
-  category   String
-  quantity   Int
-  unitPrice  Float
-  lineTotal  Float
-  spruceSku  String?
+  email      String?
+  phone      String?
+  title      String?
+  isPrimary  Boolean @default(false)
 
-  orderId   String
-  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  packageId String?
-  package   MaterialPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
 }
 
-model TrackingEvent {
-  id        String   @id @default(cuid())
-  step      String
-  label     String
-  detail    String?
+// ── Purchase requests ────────────────────────────────────────────────────────
+
+model PurchaseRequest {
+  id               String   @id @default(uuid())
+  organizationId   String
+  requestNumber    String
+  departmentId     String?
+  costCenterId     String?
+  requesterId      String
+  status           String   @default("draft")
+  // draft | needs_information | ready_for_sourcing | rfq_active | quotes_received |
+  // under_review | negotiating | awaiting_approval | approved | rejected | po_issued |
+  // ordered | shipped | delivered | closed | cancelled
+  title            String
+  budget           Float?
+  requiredDeliveryDate DateTime?
+  deliveryLocationId   String?
+  projectRef       String?
+  paymentTermsRequirement String?
+  warrantyRequirement     String?
+  certificationRequirement String?
+  preferredSupplierIds String? // JSON array
+  restrictedSupplierIds String? // JSON array
+  additionalInstructions String?
+
+  // Raw natural-language input captured verbatim, plus the AI extraction that
+  // produced the structured fields above — always traceable back to source (brief §5/§27).
+  originalDescription String?
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  orderId String
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id])
+  costCenter   CostCenter?  @relation(fields: [costCenterId], references: [id])
+  deliveryLocation Location? @relation(fields: [deliveryLocationId], references: [id])
+
+  lineItems     PurchaseRequestLineItem[]
+  comments      PurchaseRequestComment[]
+  statusHistory PurchaseRequestStatusEvent[]
+  rfqs          RFQ[]
+  approvalRequests ApprovalRequest[]
+  purchaseOrders   PurchaseOrder[]
+  savingsRecord    SavingsRecord?
+
+  @@unique([organizationId, requestNumber])
+  @@index([organizationId, status])
 }
 
-model AuthToken {
-  id        String   @id @default(cuid())
-  type      String // EMAIL_VERIFY | PASSWORD_RESET
-  tokenHash String   @unique
-  expiresAt DateTime
-  usedAt    DateTime?
+model PurchaseRequestLineItem {
+  id             String  @id @default(uuid())
+  purchaseRequestId String
+  description    String
+  category       String?
+  manufacturer   String?
+  model          String?
+  sku            String?
+  quantity       Float
+  unitOfMeasure  String  @default("each")
+  targetPrice    Float?
+  specifications String? // JSON: freeform spec requirements
+  acceptableSubstitutions String? // JSON array
+  deliveryRequirement String?
+  createdAt      DateTime @default(now())
+
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  rfqLineItems    RFQLineItem[]
+
+  @@index([purchaseRequestId])
+}
+
+model PurchaseRequestComment {
+  id             String  @id @default(uuid())
+  purchaseRequestId String
+  authorId       String?
+  authorType     String  @default("user") // user | ai
+  body           String
+  createdAt      DateTime @default(now())
+
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseRequestId])
+}
+
+model PurchaseRequestStatusEvent {
+  id             String  @id @default(uuid())
+  purchaseRequestId String
+  fromStatus     String?
+  toStatus       String
+  actorId        String?
+  actorType      String  @default("user") // user | ai | system
+  note           String?
+  createdAt      DateTime @default(now())
+
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseRequestId])
+}
+
+// ── RFQ ──────────────────────────────────────────────────────────────────────
+
+model RFQ {
+  id               String   @id @default(uuid())
+  organizationId   String
+  purchaseRequestId String
+  rfqNumber        String
+  status           String   @default("draft") // draft | sent | responses_open | closed | cancelled
+  quoteDeadline    DateTime?
+  shippingLocationId String?
+  paymentTermsRequest String?
+  warrantyRequirement String?
+  substitutionRules   String?
+  specialInstructions String?
+  responseInstructions String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
 
-  @@index([userId, type])
+  lineItems RFQLineItem[]
+  suppliers RFQSupplier[]
+
+  @@unique([organizationId, rfqNumber])
+  @@index([organizationId, status])
 }
 
-model LoginAttempt {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  failures       Int       @default(0)
-  windowStartsAt DateTime  @default(now())
-  lockedUntil    DateTime?
-  updatedAt      DateTime  @updatedAt
+model RFQLineItem {
+  id           String @id @default(uuid())
+  rfqId        String
+  sourceLineItemId String?
+  description  String
+  quantity     Float
+  unitOfMeasure String @default("each")
+  specifications String?
+
+  rfq            RFQ                       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  sourceLineItem PurchaseRequestLineItem?  @relation(fields: [sourceLineItemId], references: [id])
+  quoteLineItems QuoteLineItem[]
+
+  @@index([rfqId])
+}
+
+// Join between an RFQ and each invited supplier, tracking the communication
+// lifecycle described in brief §11 (sent/delivered/opened/responded/declined/no_response).
+model RFQSupplier {
+  id           String   @id @default(uuid())
+  rfqId        String
+  supplierId   String
+  status       String   @default("pending") // pending | sent | delivered | opened | responded | declined | no_response
+  secureToken  String   @unique // supplier portal access token
+  sentAt       DateTime?
+  openedAt     DateTime?
+  respondedAt  DateTime?
+  declinedAt   DateTime?
+  followUpCount Int     @default(0)
+
+  rfq      RFQ      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  messages RFQMessage[]
+  quotes   Quote[]
+
+  @@unique([rfqId, supplierId])
+  @@index([rfqId])
+}
+
+model RFQMessage {
+  id            String  @id @default(uuid())
+  rfqSupplierId String
+  direction     String  // inbound | outbound
+  authorType    String  @default("buyer") // buyer | supplier | ai
+  body          String
+  createdAt     DateTime @default(now())
+
+  rfqSupplier RFQSupplier @relation(fields: [rfqSupplierId], references: [id], onDelete: Cascade)
+
+  @@index([rfqSupplierId])
+}
+
+// ── Quotes ───────────────────────────────────────────────────────────────────
+
+model Quote {
+  id            String   @id @default(uuid())
+  rfqSupplierId String
+  supplierId    String
+  quoteNumber   String?
+  status        String   @default("received") // received | under_review | selected | rejected | expired
+  expiresAt     DateTime?
+  freight       Float?
+  freightIncluded Boolean @default(false)
+  taxes         Float?
+  surcharges    Float?
+  leadTimeDays  Int?
+  deliveryEstimate DateTime?
+  paymentTerms  String?
+  warranty      String?
+  exclusions    String?
+  termsAndConditions String?
+  productTotal  Float?
+  totalLandedCost Float?
+  sourceType    String   @default("portal") // portal | pdf | excel | csv | email | manual
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  rfqSupplier RFQSupplier @relation(fields: [rfqSupplierId], references: [id], onDelete: Cascade)
+  supplier    Supplier    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  lineItems  QuoteLineItem[]
+  documents  Document[] @relation("QuoteDocuments")
+  extractions QuoteExtractionField[]
+  negotiations Negotiation[]
+
+  @@index([rfqSupplierId])
+  @@index([supplierId])
+}
+
+model QuoteLineItem {
+  id            String  @id @default(uuid())
+  quoteId       String
+  rfqLineItemId String?
+  sku           String?
+  description   String
+  quantity      Float
+  unitPrice     Float
+  extendedPrice Float
+  discount      Float?
+  isSubstitution Boolean @default(false)
+  substitutionNote String?
+
+  quote       Quote        @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  rfqLineItem RFQLineItem? @relation(fields: [rfqLineItemId], references: [id])
+
+  @@index([quoteId])
+}
+
+// Field-level extraction traceability (brief §13): every AI-extracted value keeps a
+// pointer back to its source document plus a confidence score. Low-confidence values
+// are flagged for human verification instead of silently trusted.
+model QuoteExtractionField {
+  id              String   @id @default(uuid())
+  quoteId         String
+  documentId      String?
+  fieldPath       String   // e.g. "lineItems[2].unitPrice"
+  extractedValue  String
+  confidence      Float
+  verifiedByUserId String?
+  verifiedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  quote    Quote     @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id])
+
+  @@index([quoteId])
+}
+
+// ── Negotiation ──────────────────────────────────────────────────────────────
+
+model Negotiation {
+  id            String   @id @default(uuid())
+  quoteId       String
+  status        String   @default("proposed") // proposed | sent | countered | accepted | declined | closed
+  round         Int      @default(1)
+  aiRecommendation String? // JSON: target reduction, rationale
+  requestedPrice  Float?
+  requestedTerms  String?
+  resultPrice     Float?
+  resultTerms     String?
+  initiatedByUserId String?
+  autonomous      Boolean @default(false) // true only if within NegotiationAuthority policy
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quote    Quote               @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  messages NegotiationMessage[]
+
+  @@index([quoteId])
+}
+
+model NegotiationMessage {
+  id            String  @id @default(uuid())
+  negotiationId String
+  direction     String  // outbound | inbound
+  authorType    String  @default("ai") // ai | user | supplier
+  body          String
+  createdAt     DateTime @default(now())
+
+  negotiation Negotiation @relation(fields: [negotiationId], references: [id], onDelete: Cascade)
+
+  @@index([negotiationId])
+}
+
+// ── Approvals ────────────────────────────────────────────────────────────────
+
+// Generated by the policy engine (src/lib/policy), never by the AI layer directly.
+model ApprovalRequest {
+  id               String   @id @default(uuid())
+  purchaseRequestId String
+  reason           String   // which PolicyRule(s) triggered this, human readable
+  status           String   @default("pending") // pending | approved | rejected | changes_requested
+  amount           Float?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  steps           ApprovalStep[]
+
+  @@index([purchaseRequestId])
+}
+
+model ApprovalStep {
+  id                String   @id @default(uuid())
+  approvalRequestId String
+  sequence          Int      @default(1)
+  requiredRoleKey   String
+  decidedByUserId   String?
+  decision          String?  // approve | reject | request_changes
+  comments          String?
+  versionSnapshot   String?  // JSON snapshot of what was approved
+  decidedAt         DateTime?
+  createdAt         DateTime @default(now())
+
+  approvalRequest ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
+  decidedBy       User?           @relation("ApprovalDecidedBy", fields: [decidedByUserId], references: [id])
+
+  @@index([approvalRequestId])
+}
+
+// ── Purchase orders ──────────────────────────────────────────────────────────
+
+model PurchaseOrder {
+  id               String   @id @default(uuid())
+  organizationId   String
+  purchaseRequestId String
+  supplierId       String
+  poNumber         String
+  status           String   @default("issued")
+  // issued | supplier_confirmed | processing | production | ready_to_ship | shipped |
+  // partially_delivered | delivered | delayed | cancelled | closed
+  billingAddress   String?
+  shippingAddress  String?
+  paymentTerms     String?
+  requestedDeliveryDate DateTime?
+  supplierConfirmedDeliveryDate DateTime?
+  freight          Float?
+  tax              Float?
+  total            Float?
+  approvedByUserId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  supplier        Supplier        @relation(fields: [supplierId], references: [id])
+
+  lineItems     PurchaseOrderLineItem[]
+  statusHistory PurchaseOrderStatusEvent[]
+  receipts      Receipt[]
+  invoices      Invoice[]
+  documents     Document[] @relation("PurchaseOrderDocuments")
+
+  @@unique([organizationId, poNumber])
+  @@index([organizationId, status])
+}
+
+model PurchaseOrderLineItem {
+  id              String @id @default(uuid())
+  purchaseOrderId String
+  description     String
+  sku             String?
+  quantity        Float
+  unitPrice       Float
+  total           Float
+
+  purchaseOrder   PurchaseOrder    @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  receiptLineItems ReceiptLineItem[]
+  invoiceLineItems InvoiceLineItem[]
+
+  @@index([purchaseOrderId])
+}
+
+model PurchaseOrderStatusEvent {
+  id              String  @id @default(uuid())
+  purchaseOrderId String
+  fromStatus      String?
+  toStatus        String
+  actorType       String  @default("user") // user | supplier | system
+  note            String?
+  createdAt       DateTime @default(now())
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseOrderId])
+}
+
+// ── Receiving ────────────────────────────────────────────────────────────────
+
+model Receipt {
+  id              String   @id @default(uuid())
+  purchaseOrderId String
+  receivedByUserId String?
+  deliveryDate    DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  purchaseOrder PurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  lineItems     ReceiptLineItem[]
+  documents     Document[]        @relation("ReceiptDocuments")
+
+  @@index([purchaseOrderId])
+}
+
+model ReceiptLineItem {
+  id                      String  @id @default(uuid())
+  receiptId               String
+  purchaseOrderLineItemId String
+  quantityReceived        Float
+  quantityDamaged         Float   @default(0)
+  quantityMissing         Float   @default(0)
+  isPartial               Boolean @default(false)
+  notes                   String?
+
+  receipt               Receipt               @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  purchaseOrderLineItem PurchaseOrderLineItem @relation(fields: [purchaseOrderLineItemId], references: [id])
+
+  @@index([receiptId])
+}
+
+// ── Invoices (architecture now, full matching feature later — brief §23) ──────
+
+model Invoice {
+  id              String   @id @default(uuid())
+  organizationId  String
+  purchaseOrderId String?
+  supplierInvoiceNumber String?
+  amount          Float
+  freight         Float?
+  tax             Float?
+  status          String   @default("pending_match") // pending_match | matched | discrepancy | approved_for_payment | paid
+  receivedAt      DateTime @default(now())
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  lineItems     InvoiceLineItem[]
+  matchExceptions InvoiceMatchException[]
+  documents     Document[] @relation("InvoiceDocuments")
+
+  @@index([organizationId, status])
+}
+
+model InvoiceLineItem {
+  id                      String  @id @default(uuid())
+  invoiceId               String
+  purchaseOrderLineItemId String?
+  description             String
+  quantity                Float
+  unitPrice               Float
+  total                   Float
+
+  invoice               Invoice                @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  purchaseOrderLineItem PurchaseOrderLineItem? @relation(fields: [purchaseOrderLineItemId], references: [id])
+
+  @@index([invoiceId])
+}
+
+// Three-way match (PO vs Receipt vs Invoice) discrepancy record.
+model InvoiceMatchException {
+  id         String  @id @default(uuid())
+  invoiceId  String
+  type       String  // price_difference | quantity_difference | unauthorized_freight | duplicate_invoice | unexpected_tax | item_not_received | additional_fee
+  expected   Float?
+  actual     Float?
+  difference Float?
+  detail     String?
+  resolvedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+// ── Savings & purchasing intelligence ──────────────────────────────────────
+
+// One row per purchase request, populated as the request progresses. Definitions
+// (brief §24) are kept distinct so the dashboard never conflates them:
+//   negotiatedSavings = initialQuote - negotiatedQuote
+//   benchmarkSavings  = historicalBenchmark - finalPrice
+//   realizedSavings   = initialQuote - finalInvoiceAmount (only set once invoiced)
+model SavingsRecord {
+  id                  String  @id @default(uuid())
+  organizationId      String
+  purchaseRequestId   String  @unique
+  initialQuoteTotal   Float?
+  lowestQualifiedQuote Float?
+  historicalBenchmark Float?
+  negotiatedQuoteTotal Float?
+  finalApprovedPrice  Float?
+  finalInvoiceAmount  Float?
+  negotiatedSavings   Float?
+  benchmarkSavings    Float?
+  realizedSavings     Float?
+  updatedAt           DateTime @updatedAt
+
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+// Rolling aggregate used for "this quote is 14% above similar purchases" style
+// insights (brief §25). Populated by a background job from closed purchase requests.
+model PriceBenchmark {
+  id             String  @id @default(uuid())
+  organizationId String
+  category       String
+  manufacturer   String?
+  unitOfMeasure  String  @default("each")
+  periodStart    DateTime
+  periodEnd      DateTime
+  avgUnitPrice   Float
+  sampleSize     Int
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, category])
+}
+
+// ── AI & audit ───────────────────────────────────────────────────────────────
+
+// Every AI call in the system is logged here (brief §26), regardless of provider.
+model AIActivityLog {
+  id             String   @id @default(uuid())
+  organizationId String?
+  feature        String   // e.g. "purchase_request_extraction", "quote_normalization", "recommendation"
+  provider       String
+  model          String
+  promptVersion  String
+  inputRef       String?  // pointer to source (document id, request id, etc.)
+  input          String?
+  output         String?
+  confidence     Float?
+  tokensIn       Int?
+  tokensOut      Int?
+  costUsd        Float?
+  entityType     String?
+  entityId       String?
+  acceptedResult Boolean?
+  createdAt      DateTime @default(now())
+
+  organization Organization?   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  corrections  AICorrection[]
+
+  @@index([organizationId, feature])
+}
+
+// Human corrections to AI output, retained permanently (brief §27) — the AI result
+// is never overwritten, only annotated with what a human changed it to.
+model AICorrection {
+  id              String   @id @default(uuid())
+  aiActivityLogId String
+  fieldPath       String
+  originalValue   String
+  correctedValue  String
+  correctedByUserId String
+  createdAt       DateTime @default(now())
+
+  aiActivityLog AIActivityLog @relation(fields: [aiActivityLogId], references: [id], onDelete: Cascade)
+  correctedBy   User          @relation(fields: [correctedByUserId], references: [id])
+
+  @@index([aiActivityLogId])
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  companyId   String?
-  actorUserId String?
-  action      String
-  entityType  String?
-  entityId    String?
-  detail      String?
-  ip          String?
-  createdAt   DateTime @default(now())
+  id             String   @id @default(uuid())
+  organizationId String
+  actorUserId    String?
+  actorType      String   @default("user") // user | ai | system | supplier
+  action         String   // e.g. "purchase_request.approve", "policy.override"
+  entityType     String
+  entityId       String
+  before         String?  // JSON
+  after          String?  // JSON
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
 
-  @@index([companyId, createdAt])
-  @@index([actorUserId, createdAt])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, entityType, entityId])
 }
 
-/// Persisted AI agent orchestration run (multi-agent workflow).
-model AgentRun {
-  id          String    @id @default(cuid())
-  /// e.g. estimating-pipeline
-  workflowId  String
-  status      String    @default("PENDING") // PENDING | RUNNING | COMPLETED | FAILED | CANCELLED
-  progress    Int       @default(0)
-  inputJson   String?
-  resultJson  String?
-  error       String?
-  startedAt   DateTime  @default(now())
-  finishedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+// ── Notifications ────────────────────────────────────────────────────────────
 
-  companyId   String
-  projectId   String?
-  startedById String?
+model Notification {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  type           String
+  title          String
+  body           String?
+  entityType     String?
+  entityId       String?
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
 
-  steps AgentStep[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([companyId, createdAt])
-  @@index([projectId, createdAt])
-  @@index([status, createdAt])
+  @@index([organizationId, userId, readAt])
 }
 
-model AgentStep {
-  id         String    @id @default(cuid())
-  agentId    String
-  agentName  String
-  status     String    @default("PENDING") // PENDING | RUNNING | COMPLETED | FAILED | SKIPPED
-  progress   Int       @default(0)
-  message    String?
-  inputJson  String?
-  outputJson String?
-  error      String?
-  sortOrder  Int       @default(0)
-  startedAt  DateTime?
-  finishedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+// ── Documents (generic, polymorphic attachment) ─────────────────────────────
 
-  runId String
-  run   AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+model Document {
+  id               String   @id @default(uuid())
+  organizationId   String
+  entityType       String   // purchase_request | rfq | quote | purchase_order | receipt | invoice | supplier
+  entityId         String
+  filename         String
+  mimeType         String
+  sizeBytes        Int
+  storageKey       String
+  uploadedByUserId String?
+  virusScanStatus  String   @default("pending") // pending | clean | infected | skipped
+  createdAt        DateTime @default(now())
 
-  @@index([runId, sortOrder])
-  @@index([agentId, status])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  quoteExtractions QuoteExtractionField[]
+  supplier         Supplier?      @relation("SupplierDocuments", fields: [supplierRelId], references: [id])
+  supplierRelId    String?
+  quote            Quote?         @relation("QuoteDocuments", fields: [quoteRelId], references: [id])
+  quoteRelId       String?
+  purchaseOrder    PurchaseOrder? @relation("PurchaseOrderDocuments", fields: [poRelId], references: [id])
+  poRelId          String?
+  receipt          Receipt?       @relation("ReceiptDocuments", fields: [receiptRelId], references: [id])
+  receiptRelId     String?
+  invoice          Invoice?       @relation("InvoiceDocuments", fields: [invoiceRelId], references: [id])
+  invoiceRelId     String?
+
+  @@index([organizationId, entityType, entityId])
 }
 
-/// Planned construction modules — schema placeholders for future implementation.
-/// Do not expose fake CRUD; APIs return planned status until built.
-model ModuleRegistry {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  name        String
-  status      String   @default("PLANNED") // PLANNED | PARTIAL | FULL
-  description String?
-  updatedAt   DateTime @updatedAt
+// ── Background jobs (brief §34) ─────────────────────────────────────────────
+
+model Job {
+  id             String   @id @default(uuid())
+  organizationId String?
+  type           String   // e.g. "rfq.send"
+  status         String   @default("queued") // queued | running | succeeded | failed | dead_letter
+  payload        String   // JSON
+  attempts       Int      @default(0)
+  maxAttempts    Int      @default(3)
+  lastError      String?
+  runAt          DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([status, runAt])
 }
-
-/// Shared customer party (builder / homeowner / GC) — platform foundation for cabinetry + CRM.
-model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  /// BUILDER | HOMEOWNER | GC | OTHER
-  type      String   @default("BUILDER")
-  email     String?
-  phone     String?
-  address   String?
-  city      String?
-  state     String?
-  zip       String?
-  notes     String?
-  status    String   @default("ACTIVE")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdById String?
-
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  contacts      Contact[]
-  projects      Project[]
-  opportunities CabinetryOpportunity[]
-  proposals     Proposal[]
-
-  @@index([companyId, name])
-}
-
-model Contact {
-  id        String   @id @default(cuid())
-  name      String
-  /// ARCHITECT | DESIGNER | PM | OTHER
-  role      String?
-  email     String?
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdById String?
-
-  companyId  String
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@index([companyId, customerId])
-}
-
-/// Editable cabinetry product lines (Mesa / Summit / Pinnacle) — specs in DB, not hard-coded prices.
-model CabinetryProductLine {
-  id          String   @id @default(cuid())
-  slug        String
-  name        String
-  description String?
-  /// JSON construction / finish specifications (admin-editable)
-  specsJson   String   @default("{}")
-  status      String   @default("ACTIVE")
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdById String?
-
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  opportunities CabinetryOpportunity[]
-
-  @@unique([companyId, slug])
-}
-
-model CabinetryOpportunity {
-  id        String   @id @default(cuid())
-  /// NEW | DOCUMENTS_REQUESTED | ... | ACCEPTED | LOST | EXPIRED
-  stage     String   @default("NEW")
-  status    String   @default("OPEN")
-  version   Int      @default(1)
-  builderName    String?
-  architectName  String?
-  designerName   String?
-  projectAddress String?
-  requestedProposalDate DateTime?
-  targetInstallDate     DateTime?
-  /// NEW_CONSTRUCTION | REMODEL
-  constructionType String?
-  /// SUPPLY_ONLY | SUPPLY_AND_INSTALL
-  supplyScope      String?
-  taxStatus        String?
-  notes            String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdById String?
-  salespersonId String?
-  estimatorId   String?
-
-  companyId     String
-  company       Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  customerId    String
-  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  projectId     String
-  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  productLineId String?
-  productLine   CabinetryProductLine? @relation(fields: [productLineId], references: [id], onDelete: SetNull)
-
-  @@index([companyId, stage])
-  @@index([projectId])
-  @@index([customerId])
-}
-
-/// Customer-facing material proposal across shop categories
-/// (Windows, Doors, Lumber, Trusses, Cabinetry, Masonry, Hardware, Millwork, …).
-model Proposal {
-  id          String   @id @default(cuid())
-  /// Human-readable e.g. PRO-2026-00042
-  number      String
-  title       String
-  /// DRAFT | SENT | VIEWED | ACCEPTED | DECLINED | EXPIRED | SUPERSEDED
-  status      String   @default("DRAFT")
-  version     Int      @default(1)
-  intro       String?
-  scopeNotes  String?
-  exclusions  String?
-  terms       String?
-  validUntil  DateTime?
-  depositPct  Float    @default(0.3)
-  materialSubtotal   Float @default(0)
-  laborSubtotal      Float @default(0)
-  wasteSubtotal      Float @default(0)
-  contingencyAmount  Float @default(0)
-  overheadAmount     Float @default(0)
-  profitAmount       Float @default(0)
-  taxAmount          Float @default(0)
-  grandTotal         Float @default(0)
-  depositAmount      Float @default(0)
-  /// Unguessable token for public customer view / accept
-  publicToken String   @unique
-  sentAt      DateTime?
-  viewedAt    DateTime?
-  acceptedAt  DateTime?
-  declinedAt  DateTime?
-  customerEmail String?
-  customerName  String?
-  projectAddress String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdById String?
-
-  companyId  String
-  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  projectId  String?
-  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  customerId String?
-  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  cabinetryOpportunityId String?
-
-  sections    ProposalSection[]
-  acceptance  ProposalAcceptance?
-
-  @@unique([companyId, number])
-  @@index([companyId, status])
-  @@index([projectId])
-  @@index([customerId])
-  @@index([publicToken])
-}
-
-model ProposalSection {
-  id        String  @id @default(cuid())
-  /// Canonical category: Windows | Doors | Lumber | Trusses | Cabinetry | …
-  category  String
-  title     String
-  sortOrder Int     @default(0)
-  subtotal  Float   @default(0)
-  notes     String?
-
-  proposalId String
-  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-
-  lines ProposalLine[]
-
-  @@index([proposalId, sortOrder])
-}
-
-model ProposalLine {
-  id          String  @id @default(cuid())
-  name        String
-  description String?
-  category    String
-  quantity    Float
-  unit        String
-  unitPrice   Float
-  lineTotal   Float
-  spruceSku   String?
-  sortOrder   Int     @default(0)
-  sourceMaterialId String?
-
-  sectionId String
-  section   ProposalSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  @@index([sectionId, sortOrder])
-}
-
-model ProposalAcceptance {
-  id          String   @id @default(cuid())
-  /// ACCEPTED | DECLINED
-  decision    String
-  signerName  String
-  signerEmail String?
-  signerTitle String?
-  notes       String?
-  ip          String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-
-  proposalId String   @unique
-  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-}
-

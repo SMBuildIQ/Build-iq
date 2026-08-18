@@ -10,22 +10,22 @@ RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /v
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL="file:./prod.db"
+ENV DATABASE_URL="file:./build.db"
 RUN npx prisma generate && npx prisma db push && npm run build
 
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL="file:./data/prod.db"
-# AUTH_SECRET must be provided at runtime (32+ chars). Do not bake secrets into the image.
+# Production target is PostgreSQL — set DATABASE_URL at runtime (see ARCHITECTURE.md).
+# AUTH_SECRET must also be provided at runtime (32+ chars). Do not bake secrets into the image.
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/* \
-  && mkdir -p /app/data /app/uploads \
   && groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/.next/standalone ./
@@ -37,4 +37,9 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
+# No versioned migrations exist yet (dev has only used `prisma db push` — see
+# DATABASE_SCHEMA.md); switch this to `prisma migrate deploy` once migrations are
+# generated for the PostgreSQL target. The web process and the job worker
+# (npm run worker) are separate containers in docker-compose.yml / production —
+# this default CMD runs the web server only.
 CMD ["sh", "-c", "npx prisma db push && node server.js"]

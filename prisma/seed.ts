@@ -1,133 +1,50 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import { MATERIAL_PACKAGES } from "../src/lib/materials/packages";
-
-const prisma = new PrismaClient();
+import "dotenv/config";
+import { prisma } from "../src/lib/db";
+import { hashPassword } from "../src/lib/auth/password";
+import { createOrganizationWithOwner } from "../src/lib/org/bootstrap";
 
 async function main() {
-  const passwordHash = await bcrypt.hash("demo1234", 10);
-
-  for (const pkg of MATERIAL_PACKAGES) {
-    await prisma.materialPackage.upsert({
-      where: { slug: pkg.slug },
-      create: pkg,
-      update: {
-        name: pkg.name,
-        description: pkg.description,
-        contents: pkg.contents,
-        unitPrice: pkg.unitPrice,
-        leadDays: pkg.leadDays,
-        spruceSku: pkg.spruceSku,
-        sortOrder: pkg.sortOrder,
-        active: true,
-      },
-    });
+  const email = "demo@buildiq.app";
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    console.log("Seed data already present — skipping.");
+    return;
   }
 
-  let company = await prisma.company.findUnique({ where: { slug: "ridge-homes" } });
-  if (!company) {
-    company = await prisma.company.create({
-      data: {
-        name: "Ridge Homes",
-        slug: "ridge-homes",
-        phone: "541-555-0142",
-        city: "Bend",
-        state: "OR",
-        onboarded: true,
-        spruceSettings: {
-          create: {
-            mockMode: true,
-            enabled: true,
-            branchCode: "MAIN",
-            accountNumber: "CUST-1001",
-          },
-        },
-      },
-    });
-  }
-
-  let user = await prisma.user.findUnique({ where: { email: "demo@buildiq.app" } });
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email: "demo@buildiq.app",
-        name: "Demo Estimator",
-        passwordHash,
-        termsAcceptedAt: new Date(),
-        emailVerifiedAt: new Date(),
-        memberships: {
-          create: { companyId: company.id, role: "OWNER" },
-        },
-      },
-    });
-  } else {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        termsAcceptedAt: user.termsAcceptedAt || new Date(),
-        emailVerifiedAt: user.emailVerifiedAt || new Date(),
-      },
-    });
-    const membership = await prisma.membership.findFirst({
-      where: { userId: user.id, companyId: company.id },
-    });
-    if (!membership) {
-      await prisma.membership.create({
-        data: { userId: user.id, companyId: company.id, role: "OWNER" },
-      });
-    }
-  }
-
-  const { PLATFORM_MODULES } = await import("../src/lib/modules/registry");
-  for (const mod of PLATFORM_MODULES) {
-    await prisma.moduleRegistry.upsert({
-      where: { slug: mod.slug },
-      create: {
-        slug: mod.slug,
-        name: mod.name,
-        status: mod.status,
-        description: mod.description,
-      },
-      update: {
-        name: mod.name,
-        status: mod.status,
-        description: mod.description,
-      },
-    });
-  }
-
-  const existing = await prisma.project.findFirst({
-    where: { companyId: company.id, name: "Cedar Lane Residence" },
+  const user = await prisma.user.create({
+    data: { email, passwordHash: await hashPassword("demo12345"), name: "Demo Owner" },
   });
 
-  if (!existing) {
-    await prisma.project.create({
-      data: {
-        companyId: company.id,
-        createdById: user.id,
-        name: "Cedar Lane Residence",
-        address: "1847 Cedar Lane",
-        city: "Bend",
-        state: "OR",
-        zip: "97701",
-        squareFeet: 2450,
-        stories: 2,
-        notes: "Crawlspace foundation, fiber cement siding, architectural shingles",
-        status: "DRAFT",
-      },
-    });
-  }
+  const { organization } = await createOrganizationWithOwner({
+    name: "Acme Manufacturing",
+    slug: "acme-manufacturing",
+    ownerUserId: user.id,
+  });
 
-  console.log(`Seeded ${MATERIAL_PACKAGES.length} material takeoff packages`);
-  console.log("Seeded builder company Ridge Homes");
-  console.log("Demo login: demo@buildiq.app / demo1234");
+  await prisma.supplier.createMany({
+    data: [
+      { organizationId: organization.id, name: "Global Tech Distributors", status: "approved", city: "Chicago", state: "IL", country: "US", paymentTerms: "Net 30" },
+      { organizationId: organization.id, name: "Midwest Supply Co", status: "approved", city: "Detroit", state: "MI", country: "US", paymentTerms: "Net 15" },
+      { organizationId: organization.id, name: "Pacific Hardware Partners", status: "active", city: "Seattle", state: "WA", country: "US", paymentTerms: "Net 45" },
+    ],
+  });
+
+  const suppliers = await prisma.supplier.findMany({ where: { organizationId: organization.id } });
+  await Promise.all(
+    suppliers.map((s) =>
+      prisma.supplierContact.create({
+        data: { supplierId: s.id, name: "Sales Team", email: `sales@${s.name.toLowerCase().replace(/[^a-z]+/g, "")}.example.com`, isPrimary: true },
+      })
+    )
+  );
+
+  console.log(`Seeded organization "${organization.name}" (${organization.slug})`);
+  console.log(`Demo login: ${email} / demo12345`);
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((err) => {
+    console.error(err);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .finally(() => prisma.$disconnect());

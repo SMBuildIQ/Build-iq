@@ -1,61 +1,44 @@
-# Setup
-
-## Prerequisites
-
-- Node.js 22+
-- npm 10+
-
-## Local development
+# Local setup
 
 ```bash
-cp .env.example .env
-# Set AUTH_SECRET to 32+ characters
 npm install
+cp .env.example .env
 npx prisma db push
-npm run db:seed
-npm run dev
+npm run db:seed        # demo@buildiq.app / demo12345
+npm run dev            # http://localhost:3000
 ```
 
-Open http://localhost:3000
+In a second terminal, run the background job worker (RFQ send, etc.) so jobs process even without the dev-only
+inline fallback:
 
-Demo (seed only / App Review notes): `demo@buildiq.app` / `demo1234`
+```bash
+npm run worker
+```
 
-## Scripts
+## Tests
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Next.js dev server |
-| `npm run build` | Production build |
-| `npm run typecheck` | TypeScript |
-| `npm test` | Unit tests |
-| `npm run lint` | ESLint |
-| `npm run db:push` | Sync Prisma schema (dev) |
-| `npm run db:migrate` | Create/apply migrations |
-| `npm run db:seed` | Seed packages + demo company |
+```bash
+npm test           # tenant isolation, permissions, policy engine, AI extraction
+npm run typecheck
+npm run launch:check   # typecheck + test + production build
+```
 
-## Environment
+Tests use the same `DATABASE_URL` as `.env` — run `npx prisma db push` first if you haven't.
 
-See `.env.example`. Critical:
+## Using a real AI provider
 
-- `AUTH_SECRET` — required 32+ chars in production
-- Stripe keys — required for live checkout; mock only when not production or `ALLOW_MOCK_PAYMENTS=true`
-- `RESEND_API_KEY` — optional; without it, emails log to console in development
+By default `AI_PROVIDER=mock` — every AI-backed flow runs on a deterministic, offline heuristic (see
+`src/lib/ai/heuristicExtractor.ts`), which is what tests and CI use. To use Anthropic instead:
+
+```bash
+AI_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+AI_MODEL=claude-sonnet-4-5
+```
 
 ## Docker
 
 ```bash
 export AUTH_SECRET="$(openssl rand -hex 32)"
 docker compose up --build
-```
-
-## Store / Capacitor
-
-Native projects are not generated in this repo yet. After deploying HTTPS:
-
-```bash
-# On a machine with Xcode / Android Studio
-npm run cap:add:ios
-npm run cap:add:android
-# Set capacitor.config.json server.url to production
-npx cap sync
 ```

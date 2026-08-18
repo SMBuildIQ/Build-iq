@@ -1,90 +1,113 @@
-# BuildIQ Architecture (Current + Target)
+# Architecture
 
-> Status: **Monorepo scaffold in progress** — see [`PLATFORM.md`](./PLATFORM.md)  
-> Design specs: [`docs/design/DESIGN_SYSTEM.md`](./docs/design/DESIGN_SYSTEM.md) · [`docs/design/SCREENS.md`](./docs/design/SCREENS.md)  
-> Backup branch: `cursor/backup-pre-platform-rebuild-dc6e`  
-> Platform branch: `cursor/monorepo-expo-nestjs-dc6e`
-
-## Current architecture (as shipped today)
+## Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Browser / PWA / Capacitor WebView (remote URL)         │
-│  Next.js App Router UI (React 19)                       │
-└──────────────────────────┬──────────────────────────────┘
-                           │ HTTP cookie JWT
-┌──────────────────────────▼──────────────────────────────┐
-│  Next.js API routes (/api/*)                            │
-│  Prisma 5 → SQLite                                      │
-│  Local disk uploads/ · Stripe (or mock) · OpenAI (opt)  │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  Browser (Next.js App Router UI, React server components)       │
+└───────────────────────────────┬───────────────────────────────────┘
+                                 │ HTTP, cookie session (jose HS256 JWT)
+┌───────────────────────────────▼───────────────────────────────────┐
+│  Next.js route handlers                                          │
+│    /api/v1/*        — authenticated, tenant-scoped (withAuth)    │
+│    /api/v1/portal/*  — public, token-authenticated supplier portal│
+│    src/proxy.ts       — edge session presence check (Next 16     │
+│                          renamed Middleware → Proxy)              │
+├────────────────────────────────────────────────────────────────┤
+│  Domain services (src/lib)                                       │
+│    auth/       session, password hashing, request-scoped context │
+│    permissions/ RBAC catalog + checks                            │
+│    policy/      deterministic approval/negotiation-authority rules│
+│    ai/          provider-agnostic AI abstraction + activity log   │
+│    jobs/        background job queue (Job table + worker)        │
+│    audit.ts     every state change → AuditLog                    │
+├────────────────────────────────────────────────────────────────┤
+│  Prisma → SQLite (dev) / PostgreSQL (production)                 │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-| Layer | Technology | Notes |
-|---|---|---|
-| UI | Next.js 16 App Router, React 19, Tailwind | Phone-first shell + marketing pages |
-| Auth | jose HS256 JWT in HTTP-only cookie, bcrypt | 30-day tokens; `tokenVersion` revoke |
-| DB | Prisma + **SQLite** | Multi-tenant via `Company` / `Membership` |
-| Files | Local `uploads/` directory | Not object storage |
-| Payments | Stripe Payment Request + **mock wallets** | Silent mock if keys missing |
-| AI | Optional OpenAI; local fallback takeoff | Filename/sf-based, not plan vision |
-| Mobile | PWA + Capacitor config | **No `ios/` or `android/` projects**; remote WebView |
-| Deploy | Docker standalone | Requires runtime `AUTH_SECRET` |
+## Multi-tenancy
 
-## Target architecture (approved — scaffolded under `apps/`)
+Tenancy is `User → Membership → Organization`, with `Location` (branch), `Role`/`Permission` scoped per
+organization. There is no shared-schema row-level security in the SQLite dev provider, so isolation is enforced at
+the application layer:
 
-**Do not wrap the entire product forever in a bare WebView.** Apple Guideline 4.2 and your offline/jobsite requirements need a real native client.
+1. `getAuthContext()` (`src/lib/auth/context.ts`) resolves the session cookie to a `{ userId, organizationId, ... }`
+   context — never trusts a client-supplied organization id.
+2. `withAuth()` (`src/lib/api/handler.ts`) wraps every `/api/v1` handler, guaranteeing a handler never runs without
+   that context.
+3. Every tenant-scoped Prisma query filters by `organizationId` explicitly — list queries via `where: {
+   organizationId }`, single-record loads via `findFirst({ where: { id, organizationId } })` so a cross-tenant id
+   returns 404, not 403 (no confirmation the record exists elsewhere).
+4. `tests/tenant-isolation.test.ts` proves this at the query-pattern level: a record created in org A is
+   unreachable via org B's identical query shape.
 
-```
-┌──────────────────────┐     ┌──────────────────────┐
-│  Expo (React Native) │     │  Next.js Web (admin /│
-│  apps/mobile         │     │  apps/web :3001)     │
-└──────────┬───────────┘     └──────────┬───────────┘
-           │  HTTPS JSON API            │
-┌──────────▼────────────────────────────▼───────────┐
-│  NestJS API (apps/api :4000)                      │
-│  Prisma → PostgreSQL                              │
-│  S3-compatible object storage                     │
-│  Redis (rate limits, queues, sessions)            │
-│  Shared packages: types · validation · permissions│
-│  · pricing · design-tokens                        │
-└───────────────────────────────────────────────────┘
-```
+**Production hardening path:** migrating `prisma/schema.prisma`'s `datasource` from `sqlite` to `postgresql`
+preserves every model as-is (see `DATABASE_SCHEMA.md`). On Postgres, add row-level security policies keyed on
+`organization_id` as defense-in-depth beneath the application-layer checks above — the query patterns already
+match what RLS needs.
 
-### Why this split
+## RBAC
 
-1. **Reuse** the working estimating, company, project, takeoff, and shop business logic as a versioned API.
-2. **Expo** gives one TypeScript codebase for iOS + Android, EAS Build, SecureStore, camera, push, biometrics, offline SQLite — matching your requirements without two native teams.
-3. **Keep Next.js web** for office estimators who prefer large screens; do not force every workflow into a phone UI.
-4. **PostgreSQL** is required for multi-tenant production, transactions, and migrations.
+Permissions are a fixed catalog of keys (`src/lib/permissions/catalog.ts`, e.g. `purchase_request:create`,
+`approval:decide`). Screens and API routes check permission keys via `requirePermission()`, never role names.
+`Role` and `RolePermission` are database rows scoped per organization — `DEFAULT_ROLES` in the catalog is only the
+seed data new organizations get; permissions can diverge per org from there without a code change.
 
-### Alternatives considered
+The one exception: `company_owner` carries standing override authority on approval steps regardless of the
+specific role a policy rule names, mirroring real purchasing-org hierarchy (see
+`src/app/api/v1/approval-steps/[id]/decide/route.ts`).
 
-| Option | Verdict |
-|---|---|
-| Continue Next.js + Capacitor WebView only | **Insufficient** for offline queues, secure token storage, Guideline 4.2, and 25-module field UX |
-| React Native + Expo + shared API | **Recommended** — lowest risk vs full requirements |
-| Flutter | Viable, but Dart duplicates TS skills; higher rewrite cost |
-| Native Swift + Kotlin | Highest polish, **2× cost**; wrong until product-market fit on core modules |
+## The policy engine is not the AI
 
-## Folder structure (scaffolded)
+`src/lib/policy/engine.ts` is a pure, deterministic function over `PolicyRule` rows: given a purchase amount and
+context (substitution present, international supplier, etc.), it returns exactly which approval steps are
+required and how many bids are needed. The AI layer (`src/lib/ai`) can produce a *recommendation* — which quote to
+pick, what to ask a supplier for in negotiation — but no AI code path creates an `ApprovalRequest`, marks a
+`PurchaseRequest` approved, or issues a `PurchaseOrder`. Those transitions only happen through
+`/api/v1/purchase-requests/[id]/select-quote` and `/api/v1/purchase-orders`, both of which call the policy engine
+first. `NegotiationAuthority.autoNegotiateEnabled` defaults to `false` for every new org, and even when enabled,
+`allowFinalize` is a schema field with no code path that reads it as permission to finalize a purchase — autonomous
+finalization is a future milestone, not a flag this codebase honors yet.
 
-```
-apps/
-  mobile/                 # Expo Router · Millwork Studio UI kit
-  web/                    # Next.js dashboard (:3001)
-  api/                    # NestJS + Prisma Postgres (:4000)
-packages/
-  design-tokens/ types/ validation/ permissions/ pricing/
-docs/design/              # Exact design system + screen specs
-```
+## AI abstraction
 
-Legacy soft-launch Next.js remains at repo root (`src/`, `prisma/` SQLite). See [`PLATFORM.md`](./PLATFORM.md).
+Every AI-backed feature depends on the `AIProvider` interface (`src/lib/ai/types.ts`), never a vendor SDK directly:
 
-## Module status
+- `MockProvider` — deterministic, offline, zero-cost. Backs local dev (default), CI, and demos. Extraction and
+  recommendation features fall back to real (if simple) heuristics under this provider — see
+  `src/lib/ai/heuristicExtractor.ts` — rather than returning canned data.
+- `AnthropicProvider` — thin fetch wrapper over the Messages API, used when `AI_PROVIDER=anthropic` and
+  `ANTHROPIC_API_KEY` is set.
 
-See [MODULE_STATUS.md](./MODULE_STATUS.md).
+Every call — regardless of provider — is recorded to `AIActivityLog` (model, prompt version, input, output,
+confidence, token usage, estimated cost) via `src/lib/ai/log.ts`. Human corrections to AI output are recorded to
+`AICorrection` and never overwrite the original AI value.
 
-## Decision gate
+## Background jobs
 
-**Approved:** Expo + NestJS + PostgreSQL + shared packages. Soft-launch root app stays until Nest API reaches feature parity. Live Stripe stays off without keys.
+`Job` is a persisted table (status, attempts, `maxAttempts`, `lastError`, `runAt` for backoff). Two things read it:
+`scripts/worker.ts` (a polling loop — the production execution path) and inline processing right after `enqueueJob`
+in dev/demo, so a feature is visible immediately without a second process running. Both call the same processor
+registry (`src/lib/jobs/queue.ts`), so there is no behavioral difference between "background" and "inline" beyond
+timing.
+
+## Supplier portal
+
+Suppliers never get a platform account (brief requirement). `RFQSupplier.secureToken` is a 24-byte random value,
+looked up by unique index at `/portal/rfq/[token]` and `/api/v1/portal/rfq/[token]/quote`. Those are the only two
+places in the app that authorize by bare token instead of a session — deliberately isolated in `src/app/portal` and
+`src/app/api/v1/portal` and excluded from the tenant-session proxy check in `src/proxy.ts`.
+
+## Numbering
+
+Purchase request, RFQ, and PO numbers are per-organization sequential counters (`Organization.prNumberSeq` etc.),
+incremented inside a transaction (`src/lib/numbering.ts`). SQLite serializes writers, so this is race-safe today;
+the Postgres migration should keep this as a single atomic `UPDATE ... RETURNING`.
+
+## Deployment target
+
+Dev: SQLite, `npm run dev` + `npm run worker`. Production target: PostgreSQL, `next build` → `output: standalone`,
+the API/web process plus a separately-scaled worker process — see `Dockerfile` and `docker-compose.yml`. Object
+storage (S3-compatible) for `Document.storageKey` and a managed Postgres instance are the two infrastructure
+pieces this repo does not yet provision — see `KNOWN_LIMITATIONS.md`.

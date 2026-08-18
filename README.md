@@ -1,157 +1,85 @@
-# BuildIQ
+# BuildIQ Purchasing
 
-Residential construction estimating platform: blueprint upload, AI agent orchestration, material takeoff, cost estimates, subcontractor bid packages, Excel/PDF export, and ECI Spruce sync.
+A multi-tenant, AI-powered B2B purchasing platform: describe a purchase in plain English, source it against your
+supplier base, compare quotes side by side, negotiate with AI assistance, route it through configurable approvals,
+issue the PO, track delivery, and receive goods — with every AI decision logged and every dollar amount gated by a
+deterministic policy engine, never by the AI itself.
 
-**Release:** Soft launch **1.0.0** — see `FINAL_RELEASE.md` and `LAUNCH_CHECKLIST.md`.
-
-**Platform rebuild (Expo · NestJS · Postgres):** see **[`PLATFORM.md`](./PLATFORM.md)** and design specs in [`docs/design/`](./docs/design/). Soft-launch Next.js remains at repo root; new apps live under `apps/`.
-
-## Platform audit (read first)
+**Status:** early build. The core purchasing loop (Purchase Request → RFQ → Supplier Portal → Quotes → AI
+Recommendation → Negotiation → Approval → Purchase Order → Tracking → Receiving) is real and tested end to end.
+Invoice matching, notifications, the audit-log/document UI, and native integrations are modeled in the schema but
+not yet exposed — see [MODULE_STATUS.md](./MODULE_STATUS.md).
 
 | Doc | Purpose |
 |---|---|
-| [LAUNCH_CHECKLIST.md](./LAUNCH_CHECKLIST.md) | **Start here for go-live** |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Current vs recommended architecture |
-| [MODULE_STATUS.md](./MODULE_STATUS.md) | Full / partial / planned module map |
-| [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md) | Mocks, placeholders, security gaps |
-| [IMPLEMENTATION_CHECKLIST.md](./IMPLEMENTATION_CHECKLIST.md) | Phased plan with task status |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design, tenant isolation, AI abstraction, policy engine |
+| [MODULE_STATUS.md](./MODULE_STATUS.md) | What's real vs. planned |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Data model |
+| [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | `/api/v1/*` reference |
+| [SECURITY.md](./SECURITY.md) | Tenant isolation, RBAC, auth, controlled AI autonomy |
 | [SETUP.md](./SETUP.md) | Run locally |
-| [PERMISSIONS_MATRIX.md](./PERMISSIONS_MATRIX.md) | RBAC matrix |
-| [SECURITY.md](./SECURITY.md) | Security controls + threat model |
-| [PRIVACY_DATA_MAP.md](./PRIVACY_DATA_MAP.md) | Data inventory for store disclosures |
-| [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | API contract summary |
-| [store/STORE_COMPLIANCE.md](./store/STORE_COMPLIANCE.md) | App Store / Play compliance notes |
 
-**Backup branch (frozen):** `cursor/backup-pre-platform-rebuild-dc6e` — original project preserved.
+## What's implemented
 
-In-app module roadmap: **/modules** (planned modules show honest empty states — no fake CRUD).
+- **Multi-tenant core** — Organization → Location → User → Membership → Role → Permission, fully isolated per
+  organization, with automated tests proving cross-tenant queries return nothing (`tests/tenant-isolation.test.ts`).
+- **RBAC** — permission keys are never hard-coded into a screen; every route checks a permission via
+  `src/lib/permissions`, and role→permission grants live in the database per organization.
+- **AI purchasing assistant** — plain-English purchase description → structured Purchase Request, with missing
+  critical fields flagged instead of guessed (`src/lib/ai/purchaseRequestExtraction.ts`).
+- **AI provider abstraction** — every AI-backed feature goes through `src/lib/ai/types.ts`'s `AIProvider` interface.
+  A deterministic mock provider (zero cost, zero network) backs local dev, CI, and demos; an Anthropic adapter is
+  wired in for production. Every call is logged (model, prompt version, tokens, cost, confidence) to `AIActivityLog`.
+- **Deterministic policy engine** — approval thresholds, minimum bid counts, international-supplier and
+  substitution rules live in `PolicyRule` rows per organization and are evaluated by `src/lib/policy/engine.ts`.
+  The AI layer can recommend; only this engine decides what's actually allowed.
+- **Full sourcing loop** — supplier database → RFQ generation → email/portal delivery (via a real background job) →
+  a token-authenticated **supplier portal** (no account required) for quote submission → manual quote entry for
+  PDF/Excel/email responses → side-by-side comparison with computed total landed cost → AI recommendation with
+  visible rationale → assisted AI-drafted negotiation (human sends, never the AI) → policy-routed approval →
+  PO issuance → order-status tracking → receiving.
+- **Savings tracking** — `SavingsRecord` distinguishes negotiated, benchmark, and realized savings; the dashboard
+  only ever shows verified realized savings, never inflated figures.
+- **Background jobs** — a real `Job` table with retries/backoff/dead-letter, a production worker process
+  (`npm run worker`), and inline processing in dev so a demo doesn't require a second process.
+- **Audit trail** — every state-changing action writes an `AuditLog` row (who, what, when, before/after).
 
-### Launch commands
+## What's explicitly not built yet
 
-```bash
-npm run launch:check   # typecheck + tests + production build
-npm run smoke          # hit /api/health + auth + projects (server must be up)
-```
-
-## Features
-
-- **Accounts** — register / login with session cookies
-- **Projects** — residential job metadata (sf, stories, address)
-- **Blueprint upload** — PDF/images with sheet-type inference
-- **Plan workspace** — OCR scan, GPT-4o drawing vision, scale/length/area/count measuring tools
-- **AI takeoff** — Vision-grounded when scanned + `OPENAI_API_KEY`; OCR dimensions; local/catalog fallback
-- **Cost estimate** — materials, waste, labor, contingency, overhead, profit, tax
-- **Bid packages** — one package per trade
-- **Excel export** — summary, takeoff, per-trade bids, Spruce SKU sheet
-- **PDF export** — plan estimate & subtotals (cost rollup, trade subtotals, takeoff lines)
-- **Customer proposals** — polished multi-category proposals (Windows, Doors, Lumber, Trusses, Cabinetry, Masonry, Hardware, Millwork) with PDF, email send, and public accept link
-- **ECI Spruce** — mock inventory/pricing/quotes by default; live SOAP stubs when credentials are configured
-
-## App Store & Play Store
-
-See **[store/STORE_COMPLIANCE.md](store/STORE_COMPLIANCE.md)** for Apple/Google submission checklists, privacy nutrition labels, Data Safety answers, and Capacitor packaging notes.
-
-In-app: Privacy `/privacy` · Terms `/terms` · Support `/support` · Account deletion `/settings/account`
-
-## AI Agent Orchestration
-
-BuildIQ runs multi-agent workflows through a persisted orchestrator:
-
-- **Registry** — `src/lib/ai/orchestration/registry.ts` (agents + workflows)
-- **Engine** — `src/lib/ai/orchestration/orchestrator.ts` (`AgentRun` / `AgentStep`)
-- **UI** — `/agents` (registry + run history); project **Run AI bots** streams via `/api/projects/:id/orchestrate`
-
-Default workflow: `estimating-pipeline` (Plan Reader → Takeoff → Estimate → Bids → Packages → Spruce → Briefing).
-
-Cabinetry agents are registered as **planned** and do not execute until that module ships.
-
-## AI bots
-
-After a builder uploads plans, the orchestrator runs the estimating crew automatically:
-
-1. **Plan Reader** — rasterize sheets, OCR + drawing vision  
-2. **Takeoff Bot** — vision-grounded materials & quantities  
-3. **Estimate Bot** — full cost rollup  
-4. **Bid Bot** — trade bid packages  
-5. **Package Bot** — loads Shop cart (windows, doors, lumber, etc.)  
-6. **Spruce Bot** — pricing sync + quote  
-7. **Briefing Bot** — next-step summary  
-
-Open any sheet → **Open plan tools** for scale calibration, length, area, and count measuring.
-
-## Material package shop
-
-Builders can order takeoff packages from **Shop**:
-
-Windows · Doors · Lumber · Trusses · Cabinetry · Masonry Stone · Door Hardware · Millwork
-
-Flow: add to **Cart** → checkout with **Apple Pay**, **Google Pay**, or card (Stripe when keys are set; otherwise demo wallets) → **Track** sequence:
-
-Order received → Payment confirmed → Takeoff review → Procurement → Fabrication/staging → Shipped → Delivered
-
-For live Apple Pay, verify your domain in the [Stripe Apple Pay settings](https://dashboard.stripe.com/settings/payments/apple_pay). Google Pay works automatically with Stripe in supported Chrome / Android browsers.
-
-## For your builders
-
-1. Send them to **Builder signup** (`/signup`)
-2. They create a **company workspace** (name, email, password)
-3. Onboarding walks them into their first job
-4. Owners invite estimators from **Team** (invite link)
-5. Everyone installs the app to their home screen
-
-Each company only sees its own jobs, team, and Spruce settings.
-
-## Mobile app
-
-BuildIQ is an **installable web app (PWA)** with a phone-first shell (bottom tabs, home-screen install).
-
-- **iPhone:** Safari → Share → Add to Home Screen  
-- **Android:** Chrome → Install app / Add to Home screen  
-- **Native wrappers:** `capacitor.config.json` is included for iOS/Android packaging against a hosted BuildIQ URL.
+Modeled in the schema, not yet exposed in the UI/API: three-way invoice matching, in-app/email notifications, the
+audit-log and document-library viewers, purchasing-intelligence benchmarking, ERP/accounting integrations, and a
+native mobile client. See [MODULE_STATUS.md](./MODULE_STATUS.md) for the full breakdown — nothing in that list is
+faked; the nav shows an honest "Planned" state instead of a non-functional screen.
 
 ## Quick start
 
 ```bash
 npm install
-cp .env.example .env   # or use the included .env
-npx prisma migrate dev --name init
-npm run db:seed
+cp .env.example .env
+npx prisma db push
+npm run db:seed      # demo@buildiq.app / demo12345
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-**Demo login (local seed / App Review notes only — not shown in the shipping UI):** `demo@buildiq.app` / `demo1234`
+For the RFQ-send background job to run outside of the inline dev fallback, also run:
+
+```bash
+npm run worker
+```
 
 ## Environment
 
 | Variable | Purpose |
 |---|---|
-| `DATABASE_URL` | SQLite path (`file:./dev.db`) |
-| `AUTH_SECRET` | JWT signing secret |
-| `OPENAI_API_KEY` | Optional; enables GPT takeoff |
-| Spruce settings | Configured in-app under **ECI Spruce** |
-
-## Docker
-
-```bash
-export AUTH_SECRET="$(openssl rand -hex 32)"
-docker compose up --build
-```
-
-App listens on port 3000. `AUTH_SECRET` (32+ chars) is required. Persist DB/uploads via named volumes.
-
-## ECI Spruce
-
-Spruce exposes a SOAP ecommerce API (inventory, pricing, quotes) provisioned by ECI. In BuildIQ:
-
-1. Open **ECI Spruce** in the app
-2. Enter API/SOAP endpoints, API key, branch, and account from your ECI specialist
-3. Disable mock mode for live calls
-4. From a project: **Sync Spruce pricing** or **Send to Spruce**
-
-Without credentials, mock mode returns catalog-backed inventory and quote numbers so the full workflow is testable.
+| `DATABASE_URL` | SQLite path locally (`file:./dev.db`); PostgreSQL in production — see ARCHITECTURE.md |
+| `AUTH_SECRET` | 32+ char session JWT signing secret |
+| `AI_PROVIDER` | `mock` (default, offline/free) or `anthropic` |
+| `ANTHROPIC_API_KEY` | Required when `AI_PROVIDER=anthropic` |
+| `RESEND_API_KEY` / `EMAIL_FROM` | Optional; RFQ emails log to console when unset |
 
 ## Stack
 
-Next.js · TypeScript · Prisma · SQLite · ExcelJS · jose · Tailwind CSS
+Next.js (App Router) · TypeScript · Prisma · SQLite (dev) / PostgreSQL (production) · Tailwind CSS · jose (JWT) ·
+bcryptjs · zod

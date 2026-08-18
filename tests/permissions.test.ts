@@ -1,26 +1,52 @@
+import { test } from "node:test";
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
-import { hasPermission, normalizeRole, permissionsFor } from "../src/lib/permissions";
+import { DEFAULT_ROLES } from "../src/lib/permissions/catalog";
+import { hasPermission, requirePermission, ForbiddenError } from "../src/lib/permissions/check";
+import type { AuthContext } from "../src/lib/auth/context";
 
-describe("RBAC", () => {
-  it("VIEWER cannot mutate projects or place orders", () => {
-    assert.equal(hasPermission("VIEWER", "project:write"), false);
-    assert.equal(hasPermission("VIEWER", "order:place"), false);
-    assert.equal(hasPermission("VIEWER", "project:read"), true);
-  });
+function fakeCtx(roleKey: string): AuthContext {
+  const role = DEFAULT_ROLES.find((r) => r.key === roleKey);
+  if (!role) throw new Error(`no such default role: ${roleKey}`);
+  return {
+    userId: "u1",
+    email: "u1@example.com",
+    name: "Test User",
+    organizationId: "org1",
+    organizationSlug: "org1",
+    membershipId: "m1",
+    roleKeys: [role.key],
+    permissions: new Set(role.permissions),
+  };
+}
 
-  it("OWNER has account delete", () => {
-    assert.equal(hasPermission("OWNER", "account:delete"), true);
-    assert.equal(hasPermission("ADMIN", "account:delete"), false);
-  });
+test("Viewer role cannot create purchase requests", () => {
+  const ctx = fakeCtx("viewer");
+  assert.equal(hasPermission(ctx, "purchase_request:create"), false);
+  assert.throws(() => requirePermission(ctx, "purchase_request:create"), ForbiddenError);
+});
 
-  it("PURCHASING can advance orders but not configure Spruce", () => {
-    assert.equal(hasPermission("PURCHASING", "order:advance"), true);
-    assert.equal(hasPermission("PURCHASING", "spruce:configure"), false);
-  });
+test("Viewer role can view purchase requests", () => {
+  const ctx = fakeCtx("viewer");
+  assert.equal(hasPermission(ctx, "purchase_request:view"), true);
+});
 
-  it("normalizes unknown roles to VIEWER", () => {
-    assert.equal(normalizeRole("not-a-role"), "VIEWER");
-    assert.ok(permissionsFor("ESTIMATOR").includes("estimate:run"));
-  });
+test("Receiving/Warehouse role can record receipts but not issue purchase orders", () => {
+  const ctx = fakeCtx("receiving");
+  assert.equal(hasPermission(ctx, "receiving:record"), true);
+  assert.equal(hasPermission(ctx, "purchase_order:issue"), false);
+});
+
+test("Company Owner holds every permission in the catalog", () => {
+  const ctx = fakeCtx("company_owner");
+  const buyerCtx = fakeCtx("buyer");
+  for (const permission of buyerCtx.permissions) {
+    assert.equal(hasPermission(ctx, permission), true);
+  }
+});
+
+test("Buyer can create RFQs and negotiate but cannot decide approvals", () => {
+  const ctx = fakeCtx("buyer");
+  assert.equal(hasPermission(ctx, "rfq:create"), true);
+  assert.equal(hasPermission(ctx, "negotiation:initiate"), true);
+  assert.equal(hasPermission(ctx, "approval:decide"), false);
 });

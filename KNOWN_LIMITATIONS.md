@@ -1,46 +1,32 @@
-# KNOWN_LIMITATIONS.md
+# Known limitations
 
-Honest inventory after the incomplete-items fix pass.
+Honest list of simplifications and gaps in the current build. Nothing below is presented as finished elsewhere in
+the app or docs — this is the canonical list.
 
-## Fixed in this pass
+## Simplified, not fake
 
-- Production mock payments fail-closed (unless `ALLOW_MOCK_PAYMENTS=true`)
-- Logout bumps `tokenVersion`
-- Service worker no longer caches authenticated HTML
-- Boot-time `AUTH_SECRET` checks via instrumentation
-- Full RBAC with backend `requirePermission` on APIs
-- Password reset + email verification flows
-- DB-backed login lockout
-- Audit log table + order/auth events
-- AuthToken / LoginAttempt / ModuleRegistry models
-- Planned modules hub with honest empty states (no fake CRUD)
-- Privacy/Terms driven by env legal settings
-- Permissions matrix + security/setup/API docs
+- **RFQ email delivery** — real send via Resend when `RESEND_API_KEY` is set; without it, the email body is logged
+  to the server console instead of silently pretending to send. The supplier portal link always works regardless.
+- **PO document** — rendered as a print-friendly HTML page (`window.print()` → "Save as PDF" in any browser)
+  rather than a generated PDF binary. No `pdfkit`/binary generation pipeline is wired up yet.
+- **Quote document extraction** — PDF/Excel/email quotes are entered by a buyer through a manual-entry form
+  (`ManualQuoteForm`), not auto-extracted. `QuoteExtractionField` (field-level traceability + confidence) exists in
+  the schema for when a real extraction pipeline is built, but nothing writes to it yet.
+- **Object storage** — no `Document` upload endpoint is wired up yet; the model and `storageKey` field exist for
+  when local-disk or S3-compatible storage is added.
+- **Negotiation delivery** — "Send negotiation" records the message as sent and logs it; there is no actual email
+  dispatch to the supplier for the negotiation ask (RFQ send has real dispatch via Resend; negotiation reuses the
+  same message-thread model but not the same delivery path yet).
 
-## Still incomplete (not faked)
+## Modeled, not yet exposed
 
-| Item | Status |
-|---|---|
-| Capacitor `ios/` / `android/` native projects | Not generated (needs Mac/Android Studio) |
-| Expo App Store / Play binaries | Code/store-compliance ready (`1.0.0`, account deletion, legal links, EAS); needs EAS project id + TestFlight/Play internal |
-| Postgres + formal migrate history for all envs | Schema ready; still SQLite locally |
-| Object storage / signed URLs / malware scan | Planned |
-| Redis durable rate limits | In-memory only |
-| MFA / biometric / push / offline sync | Planned (Expo phase) |
-| Live Spruce SOAP parsing | Still stubby; mock default |
-| True plan vision OCR | GPT-4o vision + Tesseract OCR when scanning; needs OPENAI_API_KEY for vision |
-| Interactive measuring | Scale / length / area / count on plan workspace |
-| DWG native parsing | Export DWG to PDF/PNG first |
-| 16 construction modules marked PLANNED | Scaffolded only — see `/modules` |
-| Email delivery | Console in dev without `RESEND_API_KEY` |
-| Legal entity mailing address | Completed — Supply Monkey Lumber & Materials Co, Prescott AZ |
-| Privacy/Terms final counsel approval | Drafts labeled; set `LEGAL_POLICIES_FINAL=true` only after attorney sign-off |
-| CI workflows | Added (`.github/workflows/ci.yml`) |
-| Launch checklist + smoke script | Added — web/PWA soft-launch ready |
-| AI Agent Orchestration | FULL — registry, workflows, AgentRun/AgentStep, `/agents` |
-| Cabinetry proposals module | PARTIAL — opportunities + shared Proposals engine for package PDFs; AI extract/catalog still planned |
-| Expo mobile client | Not started (awaits architecture execution phase) |
+Invoice matching (three-way match), in-app/email notifications, the audit-log and document-library viewer UIs,
+purchasing-intelligence benchmarking and natural-language query, supplier performance scoring, and ERP/accounting
+integrations. All have real Prisma models (`Invoice`, `Notification`, `PriceBenchmark`, etc. — see
+`DATABASE_SCHEMA.md`) so adding the UI/API surface later does not require a schema rewrite.
 
-## Intentionally not faked
+## Not started
 
-Planned modules show **“Planned — not built yet”**. There are no dead Save buttons that pretend to persist CRM, RFIs, punch lists, etc.
+Native mobile client, SSO/SAML, MFA enforcement (the `User.mfaEnabled`/`mfaSecret` columns exist but nothing
+reads them), staging/production infrastructure provisioning, PostgreSQL migration (SQLite only today), and
+external supplier discovery (search APIs, marketplaces) beyond the internal approved-supplier database.
