@@ -14,7 +14,7 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 5 | AI purchasing assistant | FULL | NL description → structured request, missing-field detection, full AIActivityLog trail |
 | 6 | Purchase request creation | FULL | Structured line items, status history, tenant-scoped API + UI |
 | 7 | Structured line items | FULL | Category/manufacturer/model/SKU/target price/substitutions |
-| 8 | Vendor database | PARTIAL | Create/list suppliers + contacts; response rate, avg response time, on-time delivery rate, and a composite performance score are computed from real transaction history (`src/lib/supplierPerformance.ts`) and feed the AI recommendation — no historical-pricing view yet |
+| 8 | Vendor database | PARTIAL | Create/list suppliers + contacts (now covered by `tests/supplier-crud.test.ts`, 5 tests); response rate, avg response time, on-time delivery rate, and a composite performance score are computed from real transaction history (`src/lib/supplierPerformance.ts`) and feed the AI recommendation — no historical-pricing view yet. `Supplier.categories` is captured at creation but has no UI surface anywhere (not shown on the list, not used to filter/match suppliers to a category) — a real, minor gap found while writing this test |
 | 9 | RFQ creation | FULL | Generated from a purchase request's line items, editable instructions |
 | 10 | RFQ email distribution | PARTIAL | Real send via Resend when configured; logs instead of sending otherwise. Portal link always works |
 | 11 | Supplier response portal | FULL | Token-authenticated, no account required, structured pricing/freight/terms entry |
