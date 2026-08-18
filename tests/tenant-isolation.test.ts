@@ -69,6 +69,25 @@ test("a supplier created in org A is not reachable via org B's tenant-scoped que
   assert.equal(crossTenant, null);
 });
 
+test("verifyEntityOwnership rejects a purchase request id that belongs to a different org", async () => {
+  const { verifyEntityOwnership } = await import("../src/lib/documents/entityOwnership");
+  const orgA = await makeOrg("doc-tenant-a");
+  const orgB = await makeOrg("doc-tenant-b");
+
+  const pr = await prisma.purchaseRequest.create({
+    data: {
+      organizationId: orgA.organization.id,
+      requestNumber: `PR-${randomUUID().slice(0, 8)}`,
+      requesterId: orgA.user.id,
+      title: "Org A purchase",
+      status: "draft",
+    },
+  });
+
+  assert.equal(await verifyEntityOwnership(orgA.organization.id, "purchase_request", pr.id), true);
+  assert.equal(await verifyEntityOwnership(orgB.organization.id, "purchase_request", pr.id), false);
+});
+
 test("membership + role lookups are scoped per organization, not global to the user", async () => {
   const suffix = randomUUID().slice(0, 8);
   const user = await prisma.user.create({

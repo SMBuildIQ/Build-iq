@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { prisma } from "@/lib/db";
 import { StatusActions, ReceivingForm, PrintButton } from "./order-actions";
+import { InvoiceForm } from "./invoice-form";
+import { DocumentAttachments } from "@/components/DocumentAttachments";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await getAuthContext();
@@ -16,9 +18,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       lineItems: true,
       statusHistory: { orderBy: { createdAt: "asc" } },
       receipts: { include: { lineItems: true } },
+      invoices: { include: { lineItems: true, matchExceptions: true }, orderBy: { receivedAt: "desc" } },
     },
   });
   if (!po) notFound();
+
+  const documents = await prisma.document.findMany({
+    where: { organizationId: ctx.organizationId, entityType: "purchase_order", entityId: po.id },
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -103,6 +111,50 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           ))}
         </div>
       )}
+      <div className="mt-6 print:hidden">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-sm font-medium text-gray-700">Invoices</div>
+        </div>
+        {po.invoices.length > 0 && (
+          <div className="mb-3 flex flex-col gap-3">
+            {po.invoices.map((inv) => (
+              <div key={inv.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">{inv.supplierInvoiceNumber ?? "Invoice"}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      inv.status === "matched" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {inv.status === "matched" ? "Matched" : `${inv.matchExceptions.length} discrepancy(s)`}
+                  </span>
+                </div>
+                <div className="mt-1 text-sm text-gray-500">
+                  PO: ${po.total?.toLocaleString() ?? "—"} — Invoice: ${inv.amount.toLocaleString()}
+                  {po.total !== null && (
+                    <>
+                      {" "}
+                      — Difference: {inv.amount - po.total >= 0 ? "+" : ""}${(inv.amount - po.total).toLocaleString()}
+                    </>
+                  )}
+                </div>
+                {inv.matchExceptions.length > 0 && (
+                  <ul className="mt-2 list-inside list-disc text-sm text-amber-800">
+                    {inv.matchExceptions.map((exc) => (
+                      <li key={exc.id}>{exc.detail}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        <InvoiceForm purchaseOrderId={po.id} lineItems={po.lineItems.map((li) => ({ id: li.id, description: li.description, quantity: li.quantity, unitPrice: li.unitPrice }))} />
+      </div>
+
+      <div className="mt-6 print:hidden">
+        <DocumentAttachments entityType="purchase_order" entityId={po.id} documents={documents} />
+      </div>
     </div>
   );
 }

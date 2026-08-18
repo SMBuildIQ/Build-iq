@@ -12,21 +12,27 @@ the app or docs — this is the canonical list.
 - **Quote document extraction** — PDF/Excel/email quotes are entered by a buyer through a manual-entry form
   (`ManualQuoteForm`), not auto-extracted. `QuoteExtractionField` (field-level traceability + confidence) exists in
   the schema for when a real extraction pipeline is built, but nothing writes to it yet.
-- **Object storage** — no `Document` upload endpoint is wired up yet; the model and `storageKey` field exist for
-  when local-disk or S3-compatible storage is added.
+- **Invoice entry** — recorded manually by a buyer (`InvoiceForm`), not extracted from an uploaded invoice
+  document. The three-way matching logic itself (`src/lib/invoiceMatching.ts`) is real and tested — see
+  MODULE_STATUS.md — only the ingestion path is manual.
+- **Document storage** — local disk (`uploads/<organizationId>/...`), not durable across instances or redeploys.
+  Swapping to an S3-compatible bucket only touches `src/lib/documents/storage.ts`; `storageKey` never encodes a
+  local-filesystem assumption beyond that module.
 - **Negotiation delivery** — "Send negotiation" records the message as sent and logs it; there is no actual email
   dispatch to the supplier for the negotiation ask (RFQ send has real dispatch via Resend; negotiation reuses the
   same message-thread model but not the same delivery path yet).
+- **Notifications** — in-app only, delivered by client-side polling (`NotificationBell`, every 30s) rather than a
+  push channel; no email/SMS delivery.
 
 ## Modeled, not yet exposed
 
-Invoice matching (three-way match), in-app/email notifications, the audit-log and document-library viewer UIs,
-purchasing-intelligence benchmarking and natural-language query, supplier performance scoring, and ERP/accounting
-integrations. All have real Prisma models (`Invoice`, `Notification`, `PriceBenchmark`, etc. — see
-`DATABASE_SCHEMA.md`) so adding the UI/API surface later does not require a schema rewrite.
+Purchasing-intelligence benchmarking and natural-language query (`PriceBenchmark`), supplier performance scoring
+(fields exist on `Supplier` but nothing computes them), and ERP/accounting integrations. All have real Prisma
+models so adding the UI/API surface later does not require a schema rewrite.
 
 ## Not started
 
 Native mobile client, SSO/SAML, MFA enforcement (the `User.mfaEnabled`/`mfaSecret` columns exist but nothing
-reads them), staging/production infrastructure provisioning, PostgreSQL migration (SQLite only today), and
-external supplier discovery (search APIs, marketplaces) beyond the internal approved-supplier database.
+reads them), staging/production infrastructure provisioning, PostgreSQL migration (SQLite only today), external
+supplier discovery (search APIs, marketplaces) beyond the internal approved-supplier database, and virus/malware
+scanning on uploaded documents (`Document.virusScanStatus` is always written as `"skipped"`).

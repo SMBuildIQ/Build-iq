@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { notifyUser } from "@/lib/notifications";
 
 const schema = z.object({
   action: z.enum(["submit", "decline"]),
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
   const rfqSupplier = await prisma.rFQSupplier.findUnique({
     where: { secureToken: token },
-    include: { rfq: { include: { lineItems: true } } },
+    include: { rfq: { include: { lineItems: true, purchaseRequest: true } }, supplier: true },
   });
   if (!rfqSupplier) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -95,6 +96,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   await prisma.purchaseRequest.updateMany({
     where: { id: rfqSupplier.rfq.purchaseRequestId, status: { in: ["rfq_active"] } },
     data: { status: "quotes_received" },
+  });
+  await notifyUser(rfqSupplier.rfq.organizationId, rfqSupplier.rfq.purchaseRequest.requesterId, {
+    type: "quote_received",
+    title: `${rfqSupplier.supplier.name} submitted a quote`,
+    body: `RFQ ${rfqSupplier.rfq.rfqNumber} — ${rfqSupplier.rfq.purchaseRequest.title}`,
+    entityType: "PurchaseRequest",
+    entityId: rfqSupplier.rfq.purchaseRequestId,
   });
 
   return NextResponse.json({ ok: true, quoteId: quote.id });

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAuthContext } from "@/lib/auth/context";
 import { SignOutButton } from "./sign-out-button";
+import { NotificationBell } from "./notification-bell";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -22,7 +23,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen">
       <aside className="flex w-56 shrink-0 flex-col border-r border-gray-200 bg-white px-3 py-4">
-        <div className="mb-6 px-2 text-lg font-semibold">BuildIQ</div>
+        <div className="mb-2 px-2 text-lg font-semibold">BuildIQ</div>
+        <div className="mb-4 px-2">
+          <NotificationBell />
+        </div>
         <nav className="flex flex-1 flex-col gap-1">
           {NAV.map((item) => (
             <Link

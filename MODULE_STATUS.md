@@ -28,20 +28,25 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 19 | Purchase order generation | FULL | Generated from an approved request + selected quote |
 | 20 | Order tracking | FULL | Full status lifecycle with timeline |
 | 21 | Basic receiving | FULL | Quantity received/damaged/missing per line item |
-| 22 | Savings tracking | PARTIAL | `SavingsRecord` populated at quote selection; realized savings needs invoicing (not built) to complete |
+| 22 | Savings tracking | FULL | `SavingsRecord` populated at quote selection and again at invoicing; negotiated/benchmark/realized kept distinct |
 | 23 | Dashboard/analytics | PARTIAL | Real counts and verified-savings sum; AI "purchasing insights" panel is honest-empty until there's history to analyze |
-| 24 | Notifications | PLANNED | Schema ready, no dispatch/UI |
-| 25 | Audit logs | PARTIAL | Every mutation writes AuditLog; no viewer UI yet |
-| 26 | Document library | PLANNED | Schema ready, no upload endpoint or UI |
+| 24 | Notifications | FULL | In-app bell (poll-based), role- and user-targeted, fired on approval-required/quote-received/invoice-discrepancy |
+| 25 | Audit logs | FULL | Every mutation writes AuditLog; viewer at `/settings/audit-log` |
+| 26 | Document library | FULL | Upload/download/list, tenant- and entity-ownership-checked; local disk storage (not object storage — see KNOWN_LIMITATIONS.md) |
 | 27 | Background job system | FULL | Persisted Job table, retries/backoff/dead-letter, worker process + inline dev fallback |
 | 28 | API documentation | PARTIAL | See API_DOCUMENTATION.md; no generated OpenAPI/Swagger file yet |
-| 29 | Automated testing | PARTIAL | Tenant isolation, permissions, policy engine, AI extraction unit/integration tests; no e2e browser tests yet |
+| 29 | Automated testing | PARTIAL | Tenant isolation, permissions, policy engine, AI extraction, invoice matching, notifications — unit/integration; no e2e browser tests yet |
 | 30 | Production deployment | NONE | Dockerfile/docker-compose exist; no environment has actually been provisioned from this session |
 
-## Not in the MVP list but modeled
+## Also built (beyond the MVP list, brief §23)
 
-Invoice / three-way matching (`Invoice`, `InvoiceLineItem`, `InvoiceMatchException`) and purchasing intelligence
-benchmarking (`PriceBenchmark`) are fully modeled per brief §23/§25 but have no processing job or UI yet.
+**Invoice three-way matching** — FULL for the matching logic itself: `runThreeWayMatch()` compares PO vs. receipt
+vs. invoice and detects price differences, quantity differences, unauthorized freight, unexpected tax, items not
+received, duplicate invoices, and unexplained additional fees — including the brief's exact worked example
+(freight billed despite a freight-included quote). PARTIAL overall: invoice entry is manual (no supplier invoice
+upload/extraction pipeline), and there's no dedicated invoices list UI beyond the per-PO view.
+
+Purchasing-intelligence benchmarking (`PriceBenchmark`) is modeled per brief §25 but has no processing job or UI.
 
 **Rule:** a module with no working UI shows an explicit "Planned" state (`src/components/PlannedModule.tsx`) that
 names the backing schema — never a form that appears to save but doesn't.

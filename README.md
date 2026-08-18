@@ -6,9 +6,10 @@ issue the PO, track delivery, and receive goods — with every AI decision logge
 deterministic policy engine, never by the AI itself.
 
 **Status:** early build. The core purchasing loop (Purchase Request → RFQ → Supplier Portal → Quotes → AI
-Recommendation → Negotiation → Approval → Purchase Order → Tracking → Receiving) is real and tested end to end.
-Invoice matching, notifications, the audit-log/document UI, and native integrations are modeled in the schema but
-not yet exposed — see [MODULE_STATUS.md](./MODULE_STATUS.md).
+Recommendation → Negotiation → Approval → Purchase Order → Tracking → Receiving → Invoice three-way matching) is
+real and tested end to end, along with documents, in-app notifications, and an audit-log viewer. Purchasing
+intelligence, supplier performance scoring, ERP integrations, and native mobile are modeled in the schema but not
+yet exposed — see [MODULE_STATUS.md](./MODULE_STATUS.md).
 
 | Doc | Purpose |
 |---|---|
@@ -38,18 +39,29 @@ not yet exposed — see [MODULE_STATUS.md](./MODULE_STATUS.md).
   PDF/Excel/email responses → side-by-side comparison with computed total landed cost → AI recommendation with
   visible rationale → assisted AI-drafted negotiation (human sends, never the AI) → policy-routed approval →
   PO issuance → order-status tracking → receiving.
-- **Savings tracking** — `SavingsRecord` distinguishes negotiated, benchmark, and realized savings; the dashboard
-  only ever shows verified realized savings, never inflated figures.
+- **Invoice three-way matching** — `runThreeWayMatch()` compares PO vs. receipt vs. invoice and detects price
+  differences, quantity differences, unauthorized freight, unexpected tax, items not received, duplicate invoices,
+  and unexplained fees — including the brief's exact worked example (freight billed despite a freight-included
+  quote). Invoice entry itself is manual; see KNOWN_LIMITATIONS.md.
+- **Documents** — upload/download attached to any purchasing entity, tenant- and entity-ownership-checked before
+  either operation (`src/lib/documents/entityOwnership.ts`); local-disk storage today, swappable to S3-compatible
+  storage without touching the rest of the app.
+- **Notifications** — in-app, fired on approval-required, quote-received, and invoice-discrepancy events, targeted
+  either at a specific user or at everyone holding a given role in the organization.
+- **Audit trail** — every state-changing action writes an `AuditLog` row (who, what, when, before/after), viewable
+  at `/settings/audit-log`.
+- **Savings tracking** — `SavingsRecord` distinguishes negotiated, benchmark, and realized savings (the last only
+  ever set once a real invoice exists); the dashboard only ever shows verified realized savings, never inflated
+  figures.
 - **Background jobs** — a real `Job` table with retries/backoff/dead-letter, a production worker process
   (`npm run worker`), and inline processing in dev so a demo doesn't require a second process.
-- **Audit trail** — every state-changing action writes an `AuditLog` row (who, what, when, before/after).
 
 ## What's explicitly not built yet
 
-Modeled in the schema, not yet exposed in the UI/API: three-way invoice matching, in-app/email notifications, the
-audit-log and document-library viewers, purchasing-intelligence benchmarking, ERP/accounting integrations, and a
-native mobile client. See [MODULE_STATUS.md](./MODULE_STATUS.md) for the full breakdown — nothing in that list is
-faked; the nav shows an honest "Planned" state instead of a non-functional screen.
+Modeled in the schema, not yet exposed: purchasing-intelligence benchmarking, supplier performance scoring, and
+ERP/accounting integrations. Native mobile is also not started. See [MODULE_STATUS.md](./MODULE_STATUS.md) for the
+full breakdown — nothing in that list is faked; the nav shows an honest "Planned" state instead of a
+non-functional screen.
 
 ## Quick start
 

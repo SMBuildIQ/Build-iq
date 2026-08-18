@@ -4,6 +4,7 @@ import { getAuthContext } from "@/lib/auth/context";
 import { prisma } from "@/lib/db";
 import { SourceForm } from "./source-form";
 import { IssuePoButton } from "./issue-po-button";
+import { DocumentAttachments } from "@/components/DocumentAttachments";
 
 export default async function PurchaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await getAuthContext();
@@ -24,6 +25,11 @@ export default async function PurchaseDetailPage({ params }: { params: Promise<{
     },
   });
   if (!pr) notFound();
+
+  const documents = await prisma.document.findMany({
+    where: { organizationId: ctx.organizationId, entityType: "purchase_request", entityId: pr.id },
+    orderBy: { createdAt: "desc" },
+  });
 
   const selectedQuote =
     pr.status === "approved" && pr.purchaseOrders.length === 0
@@ -89,6 +95,10 @@ export default async function PurchaseDetailPage({ params }: { params: Promise<{
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="mb-6">
+        <DocumentAttachments entityType="purchase_request" entityId={pr.id} documents={documents} />
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">

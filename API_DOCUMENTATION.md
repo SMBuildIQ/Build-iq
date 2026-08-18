@@ -68,6 +68,34 @@ reference kept in sync with `src/app/api/v1/**/route.ts`.
 | POST | `/purchase-orders/:id/status` | `purchase_order:issue` — validated state machine (issued → … → closed) |
 | POST | `/purchase-orders/:id/receipts` | `receiving:record` |
 
+## Invoices
+
+| Method | Path | Permission |
+|---|---|---|
+| GET | `/purchase-orders/:id/invoices` | `invoice:manage` |
+| POST | `/purchase-orders/:id/invoices` | `invoice:manage` — runs `runThreeWayMatch()`, updates `SavingsRecord.realizedSavings` |
+
+## Documents
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/documents?entityType=&entityId=` | Permission depends on the entity type (e.g. `purchase_request:view`) |
+| POST | `/documents` | `multipart/form-data`: `file`, `entityType`, `entityId`. Ownership of the target entity is verified before attaching |
+| GET | `/documents/:id/file` | Streams the file; tenant-scoped |
+
+## Notifications
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/notifications` | Current user's own notifications only |
+| POST | `/notifications/:id/read` | Marks one notification read |
+
+## Audit log
+
+| Method | Path | Permission |
+|---|---|---|
+| GET | `/audit-log?entityType=` | `audit_log:view` |
+
 ## Public supplier portal (no session)
 
 | Method | Path | Notes |

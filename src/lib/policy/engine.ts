@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { writeSystemAuditLog } from "@/lib/audit";
+import { notifyRole } from "@/lib/notifications";
 
 // Deterministic purchasing policy / rules engine (brief §18).
 //
@@ -130,6 +131,19 @@ export async function createApprovalRequest(params: {
     entityId: approvalRequest.id,
     after: params.evaluation,
   });
+
+  const uniqueRoleKeys = [...new Set(params.evaluation.requiredApprovals.map((a) => a.roleKey))];
+  await Promise.all(
+    uniqueRoleKeys.map((roleKey) =>
+      notifyRole(params.organizationId, roleKey, {
+        type: "approval_required",
+        title: "Purchase approval required",
+        body: params.evaluation.requiredApprovals.find((a) => a.roleKey === roleKey)?.reason,
+        entityType: "PurchaseRequest",
+        entityId: params.purchaseRequestId,
+      })
+    )
+  );
 
   return approvalRequest;
 }

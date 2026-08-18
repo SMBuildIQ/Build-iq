@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { prisma } from "@/lib/db";
+import { hasPermission } from "@/lib/permissions/check";
 
 export default async function SettingsPage() {
   const ctx = await getAuthContext();
@@ -72,6 +74,14 @@ export default async function SettingsPage() {
           <p className="text-sm text-gray-500">Not configured.</p>
         )}
       </Section>
+
+      {hasPermission(ctx, "audit_log:view") && (
+        <Section title="Activity">
+          <Link href="/settings/audit-log" className="text-sm text-gray-900 underline">
+            View audit log
+          </Link>
+        </Section>
+      )}
     </div>
   );
 }
