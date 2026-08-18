@@ -46,8 +46,10 @@ received, duplicate invoices, and unexplained additional fees — including the 
 (freight billed despite a freight-included quote). Invoice entry now also supports upload + AI-assisted extraction
 (`src/lib/ai/invoiceDocumentExtraction.ts`, mirroring the quote extraction pipeline) for CSV, .xlsx, and PDF/image
 (vision-capable providers only) — the buyer still reviews and submits the prefilled form, with extracted values
-recorded to `InvoiceExtractionField` for traceability, same human-verification pattern as quotes. PARTIAL overall:
-no dedicated invoices list UI beyond the per-PO view.
+recorded to `InvoiceExtractionField` for traceability, same human-verification pattern as quotes. An org-wide
+`/invoices` list (`src/app/(app)/invoices/page.tsx`) now exists alongside the per-PO view, gated by `invoice:manage`
+(redirects to the dashboard without it) and tenant-scoped like every other list page, showing status/discrepancy
+count/amount/PO/supplier per invoice with a discrepancy-count summary. FULL.
 
 **Purchasing-intelligence price benchmarking (brief §25)** — FULL for what's built: `recomputePriceBenchmarks()`
 (`src/lib/priceBenchmark.ts`) rebuilds an org's `PriceBenchmark` rows from real, committed `PurchaseOrderLineItem`

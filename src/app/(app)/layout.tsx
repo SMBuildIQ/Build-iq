@@ -10,6 +10,7 @@ const NAV = [
   { href: "/rfqs", label: "RFQs" },
   { href: "/suppliers", label: "Suppliers" },
   { href: "/orders", label: "Orders" },
+  { href: "/invoices", label: "Invoices" },
   { href: "/approvals", label: "Approvals" },
   { href: "/intelligence", label: "Intelligence" },
   { href: "/documents", label: "Documents" },
