@@ -45,6 +45,12 @@ the app or docs — this is the canonical list.
   implementation). Same honesty tradeoff as RFQ send — without `RESEND_API_KEY` configured it logs instead of
   pretending to send, and a supplier with no contact on file gets an honest log line rather than a fabricated
   delivery; the audit log records a `delivered: true/false` flag reflecting which happened.
+- **Negotiation lifecycle stops at "sent"** — the `Negotiation.status` values `countered`/`accepted`/`declined`
+  exist in the schema and the savings math (`src/lib/savings.ts`) correctly branches on an accepted negotiation's
+  `resultPrice` when one exists, but there is no route or UI to actually record a supplier's counter-offer or
+  record a negotiation as accepted — a buyer has no way today to close the loop on a sent negotiation ask. Found
+  while adding savings-tracking tests: that code path is real and tested at the unit level, but has no reachable
+  path through the running app.
 - **Notifications** — in-app only, delivered by client-side polling (`NotificationBell`, every 30s) rather than a
   push channel; no email/SMS delivery.
 - **Price benchmarking (brief §25)** — real: `recomputePriceBenchmarks()` averages actual `PurchaseOrderLineItem`
