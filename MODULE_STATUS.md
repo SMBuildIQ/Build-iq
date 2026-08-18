@@ -29,7 +29,7 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 20 | Order tracking | FULL | Full status lifecycle with timeline |
 | 21 | Basic receiving | FULL | Quantity received/damaged/missing per line item |
 | 22 | Savings tracking | FULL | `SavingsRecord` populated at quote selection and again at invoicing; negotiated/benchmark/realized kept distinct |
-| 23 | Dashboard/analytics | PARTIAL | Real counts, verified-savings sum, and a "purchasing insights" panel that surfaces unresponsive suppliers, invoice discrepancies, stale approvals, and overdue RFQs from real queries (`src/lib/insights.ts`) — empty until there's data to support it. Historical-pricing insights need `PriceBenchmark`, not populated yet |
+| 23 | Dashboard/analytics | PARTIAL | Real counts, verified-savings sum, and a "purchasing insights" panel that surfaces unresponsive suppliers, invoice discrepancies, stale approvals, overdue RFQs, and now above-historical-pricing purchases, all from real queries (`src/lib/insights.ts`) — empty until there's data to support it |
 | 24 | Notifications | FULL | In-app bell (poll-based), role- and user-targeted, fired on approval-required/quote-received/invoice-discrepancy |
 | 25 | Audit logs | FULL | Every mutation writes AuditLog; viewer at `/settings/audit-log` |
 | 26 | Document library | FULL | Upload/download/list, tenant- and entity-ownership-checked; local disk storage (not object storage — see KNOWN_LIMITATIONS.md) |
@@ -46,7 +46,16 @@ received, duplicate invoices, and unexplained additional fees — including the 
 (freight billed despite a freight-included quote). PARTIAL overall: invoice entry is manual (no supplier invoice
 upload/extraction pipeline), and there's no dedicated invoices list UI beyond the per-PO view.
 
-Purchasing-intelligence benchmarking (`PriceBenchmark`) is modeled per brief §25 but has no processing job or UI.
+**Purchasing-intelligence price benchmarking (brief §25)** — FULL for what's built: `recomputePriceBenchmarks()`
+(`src/lib/priceBenchmark.ts`) rebuilds an org's `PriceBenchmark` rows from real, committed `PurchaseOrderLineItem`
+prices on issued POs (never quotes/estimates) every time a PO is issued, bucketed by category (falling back to
+manufacturer when category is unset) and unit of measure over a 180-day rolling window. A quote priced >15% above
+the org's own historical average for the same bucket is flagged with an "Above historical pricing" note on the
+compare page and rolled into the dashboard's purchasing-insights panel. No dedicated benchmark-history UI exists —
+the only exposure is the derived flag/insight — and because `category` is rarely populated on purchase request
+line items today, most real benchmarking currently falls back to the manufacturer-only bucket rather than a true
+category bucket. Verified via unit tests (`tests/price-benchmark.test.ts`) and a live smoke test issuing real POs
+against a running standalone server.
 
 **Rule:** a module with no working UI shows an explicit "Planned" state (`src/components/PlannedModule.tsx`) that
 names the backing schema — never a form that appears to save but doesn't.

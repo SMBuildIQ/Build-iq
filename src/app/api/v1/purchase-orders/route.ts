@@ -5,6 +5,7 @@ import { withAuth, NotFoundError, ValidationError } from "@/lib/api/handler";
 import { requirePermission } from "@/lib/permissions/check";
 import { nextPoNumber } from "@/lib/numbering";
 import { writeAuditLog } from "@/lib/audit";
+import { recomputePriceBenchmarks } from "@/lib/priceBenchmark";
 
 const schema = z.object({ purchaseRequestId: z.string(), quoteId: z.string() });
 
@@ -52,6 +53,7 @@ export const POST = withAuth(async (req, ctx) => {
       organizationId: ctx.organizationId,
       purchaseRequestId: purchaseRequest.id,
       supplierId: quote.supplierId,
+      quoteId: quote.id,
       poNumber,
       status: "issued",
       paymentTerms: quote.paymentTerms,
@@ -61,7 +63,12 @@ export const POST = withAuth(async (req, ctx) => {
       total: quote.totalLandedCost,
       approvedByUserId: ctx.userId,
       lineItems: {
+        // rfqLineItemId carries the manufacturer/category traceability chain
+        // forward (RFQLineItem -> sourceLineItemId -> PurchaseRequestLineItem)
+        // — see the schema comment on PurchaseOrderLineItem. Needed for price
+        // benchmarking (brief §25), not just display.
         create: quote.lineItems.map((li) => ({
+          rfqLineItemId: li.rfqLineItemId,
           description: li.description,
           sku: li.sku,
           quantity: li.quantity,
@@ -88,6 +95,11 @@ export const POST = withAuth(async (req, ctx) => {
     entityId: po.id,
     after: { poNumber, total: quote.totalLandedCost, supplier: quote.supplier.name },
   });
+  // Recompute now, not on a schedule — a newly issued PO's price is a
+  // committed fact as of this moment (brief §25's historical data is what
+  // was actually paid, not an estimate), so the benchmark should reflect it
+  // immediately rather than waiting for a background job to catch up.
+  await recomputePriceBenchmarks(ctx.organizationId);
 
   return NextResponse.json({ purchaseOrder: po }, { status: 201 });
 });

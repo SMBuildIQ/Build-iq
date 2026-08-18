@@ -1,10 +1,8 @@
 import { prisma } from "@/lib/db";
+import { benchmarkBucketKey, ABOVE_BENCHMARK_THRESHOLD } from "@/lib/priceBenchmark";
 
 // brief §4: "Purchasing Insights" panel on the dashboard. Every insight here is
 // a plain structured query over real data — no AI call, no invented numbers.
-// This intentionally does NOT try to match every brief example ("pricing is
-// 11.4% above historical" needs PriceBenchmark, which nothing populates yet —
-// see KNOWN_LIMITATIONS.md); it only surfaces what's actually knowable today.
 
 export interface Insight {
   type: string;
@@ -65,5 +63,58 @@ export async function generatePurchasingInsights(organizationId: string): Promis
     });
   }
 
+  const aboveBenchmarkCount = await countPurchasesAboveBenchmark(organizationId);
+  if (aboveBenchmarkCount > 0) {
+    insights.push({
+      type: "above_benchmark_pricing",
+      message: `${aboveBenchmarkCount} purchase${aboveBenchmarkCount === 1 ? " is" : "s are"} currently above historical pricing.`,
+    });
+  }
+
   return insights;
+}
+
+/**
+ * Counts distinct purchase requests with an active (not yet selected or
+ * rejected) quote containing at least one line item priced >15% above its
+ * benchmark. Benchmarks only exist for buckets with real PO history
+ * (recomputePriceBenchmarks), so this is silently zero until an org has
+ * actually issued purchase orders — never a guess.
+ */
+async function countPurchasesAboveBenchmark(organizationId: string): Promise<number> {
+  const quotes = await prisma.quote.findMany({
+    where: { status: "received", rfqSupplier: { rfq: { organizationId } } },
+    include: {
+      lineItems: { include: { rfqLineItem: { include: { sourceLineItem: true } } } },
+      rfqSupplier: { include: { rfq: true } },
+    },
+  });
+  if (quotes.length === 0) return 0;
+
+  const benchmarks = await prisma.priceBenchmark.findMany({
+    where: { organizationId },
+    orderBy: { periodEnd: "desc" },
+  });
+  const latestByBucket = new Map<string, number>();
+  for (const b of benchmarks) {
+    const key = `${b.category}::${b.unitOfMeasure}`;
+    if (!latestByBucket.has(key)) latestByBucket.set(key, b.avgUnitPrice);
+  }
+  if (latestByBucket.size === 0) return 0;
+
+  const flaggedPurchaseRequestIds = new Set<string>();
+  for (const quote of quotes) {
+    for (const li of quote.lineItems) {
+      const source = li.rfqLineItem?.sourceLineItem;
+      const bucketKey = benchmarkBucketKey(source?.manufacturer ?? null, source?.category ?? null);
+      if (!bucketKey) continue;
+      const unitOfMeasure = source?.unitOfMeasure ?? "each";
+      const avg = latestByBucket.get(`${bucketKey}::${unitOfMeasure}`);
+      if (avg && avg > 0 && (li.unitPrice - avg) / avg > ABOVE_BENCHMARK_THRESHOLD) {
+        flaggedPurchaseRequestIds.add(quote.rfqSupplier.rfq.purchaseRequestId);
+        break;
+      }
+    }
+  }
+  return flaggedPurchaseRequestIds.size;
 }

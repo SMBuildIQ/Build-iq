@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { prisma } from "@/lib/db";
 import { RecommendButton, SelectQuoteButton, NegotiateButton } from "./compare-actions";
+import { benchmarkBucketKey, ABOVE_BENCHMARK_THRESHOLD } from "@/lib/priceBenchmark";
 
 export default async function ComparePage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await getAuthContext();
@@ -11,11 +12,34 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
   const pr = await prisma.purchaseRequest.findFirst({ where: { id, organizationId: ctx.organizationId } });
   if (!pr) notFound();
 
-  const quotes = await prisma.quote.findMany({
-    where: { rfqSupplier: { rfq: { purchaseRequestId: id } } },
-    include: { supplier: true, lineItems: true },
-    orderBy: { totalLandedCost: "asc" },
-  });
+  const [quotes, benchmarks] = await Promise.all([
+    prisma.quote.findMany({
+      where: { rfqSupplier: { rfq: { purchaseRequestId: id } } },
+      include: { supplier: true, lineItems: { include: { rfqLineItem: { include: { sourceLineItem: true } } } } },
+      orderBy: { totalLandedCost: "asc" },
+    }),
+    prisma.priceBenchmark.findMany({ where: { organizationId: ctx.organizationId }, orderBy: { periodEnd: "desc" } }),
+  ]);
+
+  // brief §25: flag a quote priced meaningfully above what this org has
+  // actually paid historically for the same manufacturer/category — only
+  // when a real benchmark exists, never a guess.
+  const latestBenchmarkByBucket = new Map<string, number>();
+  for (const b of benchmarks) {
+    const key = `${b.category}::${b.unitOfMeasure}`;
+    if (!latestBenchmarkByBucket.has(key)) latestBenchmarkByBucket.set(key, b.avgUnitPrice);
+  }
+  const aboveBenchmark = new Map<string, boolean>();
+  for (const q of quotes) {
+    const flagged = q.lineItems.some((li) => {
+      const source = li.rfqLineItem?.sourceLineItem;
+      const bucketKey = benchmarkBucketKey(source?.manufacturer ?? null, source?.category ?? null);
+      if (!bucketKey) return false;
+      const avg = latestBenchmarkByBucket.get(`${bucketKey}::${source?.unitOfMeasure ?? "each"}`);
+      return !!avg && avg > 0 && (li.unitPrice - avg) / avg > ABOVE_BENCHMARK_THRESHOLD;
+    });
+    aboveBenchmark.set(q.id, flagged);
+  }
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -50,7 +74,12 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
                   <td className="px-4 py-2 font-medium">{q.supplier.name}</td>
                   <td className="px-4 py-2">{q.productTotal ? `$${q.productTotal.toLocaleString()}` : "—"}</td>
                   <td className="px-4 py-2">{q.freightIncluded ? "Included" : q.freight ? `$${q.freight.toLocaleString()}` : "—"}</td>
-                  <td className="px-4 py-2 font-medium">{q.totalLandedCost ? `$${q.totalLandedCost.toLocaleString()}` : "—"}</td>
+                  <td className="px-4 py-2 font-medium">
+                    {q.totalLandedCost ? `$${q.totalLandedCost.toLocaleString()}` : "—"}
+                    {aboveBenchmark.get(q.id) && (
+                      <div className="mt-0.5 text-[10px] font-normal text-amber-700">Above historical pricing</div>
+                    )}
+                  </td>
                   <td className="px-4 py-2">{q.leadTimeDays ? `${q.leadTimeDays} days` : "—"}</td>
                   <td className="px-4 py-2">{q.paymentTerms ?? "—"}</td>
                   <td className="px-4 py-2">{q.warranty ?? "—"}</td>

@@ -461,6 +461,7 @@ model RFQLineItem {
   rfq            RFQ                       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
   sourceLineItem PurchaseRequestLineItem?  @relation(fields: [sourceLineItemId], references: [id])
   quoteLineItems QuoteLineItem[]
+  purchaseOrderLineItems PurchaseOrderLineItem[]
 
   @@index([rfqId])
 }
@@ -533,6 +534,7 @@ model Quote {
   documents  Document[] @relation("QuoteDocuments")
   extractions QuoteExtractionField[]
   negotiations Negotiation[]
+  purchaseOrders PurchaseOrder[]
 
   @@index([rfqSupplierId])
   @@index([supplierId])
@@ -656,6 +658,11 @@ model PurchaseOrder {
   organizationId   String
   purchaseRequestId String
   supplierId       String
+  // Which selected Quote this PO was issued from — nullable because nothing
+  // enforces every PO having one (a future manual/no-RFQ PO path might not),
+  // but the issuance route (POST /api/v1/purchase-orders) always sets it
+  // today. Needed for real historical-price traceability (brief §25).
+  quoteId          String?
   poNumber         String
   status           String   @default("issued")
   // issued | supplier_confirmed | processing | production | ready_to_ship | shipped |
@@ -675,6 +682,7 @@ model PurchaseOrder {
   organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
   supplier        Supplier        @relation(fields: [supplierId], references: [id])
+  quote           Quote?          @relation(fields: [quoteId], references: [id])
 
   lineItems     PurchaseOrderLineItem[]
   statusHistory PurchaseOrderStatusEvent[]
@@ -689,6 +697,10 @@ model PurchaseOrder {
 model PurchaseOrderLineItem {
   id              String @id @default(uuid())
   purchaseOrderId String
+  // Carried forward from the winning QuoteLineItem so the manufacturer/
+  // category on the originating PurchaseRequestLineItem stays reachable —
+  // brief §25 needs this chain for historical price benchmarking.
+  rfqLineItemId   String?
   description     String
   sku             String?
   quantity        Float
@@ -696,6 +708,7 @@ model PurchaseOrderLineItem {
   total           Float
 
   purchaseOrder   PurchaseOrder    @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  rfqLineItem     RFQLineItem?     @relation(fields: [rfqLineItemId], references: [id])
   receiptLineItems ReceiptLineItem[]
   invoiceLineItems InvoiceLineItem[]
 

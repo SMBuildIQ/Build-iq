@@ -30,12 +30,20 @@ the app or docs — this is the canonical list.
   same message-thread model but not the same delivery path yet).
 - **Notifications** — in-app only, delivered by client-side polling (`NotificationBell`, every 30s) rather than a
   push channel; no email/SMS delivery.
+- **Price benchmarking (brief §25)** — real: `recomputePriceBenchmarks()` averages actual `PurchaseOrderLineItem`
+  prices on issued POs, and a quote >15% above the org's own historical average is flagged on the compare page and
+  in dashboard insights. Two real gaps: `PurchaseRequestLineItem.category` is rarely populated today (nothing in
+  the UI requires it), so most benchmarking currently falls back to a manufacturer-only bucket rather than a true
+  category bucket; and there's no UI to browse benchmark history directly — the only exposure is the derived
+  above-threshold flag.
 
 ## Modeled, not yet exposed
 
-Purchasing-intelligence benchmarking and natural-language query (`PriceBenchmark`) and ERP/accounting
-integrations. Both have real Prisma models so adding the UI/API surface later does not require a schema rewrite.
-(Supplier performance scoring is no longer in this category — see MODULE_STATUS.md #8.)
+Purchasing-intelligence natural-language query and ERP/accounting integrations. These have real Prisma models
+(or, for NL query, would reuse the existing AI provider abstraction) so adding the UI/API surface later does not
+require a schema rewrite.
+(Supplier performance scoring and price benchmarking are no longer in this category — see MODULE_STATUS.md #8 and
+the "Also built" section for §25.)
 
 ## Not started
 
