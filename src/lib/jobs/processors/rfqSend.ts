@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { registerJobProcessor } from "../queue";
 import { writeSystemAuditLog } from "@/lib/audit";
+import { sendEmail } from "@/lib/email";
 
 interface RfqSendPayload {
   rfqId: string;
@@ -35,18 +36,10 @@ async function processRfqSend(payload: unknown): Promise<void> {
     const subject = `RFQ ${rfq.rfqNumber} from ${rfq.organization.name}`;
     const body = buildRfqEmailBody(rfq, rfqSupplier.secureToken);
 
-    if (to && process.env.RESEND_API_KEY) {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({ from: process.env.EMAIL_FROM, to, subject, text: body }),
-      });
+    if (to) {
+      await sendEmail({ to, subject, text: body, logPrefix: "rfq.send" });
     } else {
-      // No email provider configured — log instead of silently pretending to send.
-      console.log(`[rfq.send] (no RESEND_API_KEY) would email ${to ?? "(no contact on file)"}:\n${subject}\n${body}`);
+      console.log(`[rfq.send] (no contact on file) would email:\n${subject}\n${body}`);
     }
 
     await prisma.rFQSupplier.update({

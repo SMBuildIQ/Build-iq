@@ -33,9 +33,11 @@ the app or docs — this is the canonical list.
 - **Document storage** — local disk (`uploads/<organizationId>/...`), not durable across instances or redeploys.
   Swapping to an S3-compatible bucket only touches `src/lib/documents/storage.ts`; `storageKey` never encodes a
   local-filesystem assumption beyond that module.
-- **Negotiation delivery** — "Send negotiation" records the message as sent and logs it; there is no actual email
-  dispatch to the supplier for the negotiation ask (RFQ send has real dispatch via Resend; negotiation reuses the
-  same message-thread model but not the same delivery path yet).
+- **Negotiation delivery** — now real: "Send negotiation" dispatches the AI-drafted message to the supplier's
+  primary contact via the same Resend integration RFQ send uses (`src/lib/email.ts`, extracted so both share one
+  implementation). Same honesty tradeoff as RFQ send — without `RESEND_API_KEY` configured it logs instead of
+  pretending to send, and a supplier with no contact on file gets an honest log line rather than a fabricated
+  delivery; the audit log records a `delivered: true/false` flag reflecting which happened.
 - **Notifications** — in-app only, delivered by client-side polling (`NotificationBell`, every 30s) rather than a
   push channel; no email/SMS delivery.
 - **Price benchmarking (brief §25)** — real: `recomputePriceBenchmarks()` averages actual `PurchaseOrderLineItem`

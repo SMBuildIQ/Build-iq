@@ -23,7 +23,7 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 14 | Quote normalization | FULL | Total landed cost computed from product total + freight (portal and manual entry both) |
 | 15 | Side-by-side comparison | FULL | `/purchases/[id]/compare` |
 | 16 | AI purchasing recommendation | FULL | Explainable rationale, mock heuristic + Anthropic-backed, logged to AIActivityLog |
-| 17 | Human-assisted negotiation | FULL | AI drafts, human sends — no autonomous path exists in code |
+| 17 | Human-assisted negotiation | FULL | AI drafts, human sends — no autonomous path exists in code. Sending now dispatches real email via Resend (same integration as RFQ send), with an honest log fallback when no API key or supplier contact is configured |
 | 18 | Approval engine | FULL | Deterministic PolicyRule evaluation, sequenced ApprovalSteps, role-gated decisions |
 | 19 | Purchase order generation | FULL | Generated from an approved request + selected quote |
 | 20 | Order tracking | FULL | Full status lifecycle with timeline |
