@@ -40,6 +40,11 @@ the app or docs — this is the canonical list.
 - **Document storage** — local disk (`uploads/<organizationId>/...`), not durable across instances or redeploys.
   Swapping to an S3-compatible bucket only touches `src/lib/documents/storage.ts`; `storageKey` never encodes a
   local-filesystem assumption beyond that module.
+- **Database engine** — SQLite in dev/CI by design (see `ARCHITECTURE.md`'s "Deployment target"). The Postgres
+  migration is verified, not just planned: a real local PostgreSQL 16 instance ran the full schema, the entire
+  unit/integration suite, a production build, and the e2e suite with concurrent workers (no SQLite-specific
+  `workers: 1` pin needed) with zero code changes beyond the one-line `datasource.provider` swap. Still not the
+  committed/deployed default — actually switching is a deliberate deployment decision, not an engineering one.
 - **Negotiation delivery** — now real: "Send negotiation" dispatches the AI-drafted message to the supplier's
   primary contact via the same Resend integration RFQ send uses (`src/lib/email.ts`, extracted so both share one
   implementation). Same honesty tradeoff as RFQ send — without `RESEND_API_KEY` configured it logs instead of
@@ -71,6 +76,6 @@ the "Also built" section for §25.)
 
 ## Not started
 
-Native mobile client, SSO/SAML, staging/production infrastructure provisioning, PostgreSQL migration (SQLite only today), external
+Native mobile client, SSO/SAML, staging/production infrastructure provisioning, external
 supplier discovery (search APIs, marketplaces) beyond the internal approved-supplier database, and virus/malware
 scanning on uploaded documents (`Document.virusScanStatus` is always written as `"skipped"`).

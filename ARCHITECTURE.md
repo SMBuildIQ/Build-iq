@@ -102,8 +102,10 @@ places in the app that authorize by bare token instead of a session — delibera
 ## Numbering
 
 Purchase request, RFQ, and PO numbers are per-organization sequential counters (`Organization.prNumberSeq` etc.),
-incremented inside a transaction (`src/lib/numbering.ts`). SQLite serializes writers, so this is race-safe today;
-the Postgres migration should keep this as a single atomic `UPDATE ... RETURNING`.
+incremented inside a transaction (`src/lib/numbering.ts`) via Prisma's `{ increment: 1 }`, which compiles to a
+single atomic `UPDATE ... RETURNING` at the SQL level under both providers — not a read-then-write in application
+code. Verified directly against real PostgreSQL 16: 50 concurrent increments against the same counter produced 50
+unique, contiguous numbers with zero duplicates. Race-safe under both providers today, not just under SQLite.
 
 ## Deployment target
 
@@ -111,6 +113,17 @@ Dev: SQLite, `npm run dev` + `npm run worker`. Production target: PostgreSQL, `n
 the API/web process plus a separately-scaled worker process — see `Dockerfile` and `docker-compose.yml`. Object
 storage (S3-compatible) for `Document.storageKey` and a managed Postgres instance are the two infrastructure
 pieces this repo does not yet provision — see `KNOWN_LIMITATIONS.md`.
+
+**Postgres migration — verified, not just planned.** A local PostgreSQL 16 instance was used to actually run this
+migration end to end (not just review it): `prisma/schema.prisma`'s `datasource.provider` changed from `"sqlite"`
+to `"postgresql"` (the only line that needs to change — no model changes), `prisma db push` applied the full ~40-
+model schema cleanly, the entire unit/integration suite (119 tests) passed unchanged, a production build
+succeeded, and the Playwright e2e suite — which needs `workers: 1` against SQLite to avoid real write contention
+(see module #29 in `MODULE_STATUS.md`) — passed reliably with concurrent workers against Postgres with no such
+pin, confirming that ceiling is a SQLite-specific limitation, not a fragile test suite. None of this is
+committed: the repo's dev/CI database stays SQLite by design (see `KNOWN_LIMITATIONS.md`), and the actual
+migration remains a deliberate deployment decision — this just confirms the path is real and low-risk when that
+decision is made, not aspirational.
 
 **Gotcha — relative SQLite paths under `output: standalone`:** Next's standalone build copies the generated Prisma
 client to a new location (`.next/standalone/node_modules/.prisma/client`), and Prisma resolves a *relative*

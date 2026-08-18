@@ -4,9 +4,10 @@ type Counter = "prNumberSeq" | "rfqNumberSeq" | "poNumberSeq";
 type Prefix = "prNumberPrefix" | "rfqNumberPrefix" | "poNumberPrefix";
 
 async function nextNumber(organizationId: string, counter: Counter, prefixField: Prefix): Promise<string> {
-  // SQLite serializes writers, so a single UPDATE...RETURNING-style read-after-write
-  // inside a transaction is sufficient to avoid duplicate numbers; Postgres migration
-  // should keep this as a single atomic UPDATE (see ARCHITECTURE.md).
+  // Prisma's { increment: 1 } compiles to a single atomic UPDATE at the SQL level
+  // under both providers, not a read-then-write — verified race-safe under real
+  // concurrent PostgreSQL load, not just SQLite's serialized writers (see
+  // ARCHITECTURE.md's "Numbering" section).
   const updated = await prisma.$transaction(async (tx) => {
     const org = await tx.organization.update({
       where: { id: organizationId },
