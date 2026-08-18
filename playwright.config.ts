@@ -7,6 +7,12 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false, // each test creates its own org via the UI; keep it simple and serial
+  // fullyParallel only serializes tests *within* a file — without capping workers,
+  // Playwright still runs separate spec files concurrently by default, and two
+  // workers writing to the same SQLite e2e.db at once causes real, intermittent
+  // write contention (a PO issuance request can silently fail). One worker across
+  // the whole suite avoids it; e2e suites are small enough that this costs little.
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "dot" : "list",
