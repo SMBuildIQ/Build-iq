@@ -87,7 +87,15 @@ model User {
   tokenVersion      Int      @default(0)
   emailVerifiedAt   DateTime?
   mfaEnabled        Boolean  @default(false)
+  // Encrypted at rest (src/lib/auth/crypto.ts) — a leaked DB alone must not be
+  // enough to derive a user's TOTP codes, or MFA stops adding any real defense.
   mfaSecret         String?
+  // Set during enrollment, before the user has proven they can generate a
+  // valid code. Kept separate from mfaSecret so starting (or restarting)
+  // enrollment never invalidates an already-active MFA secret before the new
+  // one is confirmed — otherwise a user mid-re-enrollment could be locked out
+  // by their own old authenticator app suddenly no longer matching.
+  mfaPendingSecret  String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   deletedAt         DateTime?
@@ -97,8 +105,26 @@ model User {
   aiCorrections     AICorrection[]
   notifications     Notification[]
   approvalDecisions ApprovalStep[]  @relation("ApprovalDecidedBy")
+  mfaBackupCodes    MfaBackupCode[]
 
   @@index([email])
+}
+
+// Single-use recovery codes issued once when MFA enrollment completes (brief-
+// adjacent, not brief-numbered — a real security feature the schema already
+// implied via User.mfaEnabled/mfaSecret but nothing enforced). Only the hash
+// is ever stored; the plaintext codes are shown to the user exactly once at
+// generation time and cannot be retrieved again.
+model MfaBackupCode {
+  id        String    @id @default(uuid())
+  userId    String
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Membership {

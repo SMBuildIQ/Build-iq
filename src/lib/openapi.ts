@@ -89,6 +89,44 @@ export const openApiSpec = {
         responses: { "200": jsonResponse({ $ref: "#/components/schemas/Session" }) },
       },
     },
+    "/auth/mfa/enroll": {
+      post: {
+        tags: ["Auth"],
+        summary: "Start TOTP MFA enrollment — generates a secret (not yet active) and a QR code",
+        responses: {
+          "200": jsonResponse({ type: "object", properties: { secret: { type: "string" }, otpauthUrl: { type: "string" }, qrCodeDataUrl: { type: "string" } } }),
+          "400": errorResponse,
+        },
+      },
+    },
+    "/auth/mfa/verify": {
+      post: {
+        tags: ["Auth"],
+        summary: "Confirm enrollment with a code from the authenticator app — enables MFA and issues one-time backup codes",
+        requestBody: jsonBody({ type: "object", required: ["code"], properties: { code: { type: "string" } } }),
+        responses: {
+          "200": jsonResponse({ type: "object", properties: { enabled: { type: "boolean" }, backupCodes: { type: "array", items: { type: "string" } } } }),
+          "400": errorResponse,
+        },
+      },
+    },
+    "/auth/mfa/disable": {
+      post: {
+        tags: ["Auth"],
+        summary: "Disable MFA — requires the current password",
+        requestBody: jsonBody({ type: "object", required: ["password"], properties: { password: { type: "string" } } }),
+        responses: { "200": jsonResponse({ type: "object", properties: { enabled: { type: "boolean" } } }), "400": errorResponse },
+      },
+    },
+    "/auth/mfa/challenge": {
+      post: {
+        tags: ["Auth"],
+        summary: "Second step of login for an MFA-enrolled account — exchanges the mfaToken from /auth/login plus a TOTP or backup code for a real session",
+        security: [],
+        requestBody: jsonBody({ type: "object", required: ["mfaToken", "code"], properties: { mfaToken: { type: "string" }, code: { type: "string" } } }),
+        responses: { "200": jsonResponse({ $ref: "#/components/schemas/AuthResult" }), "401": errorResponse, "429": errorResponse },
+      },
+    },
     "/purchase-requests": {
       get: {
         tags: ["Purchase Requests"],

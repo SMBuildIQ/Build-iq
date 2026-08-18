@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
-import { signSession } from "@/lib/auth/session";
-import { setSessionCookie } from "@/lib/auth/cookies";
+import { signMfaChallenge } from "@/lib/auth/session";
+import { establishSession } from "@/lib/auth/establishSession";
 
 const schema = z.object({
   email: z.string().email(),
@@ -39,25 +39,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
   }
 
-  const membership = await prisma.membership.findFirst({
-    where: { userId: user.id, status: "active" },
-    orderBy: { createdAt: "asc" },
-    include: { organization: true },
-  });
-  if (!membership) {
-    return NextResponse.json({ error: "This account has no active organization" }, { status: 403 });
+  if (user.mfaEnabled) {
+    // Password alone doesn't establish a session for an MFA-enrolled account —
+    // this short-lived token only proves "the password was correct" and is
+    // exchanged for a real session by POST /auth/mfa/challenge.
+    const mfaToken = await signMfaChallenge(user.id);
+    return NextResponse.json({ mfaRequired: true, mfaToken });
   }
 
-  const token = await signSession({
-    userId: user.id,
-    tokenVersion: user.tokenVersion,
-    activeOrganizationId: membership.organizationId,
-  });
-
-  const res = NextResponse.json({
-    user: { id: user.id, email: user.email, name: user.name },
-    organization: { id: membership.organization.id, name: membership.organization.name, slug: membership.organization.slug },
-  });
-  setSessionCookie(res, token);
-  return res;
+  return establishSession(user);
 }

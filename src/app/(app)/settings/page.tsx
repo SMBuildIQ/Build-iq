@@ -5,12 +5,13 @@ import { prisma } from "@/lib/db";
 import { hasPermission } from "@/lib/permissions/check";
 import { InviteForm, RevokeInviteButton } from "./team-section";
 import { DepartmentsSection, CostCentersSection, LocationsSection } from "./org-setup-section";
+import { MfaSection } from "./mfa-section";
 
 export default async function SettingsPage() {
   const ctx = await getAuthContext();
   if (!ctx) redirect("/login");
 
-  const [organization, roles, policyRules, negotiationAuthority, memberships, pendingInvites, departments, costCenters, locations] =
+  const [organization, roles, policyRules, negotiationAuthority, memberships, pendingInvites, departments, costCenters, locations, currentUser] =
     await Promise.all([
       prisma.organization.findUniqueOrThrow({ where: { id: ctx.organizationId } }),
       prisma.role.findMany({
@@ -31,6 +32,7 @@ export default async function SettingsPage() {
       prisma.department.findMany({ where: { organizationId: ctx.organizationId }, orderBy: { name: "asc" } }),
       prisma.costCenter.findMany({ where: { organizationId: ctx.organizationId }, orderBy: { code: "asc" } }),
       prisma.location.findMany({ where: { organizationId: ctx.organizationId }, orderBy: { name: "asc" } }),
+      prisma.user.findUniqueOrThrow({ where: { id: ctx.userId }, select: { mfaEnabled: true } }),
     ]);
 
   return (
@@ -49,6 +51,10 @@ export default async function SettingsPage() {
             <span className="text-gray-500">Currency:</span> {organization.currency}
           </div>
         </div>
+      </Section>
+
+      <Section title="Two-factor authentication">
+        <MfaSection mfaEnabled={currentUser.mfaEnabled} />
       </Section>
 
       <Section title="Locations">

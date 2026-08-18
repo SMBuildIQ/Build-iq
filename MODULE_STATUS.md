@@ -8,7 +8,7 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | # | Module | Status | Notes |
 |---|---|---|---|
 | 1 | Multi-tenant org architecture | FULL | Org/Location/Membership/Role/Permission, tested cross-tenant isolation |
-| 2 | Authentication | FULL | Session cookie JWT, bcrypt, login lockout; no MFA enforcement yet |
+| 2 | Authentication | FULL | Session cookie JWT, bcrypt, login lockout, and real TOTP-based MFA (enroll via QR/manual secret, verify, backup codes, disable requires password) — `src/lib/auth/mfa.ts` and `src/app/api/v1/auth/mfa/*`, gated correctly in `src/proxy.ts` |
 | 3 | RBAC/permissions | FULL | Permission-key checks, org-scoped roles, seeded default role set |
 | 4 | Org/branch/user administration | FULL | Team invite/accept flow, and full create/edit/delete for locations/departments/cost centers, all real and wired into purchase request creation. Delete is blocked (not cascaded) when a record is still referenced — by a purchase request's department/cost center/delivery location, or a member's default location — returning a clear error naming what's using it, rather than orphaning real cost-attribution history or failing with an opaque DB error |
 | 5 | AI purchasing assistant | FULL | NL description → structured request, missing-field detection, full AIActivityLog trail |

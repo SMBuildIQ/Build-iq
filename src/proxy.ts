@@ -8,6 +8,10 @@ const PUBLIC_PATHS = [
   "/api/v1/auth/login",
   "/api/v1/auth/register",
   "/api/v1/auth/me",
+  // Public: the second step of login for an MFA-enrolled account, exchanged
+  // for a real session using the short-lived mfaToken from /auth/login — no
+  // session cookie exists yet at this point, same as /auth/login itself.
+  "/api/v1/auth/mfa/challenge",
   "/api/v1/openapi.json",
 ];
 

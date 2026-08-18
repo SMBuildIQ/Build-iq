@@ -7,6 +7,13 @@ the app or docs — this is the canonical list.
 
 - **RFQ email delivery** — real send via Resend when `RESEND_API_KEY` is set; without it, the email body is logged
   to the server console instead of silently pretending to send. The supplier portal link always works regardless.
+- **MFA (TOTP)** — real: enrollment (QR + manual secret entry), verification, single-use backup codes, and
+  disable (requires password re-entry) all work end to end, with the TOTP secret encrypted at rest
+  (`src/lib/auth/crypto.ts`) and login's brute-force lockout extended to code-verification attempts. Two real
+  gaps: it's opt-in per user, not something an org admin can require of its members (no "require MFA" org
+  policy), and the short-lived post-password `mfaToken` (5 min TTL) is a signed JWT, not a single-use nonce — it
+  can be replayed against `/auth/mfa/challenge` as many times as an attacker can guess a code within that window,
+  same brute-force lockout notwithstanding. Both are real, scoped follow-ups, not something silently faked.
 - **PO document** — rendered as a print-friendly HTML page (`window.print()` → "Save as PDF" in any browser)
   rather than a generated PDF binary. No `pdfkit`/binary generation pipeline is wired up yet.
 - **Quote document extraction** — real for CSV and Excel .xlsx (both deterministic parsing via a shared
@@ -57,7 +64,6 @@ the "Also built" section for §25.)
 
 ## Not started
 
-Native mobile client, SSO/SAML, MFA enforcement (the `User.mfaEnabled`/`mfaSecret` columns exist but nothing
-reads them), staging/production infrastructure provisioning, PostgreSQL migration (SQLite only today), external
+Native mobile client, SSO/SAML, staging/production infrastructure provisioning, PostgreSQL migration (SQLite only today), external
 supplier discovery (search APIs, marketplaces) beyond the internal approved-supplier database, and virus/malware
 scanning on uploaded documents (`Document.virusScanStatus` is always written as `"skipped"`).

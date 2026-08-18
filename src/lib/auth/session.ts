@@ -44,4 +44,31 @@ export async function verifySession(token: string): Promise<SessionPayload | nul
   }
 }
 
+const MFA_CHALLENGE_TTL_SECONDS = 5 * 60; // short-lived — this token only proves "password was correct", not identity
+
+/**
+ * Issued after a correct password when the account has MFA enabled, in place
+ * of a real session — carries no tokenVersion/activeOrganizationId, so even
+ * if verifySession's shape checks were ever loosened, this token could not be
+ * mistaken for (or reused as) a full session token; a distinct `purpose`
+ * claim makes the two unambiguous regardless.
+ */
+export async function signMfaChallenge(userId: string): Promise<string> {
+  return new SignJWT({ userId, purpose: "mfa_pending" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${MFA_CHALLENGE_TTL_SECONDS}s`)
+    .sign(secretKey());
+}
+
+export async function verifyMfaChallenge(token: string): Promise<{ userId: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, secretKey());
+    if (payload.purpose !== "mfa_pending" || typeof payload.userId !== "string") return null;
+    return { userId: payload.userId };
+  } catch {
+    return null;
+  }
+}
+
 export { SESSION_COOKIE, SESSION_TTL_SECONDS };
