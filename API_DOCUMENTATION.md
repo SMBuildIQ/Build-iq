@@ -4,8 +4,9 @@ All routes below live under `/api/v1`. Authenticated routes require the `buildiq
 `/api/v1/auth/login` or `/api/v1/auth/register`) and are scoped to the session's active organization — there is no
 way to pass an organization id as a parameter. Portal routes are the one public, token-authenticated exception.
 
-A generated OpenAPI/Swagger document is not produced yet (see MODULE_STATUS.md #28) — this is a hand-written
-reference kept in sync with `src/app/api/v1/**/route.ts`.
+A real OpenAPI 3.0 spec (`src/lib/openapi.ts`) is served at `/api/v1/openapi.json` — paste that URL into Swagger
+Editor, Postman, or any OpenAPI-compatible tool, or browse a rendered index at `/api-docs` (both public, no login
+required). This document is a hand-written narrative companion kept in sync with `src/app/api/v1/**/route.ts`.
 
 ## Auth
 

@@ -34,7 +34,7 @@ Numbering follows the brief's MVP list (§37) where it maps directly.
 | 25 | Audit logs | FULL | Every mutation writes AuditLog; viewer at `/settings/audit-log` |
 | 26 | Document library | FULL | Upload/download/list, tenant- and entity-ownership-checked; local disk storage (not object storage — see KNOWN_LIMITATIONS.md) |
 | 27 | Background job system | FULL | Persisted Job table, retries/backoff/dead-letter, worker process + inline dev fallback |
-| 28 | API documentation | PARTIAL | See API_DOCUMENTATION.md; no generated OpenAPI/Swagger file yet |
+| 28 | API documentation | FULL | Real OpenAPI 3.0 spec (`src/lib/openapi.ts`) served at `/api/v1/openapi.json` (paste into Swagger Editor/Postman) with a rendered index at `/api-docs`, both public; hand-maintained API_DOCUMENTATION.md kept as a narrative companion |
 | 29 | Automated testing | PARTIAL | Tenant isolation, permissions, policy engine, AI extraction, invoice matching, notifications — unit/integration; no e2e browser tests yet |
 | 30 | Production deployment | NONE | Dockerfile/docker-compose exist; no environment has actually been provisioned from this session |
 

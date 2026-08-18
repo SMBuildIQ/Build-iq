@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth/session";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/me"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/api-docs",
+  "/api/v1/auth/login",
+  "/api/v1/auth/register",
+  "/api/v1/auth/me",
+  "/api/v1/openapi.json",
+];
 
 // Edge-safe presence/signature check only (jose verifies HMAC without touching
 // Prisma). Full tenant/permission resolution happens server-side per request via
