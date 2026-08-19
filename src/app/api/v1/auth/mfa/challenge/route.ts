@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { verifyMfaChallenge } from "@/lib/auth/session";
+import { consumeMfaChallenge } from "@/lib/auth/mfaChallengeStore";
 import { establishSession } from "@/lib/auth/establishSession";
 import { decryptSecret } from "@/lib/auth/crypto";
 import { verifyTotpCode, hashBackupCode } from "@/lib/auth/mfa";
@@ -21,6 +22,15 @@ export async function POST(req: NextRequest) {
 
   const challenge = await verifyMfaChallenge(body.data.mfaToken);
   if (!challenge) return NextResponse.json({ error: "This verification step has expired — please sign in again." }, { status: 401 });
+
+  // Burned on the first attempt against this mfaToken, win or lose — a
+  // signed JWT is verifiable but not otherwise revocable, so without this
+  // the token would stay replayable against this endpoint for its whole
+  // 5-minute TTL instead of granting exactly one guess. Same "expired"
+  // message as an actually-expired token: no separate signal for an
+  // attacker replaying a captured one.
+  const firstUse = await consumeMfaChallenge(challenge.jti);
+  if (!firstUse) return NextResponse.json({ error: "This verification step has expired — please sign in again." }, { status: 401 });
 
   const user = await prisma.user.findUnique({ where: { id: challenge.userId } });
   if (!user || user.deletedAt || !user.mfaEnabled || !user.mfaSecret) {

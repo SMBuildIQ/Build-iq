@@ -13,8 +13,16 @@ Automated tests: `tests/tenant-isolation.test.ts`.
 - Sessions: HS256 JWT in an `httpOnly`, `sameSite=lax`, `secure` (in production) cookie; 30-day expiry;
   `User.tokenVersion` allows revoking all sessions for a user (bump the version, every outstanding JWT fails the
   version check in `getAuthContext()`).
-- Login lockout: 5 failed attempts / 15 minutes per email, tracked in `LoginAttempt`.
-- MFA: `User.mfaEnabled`/`mfaSecret` columns exist; no enrollment flow or verification is implemented yet.
+- Login lockout: 5 failed attempts / 15 minutes per email, tracked in `LoginAttempt`, extended to MFA
+  code-verification attempts.
+- MFA: real TOTP enrollment (QR/manual secret), verification, single-use backup codes, and disable (requires
+  password re-entry), with the secret encrypted at rest (`src/lib/auth/crypto.ts`) — `src/lib/auth/mfa.ts`,
+  `src/app/api/v1/auth/mfa/*`. The post-password `mfaToken` (5 min TTL) is a single-use nonce, not just a
+  short-lived JWT — each jti is burned on its first use via a real unique-constraint violation
+  (`MfaChallengeUse`), so a captured token can't be replayed for multiple guesses within its TTL. Org admins can
+  require MFA for every member (`PATCH /api/v1/organization`); an unenrolled member under that policy can still
+  log in (a session is needed to reach the enrollment API) but is blocked from the rest of the app until they
+  enroll, and can't disable MFA themselves while the policy is active.
 
 ## Authorization (RBAC)
 

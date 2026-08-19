@@ -17,10 +17,16 @@ the app or docs — this is the canonical list.
   (`src/app/(app)/mfa-gate.tsx`, `src/lib/auth/mfaPolicy.ts`), and `/auth/mfa/disable` rejects the request outright
   while the policy is active. Live-smoke-verified end to end: toggle the policy on, confirm `/dashboard` blocks
   and `/settings` doesn't, enroll for real, confirm the block lifts, confirm disable is rejected, toggle the
-  policy off, confirm disable then succeeds. One real gap remains: the short-lived post-password `mfaToken`
-  (5 min TTL) is a signed JWT, not a single-use nonce — it can be replayed against `/auth/mfa/challenge` as many
-  times as an attacker can guess a code within that window, same brute-force lockout notwithstanding. A real,
-  scoped follow-up, not something silently faked.
+  policy off, confirm disable then succeeds. The other MFA gap this list tracked is also closed: the
+  short-lived post-password `mfaToken` (5 min TTL) is now a genuine single-use nonce, not just a signed JWT
+  that happened to expire eventually — `MfaChallengeUse` (a jti burn list, `src/lib/auth/mfaChallengeStore.ts`)
+  is written on the very first attempt against a token, win or lose, via a real unique-constraint violation at
+  the database level rather than an application-level check-then-act race (verified under 10 concurrent
+  consumption attempts against the same jti: exactly 1 wins). Live-smoke-verified end to end against the real
+  running app: a wrong code on a fresh token burns it, replaying the same token with the *correct* code is then
+  rejected as expired rather than succeeding, and a fresh login with a correct first-attempt code still works
+  normally. Same "this verification step has expired" message either way — a replayed token gives an attacker no
+  signal distinguishing it from a token that simply timed out.
 - **PO document** — rendered as a print-friendly HTML page (`window.print()` → "Save as PDF" in any browser)
   rather than a generated PDF binary. No `pdfkit`/binary generation pipeline is wired up yet.
 - **Quote document extraction** — real for CSV, Excel .xlsx, and legacy binary .xls (all three deterministic

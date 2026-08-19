@@ -133,6 +133,18 @@ model MfaBackupCode {
   @@index([userId])
 }
 
+// Burn list for mfaToken jti claims (src/lib/auth/session.ts,
+// mfaChallengeStore.ts) — a signed JWT alone is verifiable but not
+// revocable or one-shot; recording each jti the instant it's used turns the
+// 5-minute-lived mfaToken into a real single-use nonce instead of a bearer
+// token replayable for the rest of its TTL. No userId/expiry needed: the
+// jti itself is meaningless once consumed, and the JWT's own exp claim
+// already bounds how long a row here needs to matter.
+model MfaChallengeUse {
+  jti        String   @id
+  consumedAt DateTime @default(now())
+}
+
 model Membership {
   id             String   @id @default(uuid())
   userId         String
