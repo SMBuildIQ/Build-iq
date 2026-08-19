@@ -103,15 +103,6 @@ the app or docs — this is the canonical list.
   the UI requires it), so most benchmarking currently falls back to a manufacturer-only bucket rather than a true
   category bucket; and there's no UI to browse benchmark history directly — the only exposure is the derived
   above-threshold flag.
-
-## Modeled, not yet exposed
-
-Purchasing-intelligence natural-language query and ERP/accounting integrations. These have real Prisma models
-(or, for NL query, would reuse the existing AI provider abstraction) so adding the UI/API surface later does not
-require a schema rewrite.
-(Supplier performance scoring and price benchmarking are no longer in this category — see MODULE_STATUS.md #8 and
-the "Also built" section for §25.)
-
 - **Virus/malware scanning** — real, not fake, but not active by default: `VIRUS_SCAN_DRIVER=clamav`
   (`src/lib/documents/virusScan.ts`) shells out to a local `clamscan` binary and streams the uploaded bytes to it
   over stdin before the file ever reaches storage — an infected file is rejected (HTTP 400, an audit log entry
@@ -128,6 +119,14 @@ the "Also built" section for §25.)
   custom-built test-only signature database, not the official ClamAV virus database. The `Dockerfile` now
   installs `clamav-daemon` in the runner image (untested — this sandbox has no Docker daemon to build it with)
   but does not run `freshclam` automatically; that's a deployment decision (cron/sidecar), not an engineering one.
+
+## Modeled, not yet exposed
+
+Purchasing-intelligence natural-language query and ERP/accounting integrations. These have real Prisma models
+(or, for NL query, would reuse the existing AI provider abstraction) so adding the UI/API surface later does not
+require a schema rewrite.
+(Supplier performance scoring, price benchmarking, and virus scanning are no longer in this category — see
+MODULE_STATUS.md #8/#26 and the "Also built"/"Simplified, not fake" entries above for each.)
 
 ## Not started
 
