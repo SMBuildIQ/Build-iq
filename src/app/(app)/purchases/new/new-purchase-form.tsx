@@ -92,6 +92,7 @@ export function NewPurchaseForm({
         lineItems: [
           {
             description: f.productDescription || description.slice(0, 200),
+            category: f.category ?? undefined,
             manufacturer: f.manufacturer ?? undefined,
             model: f.modelOrSku ?? undefined,
             quantity: f.quantity ?? 1,
@@ -179,6 +180,14 @@ export function NewPurchaseForm({
           <input
             value={f.manufacturer ?? ""}
             onChange={(e) => updateField("manufacturer", e.target.value || null)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          />
+        </Field>
+        <Field label="Category">
+          <input
+            value={f.category ?? ""}
+            onChange={(e) => updateField("category", e.target.value || null)}
+            placeholder="e.g. Laptops, HVAC parts"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           />
         </Field>

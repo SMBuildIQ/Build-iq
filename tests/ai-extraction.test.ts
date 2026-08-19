@@ -6,6 +6,8 @@ import { hashPassword } from "../src/lib/auth/password";
 import { createOrganizationWithOwner } from "../src/lib/org/bootstrap";
 import { extractPurchaseRequest } from "../src/lib/ai/purchaseRequestExtraction";
 import { heuristicExtract } from "../src/lib/ai/heuristicExtractor";
+import { __setAIProviderForTests } from "../src/lib/ai/provider";
+import type { AIProvider, AICompletionResult } from "../src/lib/ai/types";
 
 // AI_PROVIDER defaults to "mock" (see .env.example / src/lib/ai/provider.ts), so
 // this runs the deterministic heuristic path with no network access — exactly
@@ -63,4 +65,43 @@ test("extractPurchaseRequest always logs an AIActivityLog entry (brief §26)", a
   const log = await prisma.aIActivityLog.findUnique({ where: { id: result.aiActivityLogId } });
   assert.ok(log);
   assert.equal(log!.feature, "purchase_request_extraction");
+});
+
+// PurchaseRequestLineItem.category feeds price benchmarking (brief §25) and
+// the natural-language purchasing query, but was rarely populated because
+// nothing ever asked for it — no heuristic extraction, no field in the
+// review form. Both are now real; these two tests cover the extraction half.
+
+test("heuristicExtract honestly returns category: null rather than guessing an open-ended taxonomy", () => {
+  const fields = heuristicExtract("We need 75 Lenovo ThinkPads delivered to Detroit before September 20.");
+  assert.equal(fields.category, null);
+});
+
+test("extractPurchaseRequest passes a real provider's extracted category through", async () => {
+  const fakeProvider: AIProvider = {
+    name: "fake-nlu",
+    model: "fake-nlu-1",
+    supportsDocuments: false,
+    async complete(): Promise<AICompletionResult> {
+      return {
+        text: JSON.stringify({
+          productDescription: "75 Lenovo ThinkPad laptops",
+          quantity: 75,
+          category: "Laptops",
+          manufacturer: "Lenovo",
+        }),
+        tokensIn: 50,
+        tokensOut: 20,
+        costUsd: 0.001,
+      };
+    },
+  };
+  __setAIProviderForTests(fakeProvider);
+  try {
+    const orgId = await makeOrgId();
+    const result = await extractPurchaseRequest(orgId, "We need 75 Lenovo ThinkPad laptops.");
+    assert.equal(result.fields.category, "Laptops");
+  } finally {
+    __setAIProviderForTests(null);
+  }
 });

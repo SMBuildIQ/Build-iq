@@ -64,6 +64,10 @@ export function heuristicExtract(description: string): ExtractedPurchaseFields {
     productDescription: description.trim(),
     quantity: extractQuantity(description),
     specifications: null,
+    // No reliable heuristic exists for an open-ended category the way
+    // extractManufacturer works off a known list — left null rather than
+    // guessing; the buyer can fill it in directly (see new-purchase-form.tsx).
+    category: null,
     manufacturer: extractManufacturer(description),
     modelOrSku: null,
     acceptableSubstitutions: extractSubstitutions(description),

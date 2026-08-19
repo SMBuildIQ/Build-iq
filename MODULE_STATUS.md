@@ -57,10 +57,11 @@ prices on issued POs (never quotes/estimates) every time a PO is issued, buckete
 manufacturer when category is unset) and unit of measure over a 180-day rolling window. A quote priced >15% above
 the org's own historical average for the same bucket is flagged with an "Above historical pricing" note on the
 compare page and rolled into the dashboard's purchasing-insights panel. No dedicated benchmark-history UI exists —
-the only exposure is the derived flag/insight — and because `category` is rarely populated on purchase request
-line items today, most real benchmarking currently falls back to the manufacturer-only bucket rather than a true
-category bucket. Verified via unit tests (`tests/price-benchmark.test.ts`) and a live smoke test issuing real POs
-against a running standalone server.
+the only exposure is the derived flag/insight. `category` is now a real, capturable field on the primary purchase
+request creation flow (AI/heuristic-extracted, buyer-editable) rather than nothing in the UI ever asking for it —
+closes half of a gap this list tracked, see KNOWN_LIMITATIONS.md for what's still open. Verified via unit tests
+(`tests/price-benchmark.test.ts`, `tests/ai-extraction.test.ts`) and a live smoke test issuing real POs against a
+running standalone server.
 
 **Purchasing-intelligence natural-language query (brief §25/§30)** — FULL, closing what was previously a
 `PlannedModule` stub at `/intelligence`. `POST /api/v1/intelligence/query` (`src/lib/ai/purchasingQuery.ts`)

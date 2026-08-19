@@ -9,6 +9,7 @@ export interface ExtractedPurchaseFields {
   productDescription: string;
   quantity: number | null;
   specifications: string | null;
+  category: string | null;
   manufacturer: string | null;
   modelOrSku: string | null;
   acceptableSubstitutions: string[];
@@ -50,7 +51,8 @@ const SYSTEM_PROMPT = `You are the purchasing intake assistant for a B2B procure
 Extract a structured purchase request from the buyer's plain-English description.
 Respond with ONLY a JSON object (no prose, no markdown fences) with exactly these keys:
 productDescription (string), quantity (number|null), specifications (string|null),
-manufacturer (string|null), modelOrSku (string|null), acceptableSubstitutions (string[]),
+category (string|null — a short general product/service category like "Laptops", "HVAC parts", or "Office furniture",
+not a repeat of the full description), manufacturer (string|null), modelOrSku (string|null), acceptableSubstitutions (string[]),
 budget (number|null), requiredDeliveryDate (ISO date string|null), deliveryLocation (string|null),
 warrantyRequirement (string|null), paymentTermsRequirement (string|null),
 certificationRequirement (string|null), preferredVendors (string[]), restrictedVendors (string[]),
