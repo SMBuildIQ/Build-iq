@@ -44,6 +44,7 @@ export const openApiSpec = {
     { name: "Invoices" },
     { name: "Documents" },
     { name: "Notifications" },
+    { name: "Intelligence" },
     { name: "Audit Log" },
     { name: "Org Setup" },
     { name: "Invites" },
@@ -342,6 +343,26 @@ export const openApiSpec = {
       get: { tags: ["Documents"], summary: "Download the file", parameters: [idParam], responses: { "200": { description: "The file", content: { "application/octet-stream": { schema: { type: "string", format: "binary" } } } } } },
     },
     "/notifications": { get: { tags: ["Notifications"], summary: "Current user's own notifications, most recent 50", responses: { "200": jsonResponse({ type: "object", properties: { notifications: { type: "array", items: { $ref: "#/components/schemas/Notification" } }, unreadCount: { type: "integer" } } }) } } },
+    "/intelligence/query": {
+      post: {
+        tags: ["Intelligence"],
+        summary: "Ask a natural-language question about the organization's real purchase history",
+        requestBody: jsonBody({ type: "object", required: ["question"], properties: { question: { type: "string" } } }),
+        responses: {
+          "200": jsonResponse({
+            type: "object",
+            properties: {
+              filter: { type: "object" },
+              lineItems: { type: "array", items: { type: "object" } },
+              totalSpent: { type: "number" },
+              lineItemCount: { type: "integer" },
+              avgUnitPrice: { type: "number", nullable: true },
+              answer: { type: "string" },
+            },
+          }),
+        },
+      },
+    },
     "/notifications/{id}/read": { post: { tags: ["Notifications"], summary: "Mark a notification read", parameters: [idParam], responses: { "200": jsonResponse({ type: "object", properties: { notification: { $ref: "#/components/schemas/Notification" } } }) } } },
     "/audit-log": {
       get: {

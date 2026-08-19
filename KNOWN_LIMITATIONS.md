@@ -119,16 +119,29 @@ the app or docs — this is the canonical list.
   custom-built test-only signature database, not the official ClamAV virus database. The `Dockerfile` now
   installs `clamav-daemon` in the runner image (untested — this sandbox has no Docker daemon to build it with)
   but does not run `freshclam` automatically; that's a deployment decision (cron/sidecar), not an engineering one.
-
-## Modeled, not yet exposed
-
-Purchasing-intelligence natural-language query and ERP/accounting integrations. These have real Prisma models
-(or, for NL query, would reuse the existing AI provider abstraction) so adding the UI/API surface later does not
-require a schema rewrite.
-(Supplier performance scoring, price benchmarking, and virus scanning are no longer in this category — see
-MODULE_STATUS.md #8/#26 and the "Also built"/"Simplified, not fake" entries above for each.)
+- **Purchasing-intelligence natural-language query (brief §25/§30)** — real: `/intelligence` was a `PlannedModule`
+  stub; `POST /api/v1/intelligence/query` (`src/lib/ai/purchasingQuery.ts`) now translates a question like "What
+  did we pay for Lenovo laptops last year?" into a structured filter (manufacturer/category/keyword/timeframe) and
+  runs a real, deterministic Prisma query against actual `PurchaseOrderLineItem` rows. The AI's role is
+  deliberately narrow — extracting the filter, never composing the answer text — so every dollar figure in the
+  answer is computed in code from real rows, not something the model could fabricate. Under the mock provider the
+  filter extraction is real heuristic logic (regex/known-manufacturer matching, same pattern as
+  `heuristicExtractor.ts`), not a canned response — `tests/purchasing-query.test.ts` (9 tests) verifies real spend
+  totals, keyword matching (with a singular/plural fold — a real bug found while testing: "laptops" in the
+  question failing to match a line item literally described as "laptop"), timeframe filtering, cancelled-PO
+  exclusion, tenant isolation, and the exact brief example question end-to-end. Live-smoke-verified against the
+  real running app with the brief's own example question, returning the correct total spend and per-unit average
+  from a real seeded purchase order. One real gap: category filtering exists but is rarely exercised in practice
+  for the same reason price benchmarking's category bucket is — `PurchaseRequestLineItem.category` is rarely
+  populated (see below); keyword matching against the description carries most of the practical filtering weight
+  today.
 
 ## Not started
 
-Native mobile client, SSO/SAML, staging/production infrastructure provisioning, and external supplier discovery
-(search APIs, marketplaces) beyond the internal approved-supplier database.
+Native mobile client, SSO/SAML, staging/production infrastructure provisioning, external supplier discovery
+(search APIs, marketplaces) beyond the internal approved-supplier database, and ERP/accounting system
+integration. The "Modeled, not yet exposed" category this list used to have — ERP integration included — is
+retired: everything else that was ever filed there (supplier performance scoring, price benchmarking, virus
+scanning, natural-language purchasing query) is now real and built, and ERP integration itself was never actually
+modeled in `prisma/schema.prisma` — an earlier version of this list claimed it had "real Prisma models," which
+wasn't true; there is no ERP-related model in the schema at all. Corrected here rather than left standing.

@@ -62,5 +62,12 @@ line items today, most real benchmarking currently falls back to the manufacture
 category bucket. Verified via unit tests (`tests/price-benchmark.test.ts`) and a live smoke test issuing real POs
 against a running standalone server.
 
+**Purchasing-intelligence natural-language query (brief §25/§30)** — FULL, closing what was previously a
+`PlannedModule` stub at `/intelligence`. `POST /api/v1/intelligence/query` (`src/lib/ai/purchasingQuery.ts`)
+translates a question like "What did we pay for Lenovo laptops last year?" into a structured filter and runs a
+real Prisma query against `PurchaseOrderLineItem` — the AI extracts the filter, never composes the answer, so
+every number is computed from real rows. `tests/purchasing-query.test.ts` (9 tests) and a live smoke test using
+the brief's own example question against a running standalone server, both verified.
+
 **Rule:** a module with no working UI shows an explicit "Planned" state (`src/components/PlannedModule.tsx`) that
 names the backing schema — never a form that appears to save but doesn't.

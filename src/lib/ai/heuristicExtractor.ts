@@ -29,7 +29,7 @@ function extractQuantity(text: string): number | null {
   return Number(match[1].replace(/,/g, ""));
 }
 
-function extractManufacturer(text: string): string | null {
+export function extractManufacturer(text: string): string | null {
   const lower = text.toLowerCase();
   for (const m of KNOWN_MANUFACTURERS) {
     if (lower.includes(m.toLowerCase())) return m;
