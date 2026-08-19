@@ -9,6 +9,7 @@ export function AddSupplierForm() {
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+  const [categories, setCategories] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +34,10 @@ export function AddSupplierForm() {
       body: JSON.stringify({
         name,
         city: city || undefined,
+        categories: categories
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean),
         contact: contactEmail ? { name: "Primary contact", email: contactEmail } : undefined,
       }),
     });
@@ -46,6 +51,7 @@ export function AddSupplierForm() {
     setName("");
     setCity("");
     setContactEmail("");
+    setCategories("");
     router.refresh();
   }
 
@@ -62,6 +68,15 @@ export function AddSupplierForm() {
       <label className="flex flex-col gap-1 text-sm">
         <span className="text-xs font-medium text-gray-500">Contact email</span>
         <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="rounded-md border border-gray-300 px-3 py-2 text-sm" />
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-xs font-medium text-gray-500">Categories (comma-separated)</span>
+        <input
+          value={categories}
+          onChange={(e) => setCategories(e.target.value)}
+          placeholder="Electrical, Plumbing"
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
       </label>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button type="submit" disabled={submitting} className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">

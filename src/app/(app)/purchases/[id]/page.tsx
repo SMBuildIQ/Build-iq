@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { SourceForm } from "./source-form";
 import { IssuePoButton } from "./issue-po-button";
 import { DocumentAttachments } from "@/components/DocumentAttachments";
+import { parseCategories, rankSuppliersByCategoryMatch } from "@/lib/supplierMatching";
 
 export default async function PurchaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await getAuthContext();
@@ -39,13 +40,20 @@ export default async function PurchaseDetailPage({ params }: { params: Promise<{
       ? await prisma.quote.findFirst({ where: { rfqSupplier: { rfq: { purchaseRequestId: pr.id } }, status: "selected" } })
       : null;
 
+  const lineItemCategories = [...new Set(pr.lineItems.map((li) => li.category).filter((c): c is string => !!c))];
+
   const suppliers =
     pr.rfqs.length === 0
-      ? await prisma.supplier.findMany({
-          where: { organizationId: ctx.organizationId, status: { in: ["active", "approved"] } },
-          select: { id: true, name: true },
-          orderBy: { name: "asc" },
-        })
+      ? rankSuppliersByCategoryMatch(
+          (
+            await prisma.supplier.findMany({
+              where: { organizationId: ctx.organizationId, status: { in: ["active", "approved"] } },
+              select: { id: true, name: true, categories: true },
+              orderBy: { name: "asc" },
+            })
+          ).map((s) => ({ id: s.id, name: s.name, categories: parseCategories(s.categories) })),
+          lineItemCategories
+        )
       : [];
 
   return (

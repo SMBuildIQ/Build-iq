@@ -8,7 +8,18 @@ interface SupplierOption {
   name: string;
 }
 
-export function SourceForm({ purchaseRequestId, suppliers }: { purchaseRequestId: string; suppliers: SupplierOption[] }) {
+interface RankedSupplierOption {
+  supplier: SupplierOption;
+  matchedCategories: string[];
+}
+
+export function SourceForm({
+  purchaseRequestId,
+  suppliers,
+}: {
+  purchaseRequestId: string;
+  suppliers: RankedSupplierOption[];
+}) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
   const [quoteDeadline, setQuoteDeadline] = useState("");
@@ -60,10 +71,15 @@ export function SourceForm({ purchaseRequestId, suppliers }: { purchaseRequestId
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        {suppliers.map((s) => (
+        {suppliers.map(({ supplier: s, matchedCategories }) => (
           <label key={s.id} className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={selected.includes(s.id)} onChange={() => toggle(s.id)} />
             {s.name}
+            {matchedCategories.length > 0 && (
+              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+                Matches: {matchedCategories.join(", ")}
+              </span>
+            )}
           </label>
         ))}
       </div>

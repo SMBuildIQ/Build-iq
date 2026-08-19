@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { prisma } from "@/lib/db";
 import { AddSupplierForm } from "./add-supplier-form";
+import { parseCategories } from "@/lib/supplierMatching";
 
 export default async function SuppliersPage() {
   const ctx = await getAuthContext();
@@ -34,6 +35,7 @@ export default async function SuppliersPage() {
             <thead className="bg-gray-50 text-xs uppercase text-gray-500">
               <tr>
                 <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Categories</th>
                 <th className="px-4 py-2">City</th>
                 <th className="px-4 py-2">Contact</th>
                 <th className="px-4 py-2">Status</th>
@@ -43,19 +45,35 @@ export default async function SuppliersPage() {
               </tr>
             </thead>
             <tbody>
-              {suppliers.map((s) => (
-                <tr key={s.id} className="border-t border-gray-100">
-                  <td className="px-4 py-2 font-medium">{s.name}</td>
-                  <td className="px-4 py-2">{s.city ?? "—"}</td>
-                  <td className="px-4 py-2">{s.contacts[0]?.email ?? "—"}</td>
-                  <td className="px-4 py-2">
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs">{s.status}</span>
-                  </td>
-                  <td className="px-4 py-2">{s.performanceScore ?? "Unrated"}</td>
-                  <td className="px-4 py-2">{s.onTimeDeliveryRate !== null ? `${Math.round(s.onTimeDeliveryRate * 100)}%` : "—"}</td>
-                  <td className="px-4 py-2">{s.responseRate !== null ? `${Math.round(s.responseRate * 100)}%` : "—"}</td>
-                </tr>
-              ))}
+              {suppliers.map((s) => {
+                const categories = parseCategories(s.categories);
+                return (
+                  <tr key={s.id} className="border-t border-gray-100">
+                    <td className="px-4 py-2 font-medium">{s.name}</td>
+                    <td className="px-4 py-2">
+                      {categories.length === 0 ? (
+                        "—"
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {categories.map((c) => (
+                            <span key={c} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-2">{s.city ?? "—"}</td>
+                    <td className="px-4 py-2">{s.contacts[0]?.email ?? "—"}</td>
+                    <td className="px-4 py-2">
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs">{s.status}</span>
+                    </td>
+                    <td className="px-4 py-2">{s.performanceScore ?? "Unrated"}</td>
+                    <td className="px-4 py-2">{s.onTimeDeliveryRate !== null ? `${Math.round(s.onTimeDeliveryRate * 100)}%` : "—"}</td>
+                    <td className="px-4 py-2">{s.responseRate !== null ? `${Math.round(s.responseRate * 100)}%` : "—"}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
