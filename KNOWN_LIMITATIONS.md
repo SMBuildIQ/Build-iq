@@ -89,8 +89,14 @@ the app or docs — this is the canonical list.
   on every page reload — a real gap this feature closed as a side effect. "Countered" offers a "Draft another
   round" action (drafts a fresh round via the same AI drafting path). Not built: nothing lets a buyer accept a
   counter without drafting a brand-new round first — countering twice in a row without redrafting isn't possible.
-- **Notifications** — in-app only, delivered by client-side polling (`NotificationBell`, every 30s) rather than a
-  push channel; no email/SMS delivery.
+- **Notifications** — in-app delivery is by client-side polling (`NotificationBell`, every 30s) rather than a push
+  channel. Email is now real, not missing: `notifyUser`/`notifyRole` (`src/lib/notifications.ts`) email every
+  notification via the same Resend integration RFQ send and negotiation send use — same honesty tradeoff, logging
+  instead of sending without `RESEND_API_KEY` configured. The in-app `Notification` row is always written first
+  and is the source of truth regardless of email outcome; a failed or unconfigured email never blocks it. Verified
+  live: submitting a quote through the real supplier portal against a running server triggered the requester's
+  actual email log line with the correct recipient, subject, and body. SMS delivery is still not implemented (no
+  SMS provider integrated).
 - **Price benchmarking (brief §25)** — real: `recomputePriceBenchmarks()` averages actual `PurchaseOrderLineItem`
   prices on issued POs, and a quote >15% above the org's own historical average is flagged on the compare page and
   in dashboard insights. Two real gaps: `PurchaseRequestLineItem.category` is rarely populated today (nothing in
