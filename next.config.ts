@@ -34,7 +34,14 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  // pdfkit reads its .afm font metrics from disk at runtime relative to its
+  // own module location — bundling it rewrites that path to a build-time
+  // placeholder that doesn't exist at runtime under output: standalone
+  // (found via a live smoke test against the actual standalone server, not
+  // `next dev`, where the bundling difference doesn't manifest the same way).
+  // Excluding it from bundling, like the Prisma packages below, keeps it a
+  // plain `require()` against the real node_modules copy instead.
+  serverExternalPackages: ["@prisma/client", "prisma", "pdfkit"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

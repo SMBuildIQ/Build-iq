@@ -27,8 +27,16 @@ the app or docs — this is the canonical list.
   rejected as expired rather than succeeding, and a fresh login with a correct first-attempt code still works
   normally. Same "this verification step has expired" message either way — a replayed token gives an attacker no
   signal distinguishing it from a token that simply timed out.
-- **PO document** — rendered as a print-friendly HTML page (`window.print()` → "Save as PDF" in any browser)
-  rather than a generated PDF binary. No `pdfkit`/binary generation pipeline is wired up yet.
+- **PO document** — real, not just print-to-PDF: `GET /api/v1/purchase-orders/:id/pdf` (`src/lib/documents/purchaseOrderPdf.ts`,
+  `pdfkit`) generates an actual PDF binary — header, buyer/supplier addresses, dates, terms, the full line-item
+  table, freight/tax/total — verified by reading the bytes back with a real PDF parser (`pdf-parse`) in
+  `tests/purchase-order-pdf.test.ts`, not just checking they start with `%PDF-`. The print-friendly HTML page
+  (`window.print()`) still exists alongside it as a second option. Found and fixed one real, non-obvious bug in
+  the process: `pdfkit` reads its `.afm` font metrics from disk at runtime relative to its own module location,
+  and Next's bundler rewrites that to a build-time placeholder path that doesn't exist under `output: standalone`
+  — invisible under `next dev`, only caught by the live smoke test against the actual standalone server. Fixed by
+  adding `pdfkit` to `serverExternalPackages` in `next.config.ts`, the same mechanism already used for the Prisma
+  packages.
 - **Quote document extraction** — real for CSV, Excel .xlsx, and legacy binary .xls (all three deterministic
   parsing, no AI call — .xlsx via `exceljs`, legacy .xls via `@e965/xlsx`, a security-patched continuation of
   SheetJS published to npm; the bare `xlsx` package is deliberately not used since it's stuck at 0.18.5 on npm

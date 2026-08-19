@@ -270,6 +270,14 @@ export const openApiSpec = {
       },
     },
     "/purchase-orders/{id}": { get: { tags: ["Purchase Orders"], summary: "Get a purchase order", parameters: [idParam], responses: { "200": jsonResponse({ type: "object", properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } } }) } } },
+    "/purchase-orders/{id}/pdf": {
+      get: {
+        tags: ["Purchase Orders"],
+        summary: "Download the purchase order as a real generated PDF (not a print-to-PDF page)",
+        parameters: [idParam],
+        responses: { "200": { description: "The PDF", content: { "application/pdf": { schema: { type: "string", format: "binary" } } } } },
+      },
+    },
     "/purchase-orders/{id}/status": {
       post: {
         tags: ["Purchase Orders"],
