@@ -1,14 +1,12 @@
-import { mkdir, writeFile, readFile } from "node:fs/promises";
-import path from "node:path";
-import { randomUUID } from "node:crypto";
+import * as localDriver from "./localStorage";
+import * as s3Driver from "./s3Storage";
 
-// Local-disk object storage. Not durable across instances/redeploys — this is
-// the same tradeoff called out in KNOWN_LIMITATIONS.md and ARCHITECTURE.md:
-// production should swap this for an S3-compatible bucket keyed the same way
-// (organizationId/storageKey), which is why storageKey never encodes a local
-// filesystem assumption beyond this module.
-
-const UPLOAD_ROOT = path.join(process.cwd(), "uploads");
+// Local disk by default; set STORAGE_DRIVER=s3 (plus S3_BUCKET and friends —
+// see s3Storage.ts) to use an S3-compatible bucket instead. Both drivers
+// implement the identical two-function interface below, and storageKey
+// (organizationId/uuid-filename) never encodes a filesystem assumption, so
+// this is a real drop-in swap, not just a documented intention — verified
+// against a real in-process S3-API server in tests/s3-storage.test.ts.
 
 export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20MB
 
@@ -24,18 +22,14 @@ export const ALLOWED_MIME_TYPES = new Set([
   "text/plain",
 ]);
 
+function driver() {
+  return process.env.STORAGE_DRIVER === "s3" ? s3Driver : localDriver;
+}
+
 export async function saveUploadedFile(organizationId: string, filename: string, bytes: Buffer): Promise<string> {
-  const dir = path.join(UPLOAD_ROOT, organizationId);
-  await mkdir(dir, { recursive: true });
-  const storageKey = `${organizationId}/${randomUUID()}-${sanitizeFilename(filename)}`;
-  await writeFile(path.join(UPLOAD_ROOT, storageKey), bytes);
-  return storageKey;
+  return driver().saveUploadedFile(organizationId, filename, bytes);
 }
 
 export async function readUploadedFile(storageKey: string): Promise<Buffer> {
-  return readFile(path.join(UPLOAD_ROOT, storageKey));
-}
-
-function sanitizeFilename(filename: string): string {
-  return filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-100);
+  return driver().readUploadedFile(storageKey);
 }

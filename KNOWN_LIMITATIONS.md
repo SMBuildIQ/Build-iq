@@ -37,9 +37,17 @@ the app or docs — this is the canonical list.
   is not parsed, and the PDF/image vision path is untested against the live Anthropic API in this session (no
   `ANTHROPIC_API_KEY` here). The three-way matching logic itself (`src/lib/invoiceMatching.ts`) is real and
   tested — see MODULE_STATUS.md.
-- **Document storage** — local disk (`uploads/<organizationId>/...`), not durable across instances or redeploys.
-  Swapping to an S3-compatible bucket only touches `src/lib/documents/storage.ts`; `storageKey` never encodes a
-  local-filesystem assumption beyond that module.
+- **Document storage** — dual-driver, verified not just documented: local disk (`uploads/<organizationId>/...`,
+  the default) or an S3-compatible bucket, selected by `STORAGE_DRIVER` (`src/lib/documents/storage.ts` dispatches
+  to `localStorage.ts`/`s3Storage.ts`; both implement the identical two-function interface and the same
+  `storageKey` shape, so callers and the `Document` model never know which is active). The S3 driver
+  (`@aws-sdk/client-s3`) was built and round-tripped against a real in-process S3-API server (`s3rver`, not a
+  mock) in `tests/s3-storage.test.ts` — including finding and fixing a real bug along the way: the SDK's default
+  streaming/trailer-based checksum on `PutObject` hangs against non-AWS S3-compatible servers, fixed with
+  `requestChecksumCalculation: "WHEN_REQUIRED"`. The local driver was smoke-tested end-to-end through the real
+  running app (register → create supplier → upload → download, byte-for-byte match) after the refactor. Still not
+  durable across instances/redeploys when running on the local driver — that's what `STORAGE_DRIVER=s3` is for, and
+  nothing is deployed to a real bucket (no AWS/MinIO credentials in this session).
 - **Database engine** — SQLite in dev/CI by design (see `ARCHITECTURE.md`'s "Deployment target"). The Postgres
   migration is verified, not just planned: a real local PostgreSQL 16 instance ran the full schema, the entire
   unit/integration suite, a production build, and the e2e suite with concurrent workers (no SQLite-specific

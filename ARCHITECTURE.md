@@ -110,9 +110,22 @@ unique, contiguous numbers with zero duplicates. Race-safe under both providers 
 ## Deployment target
 
 Dev: SQLite, `npm run dev` + `npm run worker`. Production target: PostgreSQL, `next build` → `output: standalone`,
-the API/web process plus a separately-scaled worker process — see `Dockerfile` and `docker-compose.yml`. Object
-storage (S3-compatible) for `Document.storageKey` and a managed Postgres instance are the two infrastructure
-pieces this repo does not yet provision — see `KNOWN_LIMITATIONS.md`.
+the API/web process plus a separately-scaled worker process — see `Dockerfile` and `docker-compose.yml`. A real,
+credentialed S3 bucket and a managed Postgres instance are the two infrastructure pieces this repo does not yet
+provision — see `KNOWN_LIMITATIONS.md`. The S3 *driver* itself is built and verified, not just planned (below).
+
+**Object storage — dual-driver, verified against a real S3-API server.** `src/lib/documents/storage.ts` dispatches
+to `localStorage.ts` (default) or `s3Storage.ts` (`STORAGE_DRIVER=s3`); both implement the same two-function
+interface and the same `storageKey` shape (`organizationId/uuid-filename`), so `Document` and every caller are
+driver-agnostic. `tests/s3-storage.test.ts` runs the S3 driver (`@aws-sdk/client-s3`) against `s3rver`, a real
+in-process S3-API-compatible server — not a mock of what the SDK "should" do — and round-trips files byte-for-byte
+through it. That surfaced one real bug: the SDK v3 defaults `PutObjectCommand` to streaming, trailer-based checksum
+calculation, which real AWS supports but hangs (not errors) against non-AWS S3-compatible servers; fixed with
+`requestChecksumCalculation: "WHEN_REQUIRED"` on the `S3Client`. The local driver was smoke-tested end to end
+through the real running app (standalone server, real register → supplier → upload → download round trip) to
+confirm the refactor didn't regress the default path. Not yet exercised against a real bucket (AWS or MinIO) — no
+credentials in this environment — so the endpoint/path-style/credentials plumbing is verified against a compatible
+API surface, not against AWS itself.
 
 **Postgres migration — verified, not just planned.** A local PostgreSQL 16 instance was used to actually run this
 migration end to end (not just review it): `prisma/schema.prisma`'s `datasource.provider` changed from `"sqlite"`
