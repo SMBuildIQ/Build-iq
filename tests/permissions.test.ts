@@ -13,6 +13,8 @@ function fakeCtx(roleKey: string): AuthContext {
     name: "Test User",
     organizationId: "org1",
     organizationSlug: "org1",
+    organizationRequireMfa: false,
+    mfaEnabled: false,
     membershipId: "m1",
     roleKeys: [role.key],
     permissions: new Set(role.permissions),

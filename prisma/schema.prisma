@@ -31,6 +31,12 @@ model Organization {
   prNumberSeq    Int    @default(1000)
   billingAddress  String?
   taxId           String?
+  // Org-wide policy: when true, every member must have MFA enrolled to use
+  // the app (see src/lib/auth/mfaPolicy.ts). Does not block login itself —
+  // enrollment happens through an authenticated session — it gates the rest
+  // of the app shell until enrollment completes, and blocks disabling MFA
+  // while the policy is active.
+  requireMfa      Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

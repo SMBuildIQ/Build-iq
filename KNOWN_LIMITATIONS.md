@@ -9,11 +9,18 @@ the app or docs — this is the canonical list.
   to the server console instead of silently pretending to send. The supplier portal link always works regardless.
 - **MFA (TOTP)** — real: enrollment (QR + manual secret entry), verification, single-use backup codes, and
   disable (requires password re-entry) all work end to end, with the TOTP secret encrypted at rest
-  (`src/lib/auth/crypto.ts`) and login's brute-force lockout extended to code-verification attempts. Two real
-  gaps: it's opt-in per user, not something an org admin can require of its members (no "require MFA" org
-  policy), and the short-lived post-password `mfaToken` (5 min TTL) is a signed JWT, not a single-use nonce — it
-  can be replayed against `/auth/mfa/challenge` as many times as an attacker can guess a code within that window,
-  same brute-force lockout notwithstanding. Both are real, scoped follow-ups, not something silently faked.
+  (`src/lib/auth/crypto.ts`) and login's brute-force lockout extended to code-verification attempts. Org admins
+  can now require MFA for every member (`PATCH /api/v1/organization`, gated on `org:manage_settings`) — closing
+  a gap this list previously tracked. Enforcement is a login-time-adjacent app-shell gate, not a login block: a
+  required-but-unenrolled member can still authenticate (they need a session to reach the enrollment API in the
+  first place) but every page except `/settings` renders a blocking "enroll now" screen until they do
+  (`src/app/(app)/mfa-gate.tsx`, `src/lib/auth/mfaPolicy.ts`), and `/auth/mfa/disable` rejects the request outright
+  while the policy is active. Live-smoke-verified end to end: toggle the policy on, confirm `/dashboard` blocks
+  and `/settings` doesn't, enroll for real, confirm the block lifts, confirm disable is rejected, toggle the
+  policy off, confirm disable then succeeds. One real gap remains: the short-lived post-password `mfaToken`
+  (5 min TTL) is a signed JWT, not a single-use nonce — it can be replayed against `/auth/mfa/challenge` as many
+  times as an attacker can guess a code within that window, same brute-force lockout notwithstanding. A real,
+  scoped follow-up, not something silently faked.
 - **PO document** — rendered as a print-friendly HTML page (`window.print()` → "Save as PDF" in any browser)
   rather than a generated PDF binary. No `pdfkit`/binary generation pipeline is wired up yet.
 - **Quote document extraction** — real for CSV, Excel .xlsx, and legacy binary .xls (all three deterministic

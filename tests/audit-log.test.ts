@@ -24,6 +24,8 @@ async function makeCtx(): Promise<AuthContext> {
     name: user.name,
     organizationId: organization.id,
     organizationSlug: organization.slug,
+    organizationRequireMfa: false,
+    mfaEnabled: false,
     membershipId: membership.id,
     roleKeys: ["company_owner"],
     permissions: new Set(),

@@ -10,6 +10,8 @@ export interface AuthContext {
   name: string;
   organizationId: string;
   organizationSlug: string;
+  organizationRequireMfa: boolean;
+  mfaEnabled: boolean;
   membershipId: string;
   roleKeys: string[];
   permissions: Set<PermissionKey>;
@@ -56,6 +58,8 @@ export async function getAuthContext(): Promise<AuthContext | null> {
     name: user.name,
     organizationId: membership.organizationId,
     organizationSlug: membership.organization.slug,
+    organizationRequireMfa: membership.organization.requireMfa,
+    mfaEnabled: user.mfaEnabled,
     membershipId: membership.id,
     roleKeys,
     permissions,

@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAuthContext } from "@/lib/auth/context";
+import { isMfaEnrollmentRequired } from "@/lib/auth/mfaPolicy";
 import { SignOutButton } from "./sign-out-button";
 import { NotificationBell } from "./notification-bell";
+import { MfaGate } from "./mfa-gate";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -20,6 +22,7 @@ const NAV = [
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getAuthContext();
   if (!ctx) redirect("/login");
+  const mfaRequired = isMfaEnrollmentRequired({ requireMfa: ctx.organizationRequireMfa }, { mfaEnabled: ctx.mfaEnabled });
 
   return (
     <div className="flex min-h-screen">
@@ -46,7 +49,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <SignOutButton />
         </div>
       </aside>
-      <main className="flex-1 bg-gray-50 p-6">{children}</main>
+      <main className="flex-1 bg-gray-50 p-6">
+        <MfaGate mfaRequired={mfaRequired}>{children}</MfaGate>
+      </main>
     </div>
   );
 }

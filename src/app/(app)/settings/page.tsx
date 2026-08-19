@@ -6,6 +6,7 @@ import { hasPermission } from "@/lib/permissions/check";
 import { InviteForm, RevokeInviteButton } from "./team-section";
 import { DepartmentsSection, CostCentersSection, LocationsSection } from "./org-setup-section";
 import { MfaSection } from "./mfa-section";
+import { OrgMfaPolicySection } from "./org-mfa-policy-section";
 
 export default async function SettingsPage() {
   const ctx = await getAuthContext();
@@ -56,6 +57,12 @@ export default async function SettingsPage() {
       <Section title="Two-factor authentication">
         <MfaSection mfaEnabled={currentUser.mfaEnabled} />
       </Section>
+
+      {hasPermission(ctx, "org:manage_settings") && (
+        <Section title="Two-factor authentication policy">
+          <OrgMfaPolicySection requireMfa={organization.requireMfa} />
+        </Section>
+      )}
 
       <Section title="Locations">
         <LocationsSection locations={locations} />

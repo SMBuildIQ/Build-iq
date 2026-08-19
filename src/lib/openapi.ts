@@ -355,6 +355,14 @@ export const openApiSpec = {
       get: { tags: ["Org Setup"], summary: "List locations", responses: { "200": jsonResponse(arrayOf("Location", "locations")) } },
       post: { tags: ["Org Setup"], summary: "Create a location", requestBody: jsonBody({ $ref: "#/components/schemas/CreateLocationInput" }), responses: { "201": jsonResponse({ type: "object", properties: { location: { $ref: "#/components/schemas/Location" } } }) } },
     },
+    "/organization": {
+      patch: {
+        tags: ["Org Setup"],
+        summary: "Update organization-wide settings (currently: whether MFA is required for every member)",
+        requestBody: jsonBody({ type: "object", required: ["requireMfa"], properties: { requireMfa: { type: "boolean" } } }),
+        responses: { "200": jsonResponse({ type: "object", properties: { organization: { $ref: "#/components/schemas/Organization" } } }) },
+      },
+    },
     "/invites": {
       get: { tags: ["Invites"], summary: "List pending invites", responses: { "200": jsonResponse(arrayOf("Invite", "invites")) } },
       post: {
@@ -577,6 +585,7 @@ export const openApiSpec = {
       Document: { type: "object", properties: { id: { type: "string" }, filename: { type: "string" }, mimeType: { type: "string" }, sizeBytes: { type: "integer" }, virusScanStatus: { type: "string", enum: ["pending", "clean", "infected", "skipped"] } } },
       Notification: { type: "object", properties: { id: { type: "string" }, type: { type: "string" }, title: { type: "string" }, body: { type: "string", nullable: true }, readAt: { type: "string", format: "date-time", nullable: true } } },
       AuditLogEntry: { type: "object", properties: { id: { type: "string" }, actorType: { type: "string", enum: ["user", "ai", "system", "supplier"] }, action: { type: "string" }, entityType: { type: "string" }, entityId: { type: "string" }, createdAt: { type: "string", format: "date-time" } } },
+      Organization: { type: "object", properties: { id: { type: "string" }, name: { type: "string" }, slug: { type: "string" }, requireMfa: { type: "boolean" } } },
       Department: { type: "object", properties: { id: { type: "string" }, name: { type: "string" } } },
       CostCenter: { type: "object", properties: { id: { type: "string" }, code: { type: "string" }, name: { type: "string" } } },
       CreateLocationInput: {
