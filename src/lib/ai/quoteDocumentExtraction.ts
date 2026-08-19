@@ -1,4 +1,4 @@
-import { parseCsvRows, parseXlsxRows } from "@/lib/documents/tabularParse";
+import { parseCsvRows, parseXlsxRows, parseXlsRows } from "@/lib/documents/tabularParse";
 import { getAIProvider } from "./provider";
 import { logAIActivity } from "./log";
 
@@ -114,6 +114,11 @@ export async function parseXlsxQuote(bytes: Buffer): Promise<ExtractedQuoteField
   return extractFieldsFromRows(await parseXlsxRows(bytes));
 }
 
+/** Same deterministic parsing, legacy binary .xls format — see tabularParse.ts's parseXlsRows. */
+export function parseXlsQuote(bytes: Buffer): ExtractedQuoteFields {
+  return extractFieldsFromRows(parseXlsRows(bytes));
+}
+
 const PROMPT_VERSION = "quote-document-extraction-v1";
 
 const SYSTEM_PROMPT = `You extract structured data from a B2B supplier quote document (PDF or image). Respond with
@@ -159,16 +164,8 @@ export async function extractQuoteFromDocument(params: {
   }
 
   if (params.mimeType === "application/vnd.ms-excel") {
-    // Legacy binary .xls (pre-2007 format) — a different, non-OOXML binary
-    // layout that the .xlsx parser above cannot read. Report honestly rather
-    // than silently misparsing or routing to vision, which doesn't support
-    // spreadsheets either.
-    return {
-      available: false,
-      reason: "Legacy .xls files are not supported — please re-save as .xlsx or .csv, or enter this quote manually.",
-      fields: null,
-      aiActivityLogId: null,
-    };
+    const fields = parseXlsQuote(Buffer.from(params.base64, "base64"));
+    return { available: fields.lineItems.length > 0, fields, aiActivityLogId: null, reason: fields.lineItems.length === 0 ? "No parseable rows found in the first worksheet" : undefined };
   }
 
   const provider = getAIProvider();

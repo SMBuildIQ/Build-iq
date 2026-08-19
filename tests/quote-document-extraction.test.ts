@@ -5,7 +5,8 @@ import { prisma } from "../src/lib/db";
 import { hashPassword } from "../src/lib/auth/password";
 import { createOrganizationWithOwner } from "../src/lib/org/bootstrap";
 import ExcelJS from "exceljs";
-import { parseCsvQuote, parseXlsxQuote, extractQuoteFromDocument } from "../src/lib/ai/quoteDocumentExtraction";
+import * as XLSX from "@e965/xlsx";
+import { parseCsvQuote, parseXlsxQuote, parseXlsQuote, extractQuoteFromDocument } from "../src/lib/ai/quoteDocumentExtraction";
 import { __setAIProviderForTests } from "../src/lib/ai/provider";
 import type { AIProvider, AICompletionResult } from "../src/lib/ai/types";
 
@@ -14,6 +15,18 @@ async function buildXlsxQuote(rows: (string | number)[][]): Promise<Buffer> {
   const sheet = workbook.addWorksheet("Quote");
   for (const row of rows) sheet.addRow(row);
   return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+// A real legacy binary .xls (BIFF8, pre-2007 format) built with a different
+// library than the one under test — parseXlsQuote uses @e965/xlsx to read,
+// this uses the same package's writer only because no other BIFF8 writer is
+// in this repo; the format itself (OLE2 compound file) is what's actually
+// being exercised, not a round-trip through identical code.
+function buildXlsQuote(rows: (string | number)[][]): Buffer {
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Quote");
+  return XLSX.write(workbook, { type: "buffer", bookType: "biff8" }) as Buffer;
 }
 
 async function makeOrgId(): Promise<string> {
@@ -84,7 +97,47 @@ test("extractQuoteFromDocument parses .xlsx without needing an AI provider at al
   assert.equal(result.fields!.lineItems.length, 1);
 });
 
-test("extractQuoteFromDocument honestly reports legacy .xls as unsupported rather than misparsing it", async () => {
+test("parseXlsQuote extracts line items deterministically from a real legacy .xls (BIFF8) workbook", () => {
+  const bytes = buildXlsQuote([
+    ["sku", "description", "quantity", "unit_price", "freight", "lead_time_days", "payment_terms"],
+    ["WID-1", "Widget", 10, 9.5, 25, 5, "Net 30"],
+    ["GAD-2", "Gadget", 4, 20, "", "", ""],
+  ]);
+  const fields = parseXlsQuote(bytes);
+  assert.equal(fields.lineItems.length, 2);
+  assert.equal(fields.lineItems[0].sku, "WID-1");
+  assert.equal(fields.lineItems[0].unitPrice, 9.5);
+  assert.equal(fields.lineItems[0].confidence, 1);
+  assert.equal(fields.freight, 25);
+  assert.equal(fields.leadTimeDays, 5);
+  assert.equal(fields.paymentTerms, "Net 30");
+});
+
+test("parseXlsQuote returns empty (not fabricated) fields for malformed or non-workbook input", () => {
+  assert.deepEqual(parseXlsQuote(Buffer.from("not a real xls")).lineItems, []);
+  assert.deepEqual(parseXlsQuote(buildXlsQuote([["just", "a", "header"]])).lineItems, []);
+  assert.deepEqual(parseXlsQuote(buildXlsQuote([["wrong", "columns", "here"], [1, 2, 3]])).lineItems, []);
+});
+
+test("extractQuoteFromDocument now actually parses legacy .xls instead of reporting it unsupported", async () => {
+  const orgId = await makeOrgId();
+  const bytes = buildXlsQuote([
+    ["description", "quantity", "unit_price"],
+    ["Widget", 10, 9.5],
+  ]);
+  const result = await extractQuoteFromDocument({
+    organizationId: orgId,
+    documentId: randomUUID(),
+    mimeType: "application/vnd.ms-excel",
+    base64: bytes.toString("base64"),
+  });
+  assert.equal(result.available, true);
+  assert.equal(result.aiActivityLogId, null); // deterministic parse, no AI call
+  assert.equal(result.fields!.lineItems.length, 1);
+  assert.equal(result.fields!.lineItems[0].description, "Widget");
+});
+
+test("extractQuoteFromDocument reports a garbage .xls upload as unavailable rather than crashing", async () => {
   const orgId = await makeOrgId();
   const result = await extractQuoteFromDocument({
     organizationId: orgId,
@@ -93,8 +146,7 @@ test("extractQuoteFromDocument honestly reports legacy .xls as unsupported rathe
     base64: Buffer.from("not a real xls").toString("base64"),
   });
   assert.equal(result.available, false);
-  assert.match(result.reason ?? "", /\.xls/);
-  assert.equal(result.fields, null);
+  assert.deepEqual(result.fields!.lineItems, []); // parsed, not routed to vision — just found no rows
   assert.equal(result.aiActivityLogId, null); // never routed to vision
 });
 

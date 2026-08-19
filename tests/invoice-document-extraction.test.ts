@@ -2,10 +2,11 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import ExcelJS from "exceljs";
+import * as XLSX from "@e965/xlsx";
 import { prisma } from "../src/lib/db";
 import { hashPassword } from "../src/lib/auth/password";
 import { createOrganizationWithOwner } from "../src/lib/org/bootstrap";
-import { parseCsvInvoice, parseXlsxInvoice, extractInvoiceFromDocument } from "../src/lib/ai/invoiceDocumentExtraction";
+import { parseCsvInvoice, parseXlsxInvoice, parseXlsInvoice, extractInvoiceFromDocument } from "../src/lib/ai/invoiceDocumentExtraction";
 import { __setAIProviderForTests } from "../src/lib/ai/provider";
 import type { AIProvider, AICompletionResult } from "../src/lib/ai/types";
 
@@ -23,6 +24,13 @@ async function buildXlsxInvoice(rows: (string | number)[][]): Promise<Buffer> {
   const sheet = workbook.addWorksheet("Invoice");
   for (const row of rows) sheet.addRow(row);
   return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+function buildXlsInvoice(rows: (string | number)[][]): Buffer {
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Invoice");
+  return XLSX.write(workbook, { type: "buffer", bookType: "biff8" }) as Buffer;
 }
 
 test("parseCsvInvoice extracts line items and invoice-level fields deterministically", () => {
@@ -89,7 +97,36 @@ test("extractInvoiceFromDocument parses .xlsx without needing an AI provider at 
   assert.equal(result.fields!.lineItems.length, 1);
 });
 
-test("extractInvoiceFromDocument honestly reports legacy .xls as unsupported", async () => {
+test("parseXlsInvoice extracts line items and invoice-level fields deterministically from a real legacy .xls (BIFF8) workbook", () => {
+  const bytes = buildXlsInvoice([
+    ["sku", "description", "quantity", "unit_price", "invoice_number", "freight", "tax", "amount"],
+    ["WID-1", "Widget", 10, 9.5, "INV-2001", 25, 5, 120],
+  ]);
+  const fields = parseXlsInvoice(bytes);
+  assert.equal(fields.lineItems.length, 1);
+  assert.equal(fields.invoiceNumber, "INV-2001");
+  assert.equal(fields.amount, 120);
+});
+
+test("extractInvoiceFromDocument now actually parses legacy .xls instead of reporting it unsupported", async () => {
+  const orgId = await makeOrgId();
+  const bytes = buildXlsInvoice([
+    ["description", "quantity", "unit_price"],
+    ["Widget", 10, 9.5],
+  ]);
+  const result = await extractInvoiceFromDocument({
+    organizationId: orgId,
+    documentId: randomUUID(),
+    mimeType: "application/vnd.ms-excel",
+    base64: bytes.toString("base64"),
+  });
+  assert.equal(result.available, true);
+  assert.equal(result.aiActivityLogId, null);
+  assert.equal(result.fields!.lineItems.length, 1);
+  assert.equal(result.fields!.lineItems[0].description, "Widget");
+});
+
+test("extractInvoiceFromDocument reports a garbage .xls upload as unavailable rather than crashing", async () => {
   const orgId = await makeOrgId();
   const result = await extractInvoiceFromDocument({
     organizationId: orgId,
@@ -98,8 +135,7 @@ test("extractInvoiceFromDocument honestly reports legacy .xls as unsupported", a
     base64: Buffer.from("not a real xls").toString("base64"),
   });
   assert.equal(result.available, false);
-  assert.match(result.reason ?? "", /\.xls/);
-  assert.equal(result.fields, null);
+  assert.deepEqual(result.fields!.lineItems, []); // parsed, not routed to vision — just found no rows
   assert.equal(result.aiActivityLogId, null);
 });
 

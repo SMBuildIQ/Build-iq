@@ -16,25 +16,28 @@ the app or docs — this is the canonical list.
   same brute-force lockout notwithstanding. Both are real, scoped follow-ups, not something silently faked.
 - **PO document** — rendered as a print-friendly HTML page (`window.print()` → "Save as PDF" in any browser)
   rather than a generated PDF binary. No `pdfkit`/binary generation pipeline is wired up yet.
-- **Quote document extraction** — real for CSV and Excel .xlsx (both deterministic parsing via a shared
-  row-grid extractor, no AI call — .xlsx parsing uses `exceljs`) and PDF/image (a genuine Anthropic vision
-  integration in `src/lib/ai/quoteDocumentExtraction.ts`), all wired through
-  `POST /rfq-suppliers/:id/quotes/extract` → prefilled review form → `POST /rfq-suppliers/:id/quotes` (which
-  writes `QuoteExtractionField` rows with confidence and source-document traceability once the buyer has
-  reviewed and submitted). Two real gaps: **legacy binary .xls (pre-2007 format) is not parsed** — it's a
-  different, non-OOXML binary layout the .xlsx parser can't read, so it's honestly reported as unsupported
-  rather than misparsed or routed to vision (which doesn't handle spreadsheets either) — and the **PDF/image
-  vision path has not been exercised against the live Anthropic API in this session** (no `ANTHROPIC_API_KEY`
-  available here); it's covered by unit tests using a fake vision-capable `AIProvider`, and under the default
-  mock provider it honestly reports extraction as unavailable rather than fabricating values. Email-attachment
-  ingestion isn't a distinct code path — an emailed PDF/CSV/xlsx attachment is handled the same as any other
-  upload once saved to disk.
-- **Invoice entry** — a buyer can now upload a supplier invoice (CSV, .xlsx, PDF/image) and have it extracted via
-  `src/lib/ai/invoiceDocumentExtraction.ts` (CSV/.xlsx deterministic, no AI call; PDF/image via a vision-capable
-  provider), prefilling `InvoiceForm` for review — same "extraction previews, the buyer's submit is what
-  persists and is the human-verification step" pattern as quotes, recorded to `InvoiceExtractionField`. Manual
-  entry (no document at all) still works exactly as before. Same two real gaps as quote extraction: legacy .xls
-  is not parsed, and the PDF/image vision path is untested against the live Anthropic API in this session (no
+- **Quote document extraction** — real for CSV, Excel .xlsx, and legacy binary .xls (all three deterministic
+  parsing, no AI call — .xlsx via `exceljs`, legacy .xls via `@e965/xlsx`, a security-patched continuation of
+  SheetJS published to npm; the bare `xlsx` package is deliberately not used since it's stuck at 0.18.5 on npm
+  with unpatched prototype-pollution/ReDoS advisories) and PDF/image (a genuine Anthropic vision integration in
+  `src/lib/ai/quoteDocumentExtraction.ts`), all wired through `POST /rfq-suppliers/:id/quotes/extract` →
+  prefilled review form → `POST /rfq-suppliers/:id/quotes` (which writes `QuoteExtractionField` rows with
+  confidence and source-document traceability once the buyer has reviewed and submitted). The legacy .xls gap
+  this list previously tracked is closed — verified against a real BIFF8 (OLE2 compound file) workbook in
+  `tests/quote-document-extraction.test.ts`, and live-smoke-tested through the actual running app (upload → real
+  extraction endpoint → correct line items, freight, lead time, payment terms). One real gap remains: the
+  **PDF/image vision path has not been exercised against the live Anthropic API in this session** (no
+  `ANTHROPIC_API_KEY` available here); it's covered by unit tests using a fake vision-capable `AIProvider`, and
+  under the default mock provider it honestly reports extraction as unavailable rather than fabricating values.
+  Email-attachment ingestion isn't a distinct code path — an emailed PDF/CSV/xlsx/xls attachment is handled the
+  same as any other upload once saved to disk.
+- **Invoice entry** — a buyer can now upload a supplier invoice (CSV, .xlsx, .xls, PDF/image) and have it
+  extracted via `src/lib/ai/invoiceDocumentExtraction.ts` (CSV/.xlsx/.xls deterministic, no AI call; PDF/image via
+  a vision-capable provider), prefilling `InvoiceForm` for review — same "extraction previews, the buyer's submit
+  is what persists and is the human-verification step" pattern as quotes, recorded to `InvoiceExtractionField`.
+  Manual entry (no document at all) still works exactly as before. Same status as quote extraction: legacy .xls
+  is now parsed (see above), and the PDF/image vision path is untested against the live Anthropic API in this
+  session (no
   `ANTHROPIC_API_KEY` here). The three-way matching logic itself (`src/lib/invoiceMatching.ts`) is real and
   tested — see MODULE_STATUS.md.
 - **Document storage** — dual-driver, verified not just documented: local disk (`uploads/<organizationId>/...`,

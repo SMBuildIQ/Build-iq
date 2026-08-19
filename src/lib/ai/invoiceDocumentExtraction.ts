@@ -1,4 +1,4 @@
-import { parseCsvRows, parseXlsxRows } from "@/lib/documents/tabularParse";
+import { parseCsvRows, parseXlsxRows, parseXlsRows } from "@/lib/documents/tabularParse";
 import { getAIProvider } from "./provider";
 import { logAIActivity } from "./log";
 
@@ -103,6 +103,11 @@ export async function parseXlsxInvoice(bytes: Buffer): Promise<ExtractedInvoiceF
   return extractFieldsFromRows(await parseXlsxRows(bytes));
 }
 
+/** Same deterministic parsing, legacy binary .xls format — see tabularParse.ts's parseXlsRows. */
+export function parseXlsInvoice(bytes: Buffer): ExtractedInvoiceFields {
+  return extractFieldsFromRows(parseXlsRows(bytes));
+}
+
 const PROMPT_VERSION = "invoice-document-extraction-v1";
 
 const SYSTEM_PROMPT = `You extract structured data from a B2B supplier invoice document (PDF or image). Respond with
@@ -141,12 +146,8 @@ export async function extractInvoiceFromDocument(params: {
   }
 
   if (params.mimeType === "application/vnd.ms-excel") {
-    return {
-      available: false,
-      reason: "Legacy .xls files are not supported — please re-save as .xlsx or .csv, or enter this invoice manually.",
-      fields: null,
-      aiActivityLogId: null,
-    };
+    const fields = parseXlsInvoice(Buffer.from(params.base64, "base64"));
+    return { available: fields.lineItems.length > 0, fields, aiActivityLogId: null, reason: fields.lineItems.length === 0 ? "No parseable rows found in the first worksheet" : undefined };
   }
 
   const provider = getAIProvider();
