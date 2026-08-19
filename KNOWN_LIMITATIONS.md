@@ -86,9 +86,16 @@ the app or docs — this is the canonical list.
   a supplier actually said back (accepted/countered/declined), only valid on a `sent` negotiation, and requires a
   `resultPrice` for accepted/countered so a decision can't be recorded without content. The compare page now
   fetches and renders the latest negotiation round instead of relying on ephemeral client-side state that reset
-  on every page reload — a real gap this feature closed as a side effect. "Countered" offers a "Draft another
-  round" action (drafts a fresh round via the same AI drafting path). Not built: nothing lets a buyer accept a
-  counter without drafting a brand-new round first — countering twice in a row without redrafting isn't possible.
+  on every page reload — a real gap this feature closed as a side effect. A buyer can now accept or decline a
+  supplier's counter directly (`POST /api/v1/negotiations/:id/respond` from `countered` status) without drafting
+  a brand-new round first — closes the gap this list previously tracked. Accepting defaults to the counter's own
+  `resultPrice`/`resultTerms` rather than asking the buyer to retype numbers the supplier already gave; countering
+  a counter directly (rather than drafting a fresh round) is still rejected with a clear error, since that's a
+  materially different action (a new AI-drafted message) from recording a decision on what's already there.
+  "Countered" still also offers "Draft another round" alongside the new accept/decline actions. Live-smoke-verified
+  end to end: recorded a counter, confirmed countering it again directly is rejected, accepted it with no price in
+  the request body and got the counter's own $985/Net 45 back, and separately confirmed decline-counter on a
+  second negotiation.
 - **Notifications** — in-app delivery is by client-side polling (`NotificationBell`, every 30s) rather than a push
   channel. Email is now real, not missing: `notifyUser`/`notifyRole` (`src/lib/notifications.ts`) email every
   notification via the same Resend integration RFQ send and negotiation send use — same honesty tradeoff, logging

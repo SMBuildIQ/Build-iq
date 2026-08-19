@@ -150,6 +150,30 @@ export function NegotiateButton({ quoteId, latestNegotiation }: { quoteId: strin
     router.refresh();
   }
 
+  // Distinct from onRespond above: this is the buyer deciding on a counter
+  // the supplier already made, not recording a new thing the supplier said —
+  // no price re-entry needed, the server defaults to the counter's own
+  // resultPrice. See src/app/api/v1/negotiations/[id]/respond/route.ts.
+  async function onRespondToCounter(decision: "accepted" | "declined") {
+    if (!negotiation) return;
+    setLoading(true);
+    setError(null);
+    const res = await fetch(`/api/v1/negotiations/${negotiation.id}/respond`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ decision }),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(body.error ?? "Could not record the response");
+      return;
+    }
+    const data = await res.json();
+    setNegotiation({ id: data.negotiation.id, status: data.negotiation.status, resultPrice: data.negotiation.resultPrice, resultTerms: data.negotiation.resultTerms, messages: data.negotiation.messages });
+    router.refresh();
+  }
+
   if (!negotiation) {
     return (
       <div className="mt-2">
@@ -211,16 +235,26 @@ export function NegotiateButton({ quoteId, latestNegotiation }: { quoteId: strin
           {negotiation.resultTerms ? `, ${negotiation.resultTerms}` : ""}.
         </p>
       )}
-      {negotiation.status === "declined" && <p className="text-red-700">Supplier declined.</p>}
+      {negotiation.status === "declined" && (
+        <p className="text-red-700">{negotiation.messages[negotiation.messages.length - 1]?.body ?? "Declined."}</p>
+      )}
       {negotiation.status === "countered" && (
         <div>
           <p className="mb-2 text-amber-700">
             Countered at ${negotiation.resultPrice?.toLocaleString()}
             {negotiation.resultTerms ? `, ${negotiation.resultTerms}` : ""}.
           </p>
-          <button onClick={onDraft} disabled={loading} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium disabled:opacity-50">
-            {loading ? "Drafting…" : "Draft another round"}
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => onRespondToCounter("accepted")} disabled={loading} className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50">
+              {loading ? "Saving…" : "Accept counter"}
+            </button>
+            <button onClick={() => onRespondToCounter("declined")} disabled={loading} className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 disabled:opacity-50">
+              Decline counter
+            </button>
+            <button onClick={onDraft} disabled={loading} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium disabled:opacity-50">
+              {loading ? "Drafting…" : "Draft another round"}
+            </button>
+          </div>
         </div>
       )}
 
