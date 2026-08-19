@@ -56,12 +56,13 @@ count/amount/PO/supplier per invoice with a discrepancy-count summary. FULL.
 prices on issued POs (never quotes/estimates) every time a PO is issued, bucketed by category (falling back to
 manufacturer when category is unset) and unit of measure over a 180-day rolling window. A quote priced >15% above
 the org's own historical average for the same bucket is flagged with an "Above historical pricing" note on the
-compare page and rolled into the dashboard's purchasing-insights panel. No dedicated benchmark-history UI exists —
-the only exposure is the derived flag/insight. `category` is now a real, capturable field on the primary purchase
-request creation flow (AI/heuristic-extracted, buyer-editable) rather than nothing in the UI ever asking for it —
-closes half of a gap this list tracked, see KNOWN_LIMITATIONS.md for what's still open. Verified via unit tests
-(`tests/price-benchmark.test.ts`, `tests/ai-extraction.test.ts`) and a live smoke test issuing real POs against a
-running standalone server.
+compare page and rolled into the dashboard's purchasing-insights panel. `/intelligence` now has a real
+benchmark-history table (category, manufacturer, unit, average price, sample size, period) — no longer just the
+derived flag/insight, closing that half of a gap this list tracked. `category` is now also a real, capturable
+field on the primary purchase request creation flow (AI/heuristic-extracted, buyer-editable) rather than nothing
+in the UI ever asking for it, closing the other half — see KNOWN_LIMITATIONS.md for what's still open. Verified
+via unit tests (`tests/price-benchmark.test.ts`, `tests/ai-extraction.test.ts`) and live smoke tests issuing real
+POs against a running standalone server.
 
 **Purchasing-intelligence natural-language query (brief §25/§30)** — FULL, closing what was previously a
 `PlannedModule` stub at `/intelligence`. `POST /api/v1/intelligence/query` (`src/lib/ai/purchasingQuery.ts`)

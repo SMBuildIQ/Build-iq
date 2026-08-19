@@ -113,8 +113,11 @@ the app or docs — this is the canonical list.
   form, right next to Manufacturer, before submitting — verified end to end (`tests/ai-extraction.test.ts`, and a
   live smoke test posting a real purchase request with `category: "Laptops"` and confirming it round-trips through
   the stored line item). Two real gaps remain: this only covers requests created through the primary "describe
-  what you need" flow — no other line-item entry path was audited — and there's still no UI to browse benchmark
-  history directly; the only exposure is the derived above-threshold flag.
+  what you need" flow — no other line-item entry path was audited — and, of the two, one was purely a UI gap and
+  is now closed: `/intelligence` has a real benchmark-history table (category, manufacturer, unit, average unit
+  price, sample size, rolling-window period) reading `PriceBenchmark` directly, alongside the natural-language
+  query above — not just the derived above-threshold flag. Live-smoke-verified against the running standalone
+  server: seeded a real PO, ran `recomputePriceBenchmarks()`, and confirmed the exact numbers rendered on the page.
 - **Virus/malware scanning** — real, not fake, but not active by default: `VIRUS_SCAN_DRIVER=clamav`
   (`src/lib/documents/virusScan.ts`) shells out to a local `clamscan` binary and streams the uploaded bytes to it
   over stdin before the file ever reaches storage — an infected file is rejected (HTTP 400, an audit log entry
