@@ -82,8 +82,24 @@ require a schema rewrite.
 (Supplier performance scoring and price benchmarking are no longer in this category — see MODULE_STATUS.md #8 and
 the "Also built" section for §25.)
 
+- **Virus/malware scanning** — real, not fake, but not active by default: `VIRUS_SCAN_DRIVER=clamav`
+  (`src/lib/documents/virusScan.ts`) shells out to a local `clamscan` binary and streams the uploaded bytes to it
+  over stdin before the file ever reaches storage — an infected file is rejected (HTTP 400, an audit log entry
+  recorded, no `Document` row created, nothing written to disk/S3) rather than silently accepted.
+  `tests/virus-scan.test.ts` verifies this against a real `clamscan` process using the industry-standard EICAR
+  test string (a harmless, purpose-built 68-byte signature every AV vendor recognizes for exactly this kind of
+  integration test — not live malware), and a live smoke test through the running app confirmed the same result:
+  an EICAR upload blocked, a clean file accepted with `virusScanStatus: "clean"`. `clamscan` is a system binary,
+  not an npm dependency, so the test skips cleanly (not fails) on any machine that doesn't have it installed.
+  Two real gaps: `VIRUS_SCAN_DRIVER` is unset by default, so `Document.virusScanStatus` is still `"skipped"` out
+  of the box — same honest default as before; and even when enabled, `clamscan` needs `freshclam` to have
+  populated `/var/lib/clamav` with real virus signatures first, which requires outbound network access this
+  sandbox doesn't have (`database.clamav.net` is unreachable through the proxy) — verified here only against a
+  custom-built test-only signature database, not the official ClamAV virus database. The `Dockerfile` now
+  installs `clamav-daemon` in the runner image (untested — this sandbox has no Docker daemon to build it with)
+  but does not run `freshclam` automatically; that's a deployment decision (cron/sidecar), not an engineering one.
+
 ## Not started
 
-Native mobile client, SSO/SAML, staging/production infrastructure provisioning, external
-supplier discovery (search APIs, marketplaces) beyond the internal approved-supplier database, and virus/malware
-scanning on uploaded documents (`Document.virusScanStatus` is always written as `"skipped"`).
+Native mobile client, SSO/SAML, staging/production infrastructure provisioning, and external supplier discovery
+(search APIs, marketplaces) beyond the internal approved-supplier database.

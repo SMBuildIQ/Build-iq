@@ -26,7 +26,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # ends up (not this container's WORKDIR), so a relative path silently points
 # at the wrong file. AUTH_SECRET must also be provided at runtime (32+ chars).
 # Do not bake secrets into the image.
-RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/* \
+# clamav-daemon ships the `clamscan` binary src/lib/documents/virusScan.ts shells
+# out to when VIRUS_SCAN_DRIVER=clamav (unset by default — see KNOWN_LIMITATIONS.md).
+# Installing it here makes the capability available; it does NOT make scanning
+# active on its own. freshclam must still be run (cron, sidecar, etc. — not
+# wired up here) to populate /var/lib/clamav with real signatures before this
+# is more than an installed-but-unfed binary.
+RUN apt-get update -y && apt-get install -y openssl ca-certificates clamav-daemon && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /app/data \
   && groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs

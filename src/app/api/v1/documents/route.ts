@@ -4,6 +4,7 @@ import { withAuth, ValidationError, NotFoundError } from "@/lib/api/handler";
 import { requirePermission } from "@/lib/permissions/check";
 import { DOCUMENT_ENTITY_TYPES, verifyEntityOwnership, type DocumentEntityType } from "@/lib/documents/entityOwnership";
 import { saveUploadedFile, ALLOWED_MIME_TYPES, MAX_UPLOAD_BYTES } from "@/lib/documents/storage";
+import { scanForViruses } from "@/lib/documents/virusScan";
 import { writeAuditLog } from "@/lib/audit";
 
 // Documents attach to another already-permissioned entity (purchase request,
@@ -70,6 +71,22 @@ export const POST = withAuth(async (req, ctx) => {
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
+
+  // Scanned before the file ever touches storage — an infected upload is
+  // never written to disk/S3 and never gets a Document row. See
+  // src/lib/documents/virusScan.ts: "skipped" (the default, no
+  // VIRUS_SCAN_DRIVER configured) preserves the prior honest behavior.
+  const virusScanStatus = await scanForViruses(bytes);
+  if (virusScanStatus === "infected") {
+    await writeAuditLog(ctx, {
+      action: "document.upload_blocked",
+      entityType,
+      entityId,
+      after: { filename: file.name, reason: "virus scan flagged this file" },
+    });
+    throw new ValidationError("This file failed a virus scan and was not uploaded");
+  }
+
   const storageKey = await saveUploadedFile(ctx.organizationId, file.name, bytes);
 
   const document = await prisma.document.create({
@@ -82,8 +99,7 @@ export const POST = withAuth(async (req, ctx) => {
       sizeBytes: file.size,
       storageKey,
       uploadedByUserId: ctx.userId,
-      // Honest status: no AV integration is wired up. See KNOWN_LIMITATIONS.md.
-      virusScanStatus: "skipped",
+      virusScanStatus,
     },
   });
 

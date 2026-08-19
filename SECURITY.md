@@ -54,6 +54,7 @@ git-ignored, `.env.example` documents required shape without real values.
 
 ## Gaps (tracked, not hidden)
 
-No automated dependency/secret scanning wired into CI yet, no rate limiting beyond login lockout, no object-storage
-virus scanning (there is no upload endpoint yet to scan), and no penetration test has been performed. See
-KNOWN_LIMITATIONS.md for the full list.
+No automated dependency/secret scanning wired into CI yet, no rate limiting beyond login lockout, and no
+penetration test has been performed. Virus scanning on document upload is real but opt-in
+(`VIRUS_SCAN_DRIVER=clamav`, unset by default) — see KNOWN_LIMITATIONS.md for the full list and what's not yet
+activated by default.
